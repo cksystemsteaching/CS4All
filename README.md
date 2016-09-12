@@ -20,7 +20,7 @@ General Requirements
 All homework solutions:
 
 * must be implemented in C\* in the selfie.c file,
-* must compile without warnings with starc and execute with mipster,
+* must compile without warnings with starc and execute with mipster on [travis](https://travis-ci.org/cksystemsteaching/CS4All),
 * must not break any existing selfie functionality, and
 * must be ready for presentation on your machine in class.
 
