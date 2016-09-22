@@ -1,9 +1,9 @@
 Workflow
 --------
 
-* Step 0: form a team of 2-3 members
-* Step 1: give your team a name
-* Step 2: get a github account for each member
+* Step 0: get a [github](https://github.com) account unless you already have one
+* Step 1: join the `#sws2016` and `#cs4all-bot` [slack channels](https://cksystemsteaching.slack.com/signup) and use your github username as slack username
+* Step 2: form a team of 2-3 members and give your team a name
 * Step 3: one person per team forks the [CS4All](https://github.com/cksystemsteaching/CS4All/fork) repository
 * Step 4: add the other team members to __your__ fork as collaborators
 * Step 5: each team member clones that fork
