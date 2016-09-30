@@ -7021,6 +7021,9 @@ void setArgument(int* argv) {
 int selfie() {
   int* option;
 
+  print((int *)"This is MeMyselfAndI Selfie");
+  println();
+
   if (numberOfRemainingArguments() == 0)
     return USAGE;
   else {
