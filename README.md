@@ -7,12 +7,12 @@ Workflow
 * Step 3: one person per team forks the [CS4All](https://github.com/cksystemsteaching/CS4All/fork) repository
 * Step 4: add the other team members to __your__ fork as collaborators
 * Step 5: each team member clones that fork
-* Step 6: check out the [selfie](https://github.com/cksystemsteaching/CS4All/tree/selfie) branch
+* Step 6: check out the [selfie-se](https://github.com/cksystemsteaching/CS4All/tree/selfie-se) branch
 * Step 7: add a new file called TEAM to this branch
 * Step 8: list the name of your team as well as your names in the TEAM file
 * Step 9: implement solutions of assignments in this branch as well (see below)
 * Step 10: commit regularly and push your changes to your fork
-* Step 11: to submit solutions send pull requests from your fork via github.com to the [selfie](https://github.com/cksystemsteaching/CS4All/tree/selfie) branch
+* Step 11: to submit solutions send pull requests from your fork via github.com to the [selfie-se](https://github.com/cksystemsteaching/CS4All/tree/selfie-se) branch
 
 General Requirements
 --------------------
