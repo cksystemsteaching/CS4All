@@ -27,6 +27,6 @@ All homework solutions:
 Assignment 0: Your Team!
 ------------------------
 
-__Deadline__: October 6, 10am (hard, no extensions)
+__Deadline__: October 10, 8pm (hard, no extensions)
 
 Suppose your team name is *TheRunnables*. Change selfie such that it prints "This is TheRunnables Selfie" in a separate line on the console before doing anything else. All other functionality should be unaffected.
