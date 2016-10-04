@@ -7067,9 +7067,11 @@ int main(int argc, int* argv) {
   initSelfie(argc, (int*) argv);
 
   initLibrary();
+  print((int*) "This is the Morties Selfie");
+  println();
 
   exitCode = selfie();
-
+ 
   if (exitCode == USAGE) {
     print(selfieName);
     print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary } [ (-m | -d | -y | -min | -mob ) size ... ] ");
