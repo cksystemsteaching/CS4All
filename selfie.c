@@ -7067,12 +7067,13 @@ int main(int argc, int* argv) {
   initSelfie(argc, (int*) argv);
 
   initLibrary();
+  
+  print("This is MT Selfie");
+  println();
 
   exitCode = selfie();
 
   if (exitCode == USAGE) {
-    print("This is MT Selfie");
-    println();
     print(selfieName);
     print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary } [ (-m | -d | -y | -min | -mob ) size ... ] ");
     println();
