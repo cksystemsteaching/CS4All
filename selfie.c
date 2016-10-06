@@ -407,10 +407,10 @@ void resetScanner() {
 
 void resetSymbolTables();
 
-void createSymbolTableEntry(int which, int* string, int line, int class, int type, int value, int address);
+void createSymbolTableEntry(int which, int* string, int line, int clazz, int type, int value, int address);
 
-int* searchSymbolTable(int* entry, int* string, int class);
-int* getScopedSymbolTableEntry(int* string, int class);
+int* searchSymbolTable(int* entry, int* string, int clazz);
+int* getScopedSymbolTableEntry(int* string, int clazz);
 
 int isUndefinedProcedure(int* entry);
 int reportUndefinedProcedures();
@@ -420,7 +420,7 @@ int reportUndefinedProcedures();
 // |  0 | next    | pointer to next entry
 // |  1 | string  | identifier string, string literal
 // |  2 | line#   | source line number
-// |  3 | class   | VARIABLE, PROCEDURE, STRING
+// |  3 | clazz   | VARIABLE, PROCEDURE, STRING
 // |  4 | type    | INT_T, INTSTAR_T, VOID_T
 // |  5 | value   | VARIABLE: initial value
 // |  6 | address | VARIABLE: offset, PROCEDURE: address, STRING: offset
@@ -439,7 +439,7 @@ int  getScope(int* entry)      { return        *(entry + 7); }
 void setNextEntry(int* entry, int* next)    { *entry       = (int) next; }
 void setString(int* entry, int* identifier) { *(entry + 1) = (int) identifier; }
 void setLineNumber(int* entry, int line)    { *(entry + 2) = line; }
-void setClass(int* entry, int class)        { *(entry + 3) = class; }
+void setClass(int* entry, int clazz)        { *(entry + 3) = clazz; }
 void setType(int* entry, int type)          { *(entry + 4) = type; }
 void setValue(int* entry, int value)        { *(entry + 5) = value; }
 void setAddress(int* entry, int address)    { *(entry + 6) = address; }
@@ -2227,14 +2227,14 @@ void getSymbol() {
 // ------------------------- SYMBOL TABLE --------------------------
 // -----------------------------------------------------------------
 
-void createSymbolTableEntry(int whichTable, int* string, int line, int class, int type, int value, int address) {
+void createSymbolTableEntry(int whichTable, int* string, int line, int clazz, int type, int value, int address) {
   int* newEntry;
 
   newEntry = malloc(2 * SIZEOFINTSTAR + 6 * SIZEOFINT);
 
   setString(newEntry, string);
   setLineNumber(newEntry, line);
-  setClass(newEntry, class);
+  setClass(newEntry, clazz);
   setType(newEntry, type);
   setValue(newEntry, value);
   setAddress(newEntry, address);
@@ -2245,11 +2245,11 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
     setNextEntry(newEntry, global_symbol_table);
     global_symbol_table = newEntry;
 
-    if (class == VARIABLE)
+    if (clazz == VARIABLE)
       numberOfGlobalVariables = numberOfGlobalVariables + 1;
-    else if (class == PROCEDURE)
+    else if (clazz == PROCEDURE)
       numberOfProcedures = numberOfProcedures + 1;
-    else if (class == STRING)
+    else if (clazz == STRING)
       numberOfStrings = numberOfStrings + 1;
   } else if (whichTable == LOCAL_TABLE) {
     setScope(newEntry, REG_FP);
@@ -2263,10 +2263,10 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
   }
 }
 
-int* searchSymbolTable(int* entry, int* string, int class) {
+int* searchSymbolTable(int* entry, int* string, int clazz) {
   while (entry != (int*) 0) {
     if (stringCompare(string, getString(entry)))
-      if (class == getClass(entry))
+      if (clazz == getClass(entry))
         return entry;
 
     // keep looking
@@ -2276,20 +2276,20 @@ int* searchSymbolTable(int* entry, int* string, int class) {
   return (int*) 0;
 }
 
-int* getScopedSymbolTableEntry(int* string, int class) {
+int* getScopedSymbolTableEntry(int* string, int clazz) {
   int* entry;
 
-  if (class == VARIABLE)
+  if (clazz == VARIABLE)
     // local variables override global variables
     entry = searchSymbolTable(local_symbol_table, string, VARIABLE);
-  else if (class == PROCEDURE)
+  else if (clazz == PROCEDURE)
     // library procedures override declared or defined procedures
     entry = searchSymbolTable(library_symbol_table, string, PROCEDURE);
   else
     entry = (int*) 0;
 
   if (entry == (int*) 0)
-    return searchSymbolTable(global_symbol_table, string, class);
+    return searchSymbolTable(global_symbol_table, string, clazz);
   else
     return entry;
 }
@@ -7067,6 +7067,9 @@ int main(int argc, int* argv) {
   initSelfie(argc, (int*) argv);
 
   initLibrary();
+
+  print((int*) " This is WMER Selfie ");
+  println();
 
   exitCode = selfie();
 
