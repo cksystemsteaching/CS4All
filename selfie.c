@@ -7064,12 +7064,12 @@ int selfie() {
 int main(int argc, int* argv) {
   int exitCode;
 
+  print("This is MT Selfie");
+  println();
+
   initSelfie(argc, (int*) argv);
 
   initLibrary();
-  
-  print("This is MT Selfie");
-  println();
 
   exitCode = selfie();
 
