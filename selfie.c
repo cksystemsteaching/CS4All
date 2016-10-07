@@ -7067,11 +7067,11 @@ int main(int argc, int* argv) {
   initSelfie(argc, (int*) argv);
 
   initLibrary();
-
+  print((int*) "This is The_Chainsmokers Selfie");
+  println();
   exitCode = selfie();
 
-   print((int*) "This is The_Chainsmokers Selfie");
-   println();
+
 
   if (exitCode == USAGE) {
     print(selfieName);
