@@ -7070,6 +7070,9 @@ int main(int argc, int* argv) {
 
   exitCode = selfie();
 
+  print((int*)"This is knights Selfie");
+  println();
+
   if (exitCode == USAGE) {
     print(selfieName);
     print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary } [ (-m | -d | -y | -min | -mob ) size ... ] ");
