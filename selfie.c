@@ -7064,6 +7064,8 @@ int selfie() {
 int main(int argc, int* argv) {
   int exitCode;
 
+  write(1, (int*) "This is Selfiestick Selfie\n", 27);
+
   initSelfie(argc, (int*) argv);
 
   initLibrary();
