@@ -7067,6 +7067,9 @@ int main(int argc, int* argv) {
   initSelfie(argc, (int*) argv);
 
   initLibrary();
+    
+  print("This is MT Selfie");
+  println();
 
   exitCode = selfie();
 
