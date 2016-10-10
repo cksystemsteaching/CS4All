@@ -7067,7 +7067,8 @@ int main(int argc, int* argv) {
   initSelfie(argc, (int*) argv);
 
   initLibrary();
-
+  print("This is NemPir's Selfie"); 
+  println();
   exitCode = selfie();
 
   if (exitCode == USAGE) {
