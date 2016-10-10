@@ -7068,6 +7068,9 @@ int main(int argc, int* argv) {
 
   initLibrary();
 
+  print((int *)"This is the Starc Mipsdustries Selfie");
+  println();
+
   exitCode = selfie();
 
   if (exitCode == USAGE) {
