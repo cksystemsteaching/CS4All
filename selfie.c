@@ -7069,6 +7069,7 @@ int main(int argc, int* argv) {
   initLibrary();
 
   println();
+  print((int*)"This is gcc Selfie.");
 
   exitCode = selfie();
 
