@@ -25,6 +25,19 @@ test: selfie
 	diff -q selfie3.m selfie5.m
 	diff -q selfie3.s selfie5.s
 	./selfie -c -mob 1
+	
+# Simple Tests
+simple: selfie
+	./selfie -c selfie.c -o selfie.m
+	./selfie -l selfie.m -m 10
+
+# Write assembly
+assembly: selfie
+	./selfie -c selfie.c -s selfie.s
+	
+# Debug
+debug: selfie
+	./selfie -c selfie.c -d 10
 
 # Clean up
 clean:
