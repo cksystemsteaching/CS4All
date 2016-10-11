@@ -7068,7 +7068,7 @@ int main(int argc, int* argv) {
 
   initLibrary();
 
-  print((int*) "This is TBA Selfie");
+  print((int*) "This is TheExtendables Selfie");
   println();
 
   exitCode = selfie();
