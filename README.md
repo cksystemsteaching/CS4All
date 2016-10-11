@@ -30,3 +30,20 @@ Assignment 0: Your Team!
 __Deadline__: October 10, 8pm (hard, no extensions)
 
 Suppose your team name is *TheRunnables*. Change selfie such that it prints "This is TheRunnables Selfie" in a separate line on the console before doing anything else. All other functionality should be unaffected.
+
+
+Assignment 1: Loading, scheduling, switching, execution
+-------------------------------------------------------
+
+Implement basic concurrent execution of _n_ processes in mipster. _n >= 2_ 
+
+* understand how mipster [interprets and executes binary instructions]. Tipp: add your own comments to the code
+* mipster maintains a local state for a process (running executable), e.g., pc, registers, memory
+* understand the purpose of each variable and data structure
+* duplicate the process state n times
+* running mipster like: _./selfie -m 32 yourbinary_ should generate _n_ instances of _yourbinary_ in a single instance of mipster
+* implement [preemptive multitasking](https://en.wikipedia.org/wiki/Preemption_(computing)), i.e., switching between the _n_ instances of _yourbinary_ is determined by mipster 
+* switch processes every m instructions. _1 <= m <= number of instructions in yourbinary_
+* implement [round-robin scheduling](https://en.wikipedia.org/wiki/Round-robin_scheduling)
+* add some output in _yourbinary_ to demonstrate context switching
+* __Deadline__: October 24, 8pm (hard, no extensions)
