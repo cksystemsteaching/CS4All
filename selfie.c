@@ -7067,6 +7067,9 @@ int main(int argc, int* argv) {
   initSelfie(argc, (int*) argv);
 
   initLibrary();
+    
+  print((int*) "This is WeirdOS Selfie");
+  println();
 
   exitCode = selfie();
 
