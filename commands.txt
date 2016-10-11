@@ -1,0 +1,24 @@
+Befehle:
+
+
+
+Selfie-Executable erstellen:
+
+make
+
+-----
+
+Selfie.c mit der Selfie-Executable compilieren (selfie ist in dem Fall also compiler);
+Kompilierung für mipster und hypster:
+
+./selfie -c selfie.c -o selfie.m
+
+------
+
+Selfie.m von mipster ausführen lassen:
+
+./selfie -l selfie.m -m 1
+
+Semantically equivalent:
+
+./selfie
