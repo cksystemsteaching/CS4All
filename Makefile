@@ -1,5 +1,5 @@
 # Compiler flags
-CFLAGS := -w -m32 -D'main(a,b)=main(a,char**argv)'
+CFLAGS := -Wall -m32 -D'main(a,b)=main(a,char**argv)'
 
 # Compile selfie.c into selfie executable
 selfie: selfie.c
@@ -25,6 +25,10 @@ test: selfie
 	diff -q selfie3.m selfie5.m
 	diff -q selfie3.s selfie5.s
 	./selfie -c -mob 1
+
+fast: clean selfie
+	./selfie -c selfie.c -o selfie1.m -m 4 -c selfie.c -o selfie2.m 
+	diff -q selfie1.m selfie2.m
 
 # Clean up
 clean:

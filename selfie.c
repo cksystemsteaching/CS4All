@@ -7068,6 +7068,8 @@ int main(int argc, int* argv) {
 
   initLibrary();
 
+  println();
+
   exitCode = selfie();
 
   if (exitCode == USAGE) {
