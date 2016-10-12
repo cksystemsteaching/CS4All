@@ -513,6 +513,7 @@ void printType(int type);
 void typeWarning(int expected, int found);
 
 int* getVariable(int* variable);
+int  incrementCurrTemp();
 int  load_variable(int* variable);
 void load_integer(int value);
 void load_string(int* string);
@@ -2610,6 +2611,10 @@ int* getVariable(int* variable) {
   return entry;
 }
 
+int incrementCurrTemp() {
+  emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+}
+
 int load_variable(int* variable) {
   int* entry;
 
@@ -2878,11 +2883,22 @@ int gr_factor() {
   if (symbol == SYM_ASTERISK) {
     getSymbol();
 
-    // ["*"] identifier
+    // "*" identifier
     if (symbol == SYM_IDENTIFIER) {
       type = load_variable(identifier);
 
       getSymbol();
+
+   // "*" "++" identifier
+    } else if (symbol == SYM_PLUSPLUS) {
+      if (symbol == SYM_IDENTIFIER) {
+
+        type = load_variable(identifier);
+
+        incrementCurrTemp();
+
+        getSymbol();
+      }
 
     // * "(" expression ")"
     } else if (symbol == SYM_LPARENTHESIS) {
@@ -2904,6 +2920,43 @@ int gr_factor() {
     emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
     type = INT_T;
+
+
+
+
+
+
+
+
+  } else if (symbol == SYM_PLUSPLUS) {
+    getSymbol();
+
+    if (symbol == SYM_ASTERISK) {
+      getSymbol();
+
+      if (symbol == SYM_IDENTIFIER) {
+        type = load_variable(identifier);
+
+        incrementCurrTemp();
+
+        getSymbol();
+      }
+    } else if (symbol == SYM_IDENTIFIER) {
+      variableOrProcedureName = identifier;
+
+      getSymbol();
+
+      // variable access: identifier
+      type = load_variable(variableOrProcedureName);
+
+      incrementCurrTemp();
+    }
+
+
+
+
+
+
 
   // identifier?
   } else if (symbol == SYM_IDENTIFIER) {

@@ -62,7 +62,8 @@ simpleExpression = [ "-" ] term { ( "+" | "-" ) term } .
 term             = factor { ( "*" | "/" | "%" ) factor } .
 
 factor           = [ cast ]
-                    ( [ "*" ] ( identifier | "(" expression ")" ) |
+                    ( [ "*" ] ( ["++"] identifier | "(" expression ")" ) |
+                    "++" [ "*" ] identifier  | 
                       call |
                       literal |
                       string ) .
