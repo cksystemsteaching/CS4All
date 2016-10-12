@@ -531,6 +531,7 @@ int  gr_expression();
 void gr_while();
 void gr_if();
 void gr_return();
+void gr_increment_decrement(int post, int* variableOrProcedureName);
 void gr_statement();
 int  gr_type();
 void gr_variable(int offset);
@@ -2130,27 +2131,29 @@ void getSymbol() {
       } else if (character == CHAR_PLUS) {
         getCharacter();
 
-        if (character == CHAR_SPACE)
+        if (character == CHAR_SPACE) {
+          getCharacter();
+
           symbol = SYM_PLUS;
-        else if (character == CHAR_PLUS) {
+        } else if (character == CHAR_PLUS) {
           getCharacter();
 
           symbol = SYM_INC;
-        }
-        else
+        } else
           symbol = SYM_PLUS;
 
       } else if (character == CHAR_DASH) {
         getCharacter();
 
-        if (character == CHAR_SPACE)
+        if (character == CHAR_SPACE) {
+          getCharacter();
+
           symbol = SYM_MINUS;
-        else if (character == CHAR_DASH) {
+        } else if (character == CHAR_DASH) {
           getCharacter();
 
           symbol = SYM_DEC;
-        }
-        else
+        } else
           symbol = SYM_MINUS;
 
       } else if (character == CHAR_ASTERISK) {
@@ -2468,6 +2471,10 @@ int lookForStatement() {
   else if (symbol == SYM_IF)
     return 0;
   else if (symbol == SYM_RETURN)
+    return 0;
+  else if (symbol == SYM_INC)
+    return 0;
+  else if (symbol == SYM_DEC)
     return 0;
   else if (symbol == SYM_EOF)
     return 0;
@@ -2841,7 +2848,6 @@ int gr_factor() {
   int type;
 
   int* variableOrProcedureName;
-  int* entry;
 
   // assert: n = allocatedTemporaries
 
@@ -2942,47 +2948,11 @@ int gr_factor() {
 
       // identifier++
     } else if (symbol == SYM_INC) {
-      getSymbol();
-
-      entry = getVariable(variableOrProcedureName);
-
-      type = getType(entry);
-
-      if (type != INT_T)
-        typeWarning(type, INT_T);
-
-      talloc();
-      emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
-
-      talloc();
-      emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
-      emitIFormat(OP_ADDIU, REG_ZR, nextTemporary(), 1);
-      emitRFormat(OP_SPECIAL, currentTemporary(), nextTemporary(), currentTemporary(), FCT_ADDU);
-
-      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-      tfree(1);
+      gr_increment_decrement(1, variableOrProcedureName);
 
       // identifier--
     } else if (symbol == SYM_DEC) {
-      getSymbol();
-
-      entry = getVariable(variableOrProcedureName);
-
-      type = getType(entry);
-
-      if (type != INT_T)
-        typeWarning(type, INT_T);
-
-      talloc();
-      emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
-
-      talloc();
-      emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
-      emitIFormat(OP_ADDIU, REG_ZR, nextTemporary(), 1);
-      emitRFormat(OP_SPECIAL, currentTemporary(), nextTemporary(), currentTemporary(), FCT_SUBU);
-
-      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-      tfree(1);
+      gr_increment_decrement(1, variableOrProcedureName);
     } else
       // variable access: identifier
       type = load_variable(variableOrProcedureName);
@@ -3023,54 +2993,14 @@ int gr_factor() {
       getSymbol();
     else
       syntaxErrorSymbol(SYM_RPARENTHESIS);
+
+  // ++identifier
   } else if (symbol == SYM_INC) {
-    getSymbol();
+    gr_increment_decrement(0, (int*) 0);
 
-    if (symbol == SYM_IDENTIFIER) {
-      variableOrProcedureName = identifier;
-
-      entry = getVariable(variableOrProcedureName);
-
-      type = getType(entry);
-
-      if (type != INT_T)
-        typeWarning(type, INT_T);
-
-      talloc();
-      emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
-      emitIFormat(OP_ADDIU, REG_ZR, nextTemporary(), 1);
-
-      emitRFormat(OP_SPECIAL, currentTemporary(), nextTemporary(), currentTemporary(), FCT_ADDU);
-
-      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-
-      getSymbol();
-    }
+  // --identifier
   } else if (symbol == SYM_DEC) {
-    getSymbol();
-
-    if (symbol == SYM_IDENTIFIER) {
-      variableOrProcedureName = identifier;
-
-      entry = getVariable(variableOrProcedureName);
-
-      type = getType(entry);
-
-      if (type != INT_T)
-        typeWarning(type, INT_T);
-
-      talloc();
-      emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
-      emitIFormat(OP_ADDIU, REG_ZR, nextTemporary(), 1);
-
-      emitRFormat(OP_SPECIAL, currentTemporary(), nextTemporary(), currentTemporary(), FCT_SUBU);
-
-      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-
-      tfree(1);
-
-      getSymbol();
-    }
+    gr_increment_decrement(0, (int*) 0);
   } else
     syntaxErrorUnexpected();
 
@@ -3487,6 +3417,53 @@ void gr_return() {
   numberOfReturn = numberOfReturn + 1;
 }
 
+void gr_increment_decrement(int post, int* variableOrProcedureName) {
+  int inc;
+  int type;
+  int* entry;
+
+  if (symbol == SYM_INC)
+    inc = 1;
+
+  getSymbol();
+
+  if (post)
+    entry = getVariable(variableOrProcedureName);
+  else {
+    if (symbol == SYM_IDENTIFIER) {
+      entry = getVariable(identifier);
+
+      getSymbol();
+    } else
+      syntaxErrorSymbol(SYM_IDENTIFIER);
+  }
+
+  type = getType(entry);
+
+  if (type != INT_T)
+    typeWarning(type, INT_T);
+
+  talloc();
+  emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
+
+  if (post) {
+    talloc();
+    emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
+  }
+
+  emitIFormat(OP_ADDIU, REG_ZR, nextTemporary(), 1);
+
+  if (inc)
+    emitRFormat(OP_SPECIAL, currentTemporary(), nextTemporary(), currentTemporary(), FCT_ADDU);
+  else
+    emitRFormat(OP_SPECIAL, currentTemporary(), nextTemporary(), currentTemporary(), FCT_SUBU);
+
+  emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
+  if (post)
+    tfree(1);
+}
+
 void gr_statement() {
   int ltype;
   int rtype;
@@ -3627,52 +3604,23 @@ void gr_statement() {
         getSymbol();
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
+
+    // identifier++;
     } else if (symbol == SYM_INC) {
-      entry = getVariable(identifier);
+      gr_increment_decrement(1, variableOrProcedureName);
 
-      getSymbol();
-
-      ltype = getType(entry);
-
-      if (ltype != INT_T)
-        typeWarning(ltype, INT_T);
-
-      talloc();
-      emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
-
-      talloc();
-      emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
-      emitIFormat(OP_ADDIU, REG_ZR, nextTemporary(), 1);
-      emitRFormat(OP_SPECIAL, currentTemporary(), nextTemporary(), currentTemporary(), FCT_ADDU);
-
-      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-      tfree(2);
+      tfree(1);
 
       if (symbol == SYM_SEMICOLON)
         getSymbol();
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
 
+    // identifier--;
     } else if (symbol == SYM_DEC) {
-      entry = getVariable(identifier);
+      gr_increment_decrement(1, variableOrProcedureName);
 
-      getSymbol();
-
-      ltype = getType(entry);
-
-      if (ltype != INT_T)
-        typeWarning(ltype, INT_T);
-
-      talloc();
-      emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
-
-      talloc();
-      emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
-      emitIFormat(OP_ADDIU, REG_ZR, nextTemporary(), 1);
-      emitRFormat(OP_SPECIAL, currentTemporary(), nextTemporary(), currentTemporary(), FCT_SUBU);
-
-      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-      tfree(2);
+      tfree(1);
 
       if (symbol == SYM_SEMICOLON)
         getSymbol();
@@ -3698,60 +3646,25 @@ void gr_statement() {
       getSymbol();
     else
       syntaxErrorSymbol(SYM_SEMICOLON);
+
+  // ++identifier;
   } else if (symbol == SYM_INC) {
-    entry = getVariable(identifier);
-
-    getSymbol();
-
-    ltype = getType(entry);
-
-    if (ltype != INT_T)
-      typeWarning(ltype, INT_T);
-
-    talloc();
-    emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
-
-    talloc();
-    emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
-    emitIFormat(OP_ADDIU, REG_ZR, nextTemporary(), 1);
-    emitRFormat(OP_SPECIAL, currentTemporary(), nextTemporary(), currentTemporary(), FCT_ADDU);
-
-    emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-    tfree(2);
+    gr_increment_decrement(0, (int*) 0);
 
     if (symbol == SYM_SEMICOLON)
       getSymbol();
     else
-      syntaxErrorSymbol(SYM_SEMICOLON);
+        syntaxErrorSymbol(SYM_SEMICOLON);
 
+  // --identifier;
   } else if (symbol == SYM_DEC) {
-    entry = getVariable(identifier);
-
-    getSymbol();
-
-    ltype = getType(entry);
-
-    if (ltype != INT_T)
-      typeWarning(ltype, INT_T);
-
-    talloc();
-    emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
-
-    talloc();
-    emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
-    emitIFormat(OP_ADDIU, REG_ZR, nextTemporary(), 1);
-    emitRFormat(OP_SPECIAL, currentTemporary(), nextTemporary(), currentTemporary(), FCT_SUBU);
-
-    emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-    tfree(2);
+    gr_increment_decrement(0, (int*) 0);
 
     if (symbol == SYM_SEMICOLON)
       getSymbol();
     else
-      syntaxErrorSymbol(SYM_SEMICOLON);
-
+        syntaxErrorSymbol(SYM_SEMICOLON);
   }
-
 }
 
 int gr_type() {
@@ -7281,6 +7194,10 @@ int selfie() {
 
 int main(int argc, int* argv) {
   int exitCode;
+
+  // variables for testing:
+  int test;
+
   int i;
   int j;
   int k;
@@ -7290,42 +7207,46 @@ int main(int argc, int* argv) {
 
   initLibrary();
 
-  println();
-  print((int*)"This is the gcc Selfie.");
-  println();
+  println(); print((int*)"This is the gcc Selfie."); println(); println();
+
+  test = 1;
+  // ################################################################
+  // ###################### TEST ENVIRONMENT ########################
+  // ################################################################
+  if (test) {
+    println(); print((int*)"Executing test..."); println(); println();
+
+    i = 1;
+    j = 2;
+    k = -13;
+
+    i++;
+
+    print((int*)"i (2): ");
+    print(itoa(i,integer_buffer,10,0,0)); println();
+
+    temp = 5 + j++;
+
+    print((int*)"temp (7): ");
+    print(itoa(temp,integer_buffer,10,0,0));println();
+    print((int*)"j (3): ");
+    print(itoa(j,integer_buffer,10,0,0));println();
+
+    temp = -5 + ++k;
+
+    print((int*)"temp (-17): ");
+    print(itoa(temp,integer_buffer,10,0,0));println();
+    print((int*)"k (-12): ");
+    print(itoa(k,integer_buffer,10,0,0));println();
+
+
+    println(); println(); print((int*) "Test done."); println(); println();
+  }
+  // ################################################################
+  // ################################################################
+  // ################################################################
 
   exitCode = selfie();
-
-  // ##################### TEST ENVIRONMENT #########################
-  i = 1;
-  j = 2;
-  k = -13;
-
-  i++;
-  ++i;
-  --i;
-
-  print((int*)"i (2): ");
-  print(itoa(i,integer_buffer,10,0,0));
-
-  temp = 5 + j++;
-
-  print((int*)"temp (7): ");
-  print(itoa(temp,integer_buffer,10,0,0));
-  print((int*)"j (3): ");
-  print(itoa(j,integer_buffer,10,0,0));
-
-  temp = -5 + ++k;
-
-  print((int*)"temp (-17): ");
-  print(itoa(temp,integer_buffer,10,0,0));
-
-
-  print((int*)"k (-12): ");
-  print(itoa(k,integer_buffer,10,0,0));
-
-
-  // ################################################################
 
   if (exitCode == USAGE) {
     print(selfieName);
