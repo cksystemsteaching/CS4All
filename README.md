@@ -30,3 +30,16 @@ Assignment 0: Your Team!
 __Deadline__: October 12, 10am (hard, no extensions)
 
 Suppose your team name is *TheRunnables*. Change selfie such that it prints "This is TheRunnables Selfie" in a separate line on the console before doing anything else. All other functionality should be unaffected.
+
+Assignment 1: Revisiting Compilers
+----------------------------------
+
+__Deadline__: October 18, 9am (hard, no extensions)
+
+Implement either the prefix or the postfix increment (`++`) in selfie.
+(Bonus: Do both, and maybe throw in `--` for good measure.)
+Extend `grammar.md` and modify the scanner and parser/codegenerator of starc accordingly.
+Test your implementation on syntactically correct as well as syntactically incorrect C\* programs.
+
+In C/C++ the expression `++i + ++i` is undefined. Why???
+Can you find a program and compiler flags (for eg. `gcc` or `clang`), such that the compiled program behaves differently than the same program compiled with your implementation.
