@@ -36,8 +36,8 @@ __Deadline__: October 10, 8pm (hard, no extensions)
 Suppose your team name is *TheRunnables*. Change selfie such that it prints "This is TheRunnables Selfie" in a separate line on the console before doing anything else. All other functionality should be unaffected.
 
 
-Lecture 1 (pdf)
----------------
+[Lecture 1](https://myfiles.sbg.ac.at/index.php/s/NtyOPFF2xnaP5DL)
+-----------
 
 
 
