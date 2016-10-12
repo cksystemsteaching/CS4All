@@ -24,12 +24,21 @@ All homework solutions:
 * must not break any existing selfie functionality, and
 * must be ready for presentation on your machine in class.
 
+
+[Introduction slides](https://myfiles.sbg.ac.at/index.php/s/2cLKfyv30T3RwUj)
+---------------------
+
 Assignment 0: Your Team!
 ------------------------
 
 __Deadline__: October 10, 8pm (hard, no extensions)
 
 Suppose your team name is *TheRunnables*. Change selfie such that it prints "This is TheRunnables Selfie" in a separate line on the console before doing anything else. All other functionality should be unaffected.
+
+
+Lecture 1 (pdf)
+---------------
+
 
 
 Assignment 1: Loading, scheduling, switching, execution
