@@ -514,6 +514,7 @@ void typeWarning(int expected, int found);
 
 int* getVariable(int* variable);
 int  load_variable(int* variable);
+
 void load_integer(int value);
 void load_string(int* string);
 
@@ -535,6 +536,8 @@ void gr_variable(int offset);
 int  gr_initialization(int type);
 void gr_procedure(int* procedure, int type);
 void gr_cstar();
+void  gr_lvalue();
+void gr_statement_old();
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -3382,7 +3385,168 @@ void gr_return() {
   numberOfReturn = numberOfReturn + 1;
 }
 
+
+//lvalue := ["*"] identifier | "*" "(" expression ")" 
+void gr_lvalue() {
+  int type;
+  int* variableOrProcedureName;
+
+  // dereference?
+  if (symbol == SYM_ASTERISK) {
+    getSymbol();
+
+    // "*" identifier
+    if (symbol == SYM_IDENTIFIER) {
+      type = load_variable(identifier);
+      
+      if (type != INTSTAR_T) 
+        typeWarning(INTSTAR_T, type);
+
+      getSymbol();
+    }
+    // * "(" expression ")"
+    else if (symbol == SYM_LPARENTHESIS) {
+      getSymbol();
+      type = gr_expression();
+
+      if (type != INTSTAR_T)
+        typeWarning(INTSTAR_T, type);
+
+      if (symbol == SYM_RPARENTHESIS)
+        getSymbol();
+      else 
+        syntaxErrorSymbol(SYM_RPARENTHESIS);
+    } else 
+      syntaxErrorUnexpected();
+  }
+  //identifier?
+  else if (symbol == SYM_IDENTIFIER) {
+    variableOrProcedureName = identifier;
+
+    getSymbol();
+
+    load_variable(variableOrProcedureName);
+  }
+  else 
+    syntaxErrorUnexpected();
+}
+
+//new version of gr_statement(), works with gr_lvalue()
 void gr_statement() {
+  int ltype;
+  int rtype;
+  int* variableOrProcedureName;
+  int* entry;
+
+  // assert: allocatedTemporaries == 0;
+
+  while (lookForStatement()) {
+    syntaxErrorUnexpected();
+
+    if (symbol == SYM_EOF)
+      exit(-1);
+    else
+      getSymbol();
+  }
+
+  // ["*"]
+  if (symbol == SYM_ASTERISK) {
+
+    gr_lvalue();
+
+    // ltype "=" 
+    if (symbol == SYM_ASSIGN) {
+
+      getSymbol();
+
+      rtype = gr_expression();
+
+      if (rtype != INT_T)
+        typeWarning(INT_T, rtype);
+
+      emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+      tfree(2);
+
+      numberOfAssignments = numberOfAssignments + 1;
+    }
+    else {
+      syntaxErrorSymbol(SYM_ASSIGN);
+      tfree(1);
+    }
+    if (symbol == SYM_SEMICOLON)
+      getSymbol();
+    else
+      syntaxErrorSymbol(SYM_SEMICOLON);
+
+  }
+  // identifier "=" expression | call
+  else if (symbol == SYM_IDENTIFIER) {
+    variableOrProcedureName = identifier;
+    getSymbol();
+
+    // procedure call
+    if (symbol == SYM_LPARENTHESIS) {
+      getSymbol();
+
+      gr_call(variableOrProcedureName);
+
+      // reset return register to initial return value
+      // for missing return expressions
+      emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
+
+      if (symbol == SYM_SEMICOLON)
+        getSymbol();
+      else
+        syntaxErrorSymbol(SYM_SEMICOLON);
+
+    // identifier = expression
+    } else if (symbol == SYM_ASSIGN) {
+      entry = getVariable(variableOrProcedureName);
+
+      ltype = getType(entry);
+
+      getSymbol();
+
+      rtype = gr_expression();
+
+      if (ltype != rtype)
+        typeWarning(ltype, rtype);
+
+      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
+      tfree(1);
+
+      numberOfAssignments = numberOfAssignments + 1;
+
+      if (symbol == SYM_SEMICOLON)
+        getSymbol();
+      else
+        syntaxErrorSymbol(SYM_SEMICOLON);
+    } else
+      syntaxErrorUnexpected();
+  }
+  // while statement?
+  else if (symbol == SYM_WHILE) {
+    gr_while();
+  }
+  // if statement?
+  else if (symbol == SYM_IF) {
+    gr_if();
+  }
+  // return statement?
+  else if (symbol == SYM_RETURN) {
+    gr_return();
+
+    if (symbol == SYM_SEMICOLON)
+      getSymbol();
+    else
+      syntaxErrorSymbol(SYM_SEMICOLON);
+  }
+
+}
+
+// the old version of gr_statement()
+void gr_statement_old() {
   int ltype;
   int rtype;
   int* variableOrProcedureName;
@@ -3543,6 +3707,8 @@ void gr_statement() {
       syntaxErrorSymbol(SYM_SEMICOLON);
   }
 }
+
+
 
 int gr_type() {
   int type;
