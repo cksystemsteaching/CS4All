@@ -22,3 +22,16 @@ Selfie.m von mipster ausführen lassen:
 Semantically equivalent:
 
 ./selfie
+
+------
+
+testfile mit selfie compilieren:
+
+./selfie -c test_program.c -o test_program.m
+
+------
+
+testfile mit selfie's mipser ausführen: TODO: nicht sicher! check!
+
+./selfie -l test_program.m -m 1
+
