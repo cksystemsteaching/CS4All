@@ -316,6 +316,7 @@ int SYM_NOTEQ        = 24; // !=
 int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
+int SYM_INCREMENT    = 28; // ++
 
 int* SYMBOLS; // strings representing symbols
 
@@ -352,7 +353,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(28 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(29 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -382,6 +383,7 @@ void initScanner () {
   *(SYMBOLS + SYM_MOD)          = (int) "%";
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
+  *(SYMBOLS + SYM_INCREMENT)    = (int) "++";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -2125,8 +2127,13 @@ void getSymbol() {
 
       } else if (character == CHAR_PLUS) {
         getCharacter();
-
-        symbol = SYM_PLUS;
+		
+		if(character == CHAR_PLUS){
+			getCharacter();
+			symbol = SYM_INCREMENT;
+		} else {
+			symbol = SYM_PLUS;
+		}      
 
       } else if (character == CHAR_DASH) {
         getCharacter();
@@ -2434,6 +2441,8 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_EOF)
     return 0;
+  else if (symbol == SYM_INCREMENT)
+    return 0;
   else
     return 1;
 }
@@ -2450,6 +2459,8 @@ int lookForStatement() {
   else if (symbol == SYM_RETURN)
     return 0;
   else if (symbol == SYM_EOF)
+    return 0;
+  else if (symbol == SYM_INCREMENT)
     return 0;
   else
     return 1;
@@ -2613,6 +2624,14 @@ int load_variable(int* variable) {
   emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
 
   return getType(entry);
+}
+
+void store_variable(int* variable) {
+	int* entry;
+	
+	entry = getVariable(variable);
+	
+	emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));	
 }
 
 void load_integer(int value) {
@@ -2898,6 +2917,22 @@ int gr_factor() {
 
     type = INT_T;
 
+  //increment?
+  } else if(symbol == SYM_INCREMENT) {	  
+	  getSymbol();
+	  
+	   if(symbol == SYM_IDENTIFIER){
+		  getSymbol();		  
+		  type = load_variable(identifier);
+		  if(type != INT_T)
+			  typeWarning(INT_T, type);
+		  emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+		  store_variable(identifier);
+		  
+	  } else {
+		  syntaxErrorSymbol(SYM_IDENTIFIER);
+	  }
+	
   // identifier?
   } else if (symbol == SYM_IDENTIFIER) {
     variableOrProcedureName = identifier;
@@ -3524,6 +3559,15 @@ void gr_statement() {
   // if statement?
   else if (symbol == SYM_IF) {
     gr_if();
+  }
+  // increment statement?
+  else if(symbol == SYM_INCREMENT) {
+	  gr_term();
+	  
+	  if (symbol == SYM_SEMICOLON)
+        getSymbol();
+      else
+        syntaxErrorSymbol(SYM_SEMICOLON);
   }
   // return statement?
   else if (symbol == SYM_RETURN) {
@@ -7061,6 +7105,25 @@ int selfie() {
   return 0;
 }
 
+void testIncrement(){
+	int i;
+	
+	i = 0;
+	
+	printInteger(i);
+	println();
+	
+	++ i;
+	
+	printInteger(i);
+	println();
+	
+	++i;
+	
+	printInteger(i);
+	println();
+}
+
 int main(int argc, int* argv) {
   int exitCode;
 
@@ -7070,6 +7133,8 @@ int main(int argc, int* argv) {
 
   print((int*) "This is TheSerializables Selfie");
   println();
+  
+  testIncrement();
   
   exitCode = selfie();
 
