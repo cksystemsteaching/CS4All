@@ -867,6 +867,8 @@ int  mipster_switch(int toID);
 
 int selfie_switch(int toID);
 
+int scheduleRoundRobin(int fromID);
+
 void emitStatus();
 void implementStatus();
 
@@ -5201,6 +5203,33 @@ int selfie_switch(int toID) {
     return hypster_switch(toID);
 }
 
+int scheduleRoundRobin(int fromID){
+    int nextID;
+    int* nextContext;
+    int* currentContext;
+    //get current context
+    currentContext = findContext(fromID, usedContexts);
+    // find next context
+    nextContext = getNextContext(nextContext);
+
+    //next context existing -> choose this context according to the round robin scheduling
+    if (((int)nextContext) != 0){
+        nextID = getID(nextContext);
+    }
+    //next context not existing == end of the list -> choose first context in double linked list
+    else {
+        nextContext = getPrevContext(currentContext);
+        while (((int) nextContext) != 0){
+            currentContext = nextContext;
+            nextContext = getPrevContext(currentContext);
+        }
+        //id of first element in list
+        nextID = getID(currentContext);
+    }
+
+    return nextID;
+}
+
 void emitStatus() {
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "hypster_status", 0, PROCEDURE, INT_T, 0, binaryLength);
 
@@ -6801,6 +6830,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       } else if (exceptionNumber == EXCEPTION_EXIT)
         // TODO: only return if all contexts have exited
         return exceptionParameter;
+      //EXCEPTION_TIMER isn't actually an exception -> only means we should change context (== change process)
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
@@ -6812,8 +6842,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         return -1;
       }
 
-      // TODO: scheduler should go here
-      toID = fromID;
+      toID = scheduleRoundRobin(fromID);
     }
   }
 }
@@ -6902,9 +6931,10 @@ int boot(int argc, int* argv) {
     // create duplicate of the initial context on our boot level
     usedContexts = createContext(initID, selfie_ID(), (int*) 0);
 
+  //load PT of first context --> first element in usedContexts (kind of choose first context - process - as next executed process)
   up_loadBinary(getPT(usedContexts));
 
-  up_loadArguments(getPT(usedContexts), argc, argv);
+  up_loadArguments(getPT(usedContexts), argc, argv); //load
 
   // propagate page table of initial context to microkernel boot level
   down_mapPageTable(usedContexts);
