@@ -996,7 +996,7 @@ void printStatus(int status);
 void throwException(int exception, int parameter);
 
 void fetch();
-void execute();
+void execue();
 void interrupt();
 
 void runUntilException();
@@ -6895,22 +6895,25 @@ int boot(int argc, int* argv) {
 
   resetMicrokernel();
 
-  // create initial context on microkernel boot level
-  initID = selfie_create();
+	//abstract prototype of context creation for concurrent program execution
+	while program-index < number_programs {
+	 	// create initial context on microkernel boot level
+  	initID = selfie_create();
 
-  if (usedContexts == (int*) 0)
-    // create duplicate of the initial context on our boot level
-    usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+	  if (usedContexts == (int*) 0)
+	    // create duplicate of the initial context on our boot level
+	    usedContexts = createContext(initID, selfie_ID(), (int*) 0);	// 3rd arg = id of previous context)
 
-  up_loadBinary(getPT(usedContexts));
+	  up_loadBinary(getPT(usedContexts));
 
-  up_loadArguments(getPT(usedContexts), argc, argv);
+	  up_loadArguments(getPT(usedContexts), argc, argv);
 
-  // propagate page table of initial context to microkernel boot level
-  down_mapPageTable(usedContexts);
+	  // propagate page table of initial context to microkernel boot level
+	  down_mapPageTable(usedContexts);
+	}
 
-  // mipsters and hypsters handle page faults
-  exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
+	// mipsters and hypsters handle page faults
+	exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -7043,7 +7046,7 @@ int selfie() {
         selfie_disassemble();
       else if (stringCompare(option, (int*) "-l"))
         selfie_load();
-      else if (stringCompare(option, (int*) "-m"))
+      else if (stringCompare(option, (int*) "-m"))			// MARK BEGIN A1
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
         return selfie_run(MIPSTER, MIPSTER, 1);
