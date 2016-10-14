@@ -31,7 +31,10 @@ testfile mit selfie compilieren:
 
 ------
 
-testfile mit selfie's mipser ausführen: TODO: nicht sicher! check!
+testfile mit selfie's mipser ausführen:
 
 ./selfie -l test_program.m -m 1
+
+compile test_program.c and link with selfie.c (as library for print etc) and execute with mipster (1MB memory)
+$ ./selfie -c test_program.c selfie.c -m 1
 
