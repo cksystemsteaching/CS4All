@@ -536,8 +536,9 @@ void gr_variable(int offset);
 int  gr_initialization(int type);
 void gr_procedure(int* procedure, int type);
 void gr_cstar();
-void  gr_lvalue();
+int gr_lvalue();
 void gr_statement_old();
+int gr_factor_old();
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -2128,7 +2129,8 @@ void getSymbol() {
 
         symbol = SYM_SEMICOLON;
 
-      } else if (character == CHAR_PLUS) {
+      }
+      else if (character == CHAR_PLUS) {
         getCharacter();
 
         if (character == CHAR_PLUS) {
@@ -2445,6 +2447,8 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_EOF)
     return 0;
+  else if (symbol == SYM_PLUSPLUS)
+    return 0;
   else
     return 1;
 }
@@ -2461,6 +2465,8 @@ int lookForStatement() {
   else if (symbol == SYM_RETURN)
     return 0;
   else if (symbol == SYM_EOF)
+    return 0;
+  else if (symbol == SYM_PLUSPLUS)
     return 0;
   else
     return 1;
@@ -2827,6 +2833,188 @@ int gr_call(int* procedure) {
 }
 
 int gr_factor() {
+  int hasCast;
+  int cast;
+  int type;
+  int* variableOrProcedureName;
+  int* entry;
+  // assert: n = allocatedTemporaries
+
+  hasCast = 0;
+
+  type = INT_T;
+
+  while (lookForFactor()) {
+    syntaxErrorUnexpected();
+
+    if (symbol == SYM_EOF)
+      exit(-1);
+    else
+      getSymbol();
+  }
+
+  // optional cast: [ cast ]
+  if (symbol == SYM_LPARENTHESIS) {
+    getSymbol();
+
+    // cast: "(" "int" [ "*" ] ")"
+    if (symbol == SYM_INT) {
+      hasCast = 1;
+
+      cast = gr_type();
+
+      if (symbol == SYM_RPARENTHESIS)
+        getSymbol();
+      else
+        syntaxErrorSymbol(SYM_RPARENTHESIS);
+
+      // not a cast: "(" expression ")"
+    } else {
+      type = gr_expression();
+
+      if (symbol == SYM_RPARENTHESIS)
+        getSymbol();
+      else
+        syntaxErrorSymbol(SYM_RPARENTHESIS);
+
+      // assert: allocatedTemporaries == n + 1
+
+      return type;
+    }
+  }
+
+  //ASSIGNMENT 1
+  // ["++"] ?
+  if (symbol == SYM_PLUSPLUS) {
+    getSymbol();
+    type = gr_lvalue();
+
+    if (type == INTSTAR_T) {
+      //allocate new register
+      talloc();
+      //dereference previous register and store its value in new register
+      emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+      //increment its value by 1
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      //store content of new register into memory location of old register
+      emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+      //deallocate register again
+      tfree(1);
+      //dereference register again for further operations
+      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+    }
+    //identifier: increment register content by 1 and store back in memory.
+    else {
+      entry = getVariable(identifier);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+    }
+
+    type = INT_T;
+  }
+  else if (symbol == SYM_ASTERISK) {
+    getSymbol();
+
+    // ["*"] identifier
+    if (symbol == SYM_IDENTIFIER) {
+      type = load_variable(identifier);
+
+      getSymbol();
+
+      // * "(" expression ")"
+    } else if (symbol == SYM_LPARENTHESIS) {
+      getSymbol();
+
+      type = gr_expression();
+
+      if (symbol == SYM_RPARENTHESIS)
+        getSymbol();
+      else
+        syntaxErrorSymbol(SYM_RPARENTHESIS);
+    } else
+      syntaxErrorUnexpected();
+
+    if (type != INTSTAR_T)
+      typeWarning(INTSTAR_T, type);
+
+    // dereference
+    emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
+    type = INT_T;
+
+    // identifier?
+  } else if (symbol == SYM_IDENTIFIER) {
+    variableOrProcedureName = identifier;
+
+    getSymbol();
+
+    if (symbol == SYM_LPARENTHESIS) {
+      getSymbol();
+
+      // procedure call: identifier "(" ... ")"
+      type = gr_call(variableOrProcedureName);
+
+      talloc();
+
+      // retrieve return value
+      emitIFormat(OP_ADDIU, REG_V0, currentTemporary(), 0);
+
+      // reset return register to initial return value
+      // for missing return expressions
+      emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
+    } else
+      // variable access: identifier
+      type = load_variable(variableOrProcedureName);
+
+    // integer?
+  } else if (symbol == SYM_INTEGER) {
+    load_integer(literal);
+
+    getSymbol();
+
+    type = INT_T;
+
+    // character?
+  } else if (symbol == SYM_CHARACTER) {
+    talloc();
+
+    emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), literal);
+
+    getSymbol();
+
+    type = INT_T;
+
+    // string?
+  } else if (symbol == SYM_STRING) {
+    load_string(string);
+
+    getSymbol();
+
+    type = INTSTAR_T;
+
+    //  "(" expression ")"
+  } else if (symbol == SYM_LPARENTHESIS) {
+    getSymbol();
+
+    type = gr_expression();
+
+    if (symbol == SYM_RPARENTHESIS)
+      getSymbol();
+    else
+      syntaxErrorSymbol(SYM_RPARENTHESIS);
+  } else
+    syntaxErrorUnexpected();
+
+  // assert: allocatedTemporaries == n + 1
+
+  if (hasCast)
+    return cast;
+  else
+    return type;
+}
+
+//old version of gr_factor(), does not work with "++"
+int gr_factor_old() {
   int hasCast;
   int cast;
   int type;
@@ -3387,7 +3575,7 @@ void gr_return() {
 
 
 //lvalue := ["*"] identifier | "*" "(" expression ")" 
-void gr_lvalue() {
+int gr_lvalue() {
   int type;
   int* variableOrProcedureName;
 
@@ -3425,10 +3613,12 @@ void gr_lvalue() {
 
     getSymbol();
 
-    load_variable(variableOrProcedureName);
+    type = load_variable(variableOrProcedureName);
   }
   else 
     syntaxErrorUnexpected();
+
+  return type;
 }
 
 //new version of gr_statement(), works with gr_lvalue()
@@ -3449,10 +3639,45 @@ void gr_statement() {
       getSymbol();
   }
 
-  // ["*"]
-  if (symbol == SYM_ASTERISK) {
+  //ASSIGNMENT 1
+  if (symbol == SYM_PLUSPLUS) {
+    getSymbol();
 
-    gr_lvalue();
+    ltype = gr_lvalue(); //does not matter if ltype or rtype
+
+    if (ltype == INTSTAR_T) {
+      //allocate new register
+      talloc();
+      //dereference previous register and store its value in new register
+      emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+      //increment its value by 1
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      //store content of new register into memory location of old register
+      emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+      //deallocate register again
+      tfree(1);
+      //dereference register again for further operations
+      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+    }
+      //identifier: increment register content by 1 and store in memory.
+    else {
+      entry = getVariable(identifier);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+    }
+
+    if (symbol == SYM_SEMICOLON)
+      getSymbol();
+    else
+      syntaxErrorSymbol(SYM_SEMICOLON);
+
+    tfree(1);
+
+  }
+  // ["*"]
+  else if (symbol == SYM_ASTERISK) {
+
+    ltype = gr_lvalue();
 
     // ltype "=" 
     if (symbol == SYM_ASSIGN) {
