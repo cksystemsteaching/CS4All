@@ -317,6 +317,7 @@ int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
 int SYM_PLUSPLUS     = 28; // ++
+int SYM_MINUSMINUS   = 29; // --
 
 int* SYMBOLS; // strings representing symbols
 
@@ -353,7 +354,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(29 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(30 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -384,6 +385,7 @@ void initScanner () {
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
   *(SYMBOLS + SYM_PLUSPLUS)     = (int) "++";
+  *(SYMBOLS + SYM_MINUSMINUS)   = (int) "--";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -498,6 +500,7 @@ int isExpression();
 int isLiteral();
 int isStarOrDivOrModulo();
 int isPlusOrMinus();
+int isIncrementOrDecrement();
 int isComparison();
 
 int lookForFactor();
@@ -2144,7 +2147,13 @@ void getSymbol() {
       } else if (character == CHAR_DASH) {
         getCharacter();
 
-        symbol = SYM_MINUS;
+        if (character == CHAR_DASH) {
+          getCharacter();
+
+          symbol = SYM_MINUSMINUS;
+        }
+        else
+          symbol = SYM_MINUS;
 
       } else if (character == CHAR_ASTERISK) {
         getCharacter();
@@ -2415,6 +2424,15 @@ int isPlusOrMinus() {
     return 0;
 }
 
+int isIncrementOrDecrement() {
+  if (symbol == SYM_PLUSPLUS)
+    return 1;
+  else if (symbol == SYM_MINUSMINUS)
+    return 1;
+  else
+    return 0;
+}
+
 int isComparison() {
   if (symbol == SYM_EQUALITY)
     return 1;
@@ -2449,6 +2467,8 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_PLUSPLUS)
     return 0;
+  else if (symbol == SYM_MINUSMINUS)
+    return 0;
   else
     return 1;
 }
@@ -2467,6 +2487,8 @@ int lookForStatement() {
   else if (symbol == SYM_EOF)
     return 0;
   else if (symbol == SYM_PLUSPLUS)
+    return 0;
+  else if (symbol == SYM_MINUSMINUS)
     return 0;
   else
     return 1;
@@ -2838,6 +2860,7 @@ int gr_factor() {
   int type;
   int* variableOrProcedureName;
   int* entry;
+  int incrDecrValue; //stores value of increment(1) or decrement(-1) operation.
   // assert: n = allocatedTemporaries
 
   hasCast = 0;
@@ -2884,8 +2907,15 @@ int gr_factor() {
   }
 
   //ASSIGNMENT 1
-  // ["++"] ?
-  if (symbol == SYM_PLUSPLUS) {
+  // ([ "++" ] | "[ "--" ])
+  if (isIncrementOrDecrement()) {
+
+    //[ "++" ]
+    if (symbol == SYM_PLUSPLUS)
+      incrDecrValue = 1;
+    else  //[ "--" ]
+      incrDecrValue = -1;
+
     getSymbol();
     type = gr_lvalue();
 
@@ -2895,7 +2925,7 @@ int gr_factor() {
       //dereference previous register and store its value in new register
       emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
       //increment its value by 1
-      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), incrDecrValue);
       //store content of new register into memory location of old register
       emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
       //deallocate register again
@@ -2906,7 +2936,7 @@ int gr_factor() {
     //identifier: increment register content by 1 and store back in memory.
     else {
       entry = getVariable(identifier);
-      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), incrDecrValue);
       emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
     }
 
@@ -3627,6 +3657,7 @@ void gr_statement() {
   int rtype;
   int* variableOrProcedureName;
   int* entry;
+  int incrDecrValue; //increment = 1, decrement = -1;
 
   // assert: allocatedTemporaries == 0;
 
@@ -3640,7 +3671,15 @@ void gr_statement() {
   }
 
   //ASSIGNMENT 1
-  if (symbol == SYM_PLUSPLUS) {
+  // ([ "++" ] | "[ "--" ])
+  if (isIncrementOrDecrement()) {
+
+    //[ "++" ]
+    if (symbol == SYM_PLUSPLUS)
+      incrDecrValue = 1;
+    else  //[ "--" ]
+      incrDecrValue = -1;
+
     getSymbol();
 
     ltype = gr_lvalue(); //does not matter if ltype or rtype
@@ -3650,8 +3689,8 @@ void gr_statement() {
       talloc();
       //dereference previous register and store its value in new register
       emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
-      //increment its value by 1
-      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      //increment/decrement its value by 1
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), incrDecrValue);
       //store content of new register into memory location of old register
       emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
       //deallocate register again
@@ -3659,10 +3698,10 @@ void gr_statement() {
       //dereference register again for further operations
       emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
     }
-      //identifier: increment register content by 1 and store in memory.
+      //identifier: increment/decrement register content by 1 and store in memory.
     else {
       entry = getVariable(identifier);
-      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), incrDecrValue);
       emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
     }
 
