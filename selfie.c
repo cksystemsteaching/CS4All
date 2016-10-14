@@ -2129,7 +2129,6 @@ void getSymbol() {
         getCharacter();
 
         if (character == CHAR_PLUS) {
-
           symbol = SYM_PLUSPLUS;
           getCharacter();
 
@@ -2455,6 +2454,8 @@ int lookForStatement() {
   if (symbol == SYM_ASTERISK)
     return 0;
   else if (symbol == SYM_IDENTIFIER)
+    return 0;
+  else if (symbol == SYM_PLUSPLUS)
     return 0;
   else if (symbol == SYM_WHILE)
     return 0;
@@ -2850,8 +2851,28 @@ int gr_factor() {
       getSymbol();
   }
 
+  if (symbol == SYM_PLUSPLUS) {
+    getSymbol();
+    if (symbol == SYM_IDENTIFIER) {
+      load_variable(identifier);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+    } else if (symbol == SYM_ASTERISK) {
+      getSymbol();
+      if (symbol == SYM_IDENTIFIER) {
+        getSymbol();
+        emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      } else if (symbol == SYM_LPARENTHESIS) {
+        gr_expression();
+        emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      }
+    }
+  }
+
   // optional cast: [ cast ]
-  if (symbol == SYM_LPARENTHESIS) {
+  else if (symbol == SYM_LPARENTHESIS) {
     getSymbol();
 
     // cast: "(" "int" [ "*" ] ")"
@@ -7076,6 +7097,8 @@ int selfie() {
 
 int main(int argc, int* argv) {
   int exitCode;
+  int i;
+  int j;
 
   initSelfie(argc, (int*) argv);
 
@@ -7083,6 +7106,11 @@ int main(int argc, int* argv) {
 
   print((int *)"This is the Starc Mipsdustries Selfie");
   println();
+
+  i = 99999;
+  j = ++i;
+  printInteger(j);
+
 
   exitCode = selfie();
 
