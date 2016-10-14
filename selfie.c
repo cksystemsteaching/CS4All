@@ -316,6 +316,7 @@ int SYM_NOTEQ        = 24; // !=
 int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
+int SYM_INCREMENT    = 28; //++
 
 int* SYMBOLS; // strings representing symbols
 
@@ -352,7 +353,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(28 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(29 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -382,6 +383,7 @@ void initScanner () {
   *(SYMBOLS + SYM_MOD)          = (int) "%";
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
+  *(SYMBOLS + SYM_INCREMENT)    = (int) "++";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -793,7 +795,7 @@ void selfie_load();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int maxBinaryLength = 131072; // 128KB
+int maxBinaryLength = 262144; // 256KB
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -2125,8 +2127,12 @@ void getSymbol() {
 
       } else if (character == CHAR_PLUS) {
         getCharacter();
-
-        symbol = SYM_PLUS;
+        if(character == CHAR_PLUS){
+        	getCharacter();
+        	symbol = SYM_INCREMENT;
+        }else{
+        	 symbol = SYM_PLUS;
+        }
 
       } else if (character == CHAR_DASH) {
         getCharacter();
@@ -2434,6 +2440,8 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_EOF)
     return 0;
+  else if (symbol == SYM_INCREMENT)
+	return 0;
   else
     return 1;
 }
@@ -2451,6 +2459,8 @@ int lookForStatement() {
     return 0;
   else if (symbol == SYM_EOF)
     return 0;
+  else if (symbol == SYM_INCREMENT)
+	  return 0;
   else
     return 1;
 }
@@ -2819,7 +2829,7 @@ int gr_factor() {
   int hasCast;
   int cast;
   int type;
-
+  int* entry;
   int* variableOrProcedureName;
 
   // assert: n = allocatedTemporaries
@@ -2921,9 +2931,31 @@ int gr_factor() {
     } else
       // variable access: identifier
       type = load_variable(variableOrProcedureName);
+     
+  //increment?
+  } else if(symbol == SYM_INCREMENT){
+	  getSymbol();
+	  if(symbol == SYM_IDENTIFIER){
+		  getSymbol();
+		  //exclude methods
+		  //if(symbol == SYM_LPARENTHESIS){
+			//  syntaxErrorSymbol(SYM_LPARENTHESIS);
+		  //}
+
+		  type = load_variable(identifier);
+          if(type != INT_T)
+              typeWarning(INT_T, type);
+          
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+          entry = getVariable(identifier);
+          emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
+
+      }else syntaxErrorSymbol(SYM_IDENTIFIER);
+  }
 
   // integer?
-  } else if (symbol == SYM_INTEGER) {
+  else if (symbol == SYM_INTEGER) {
     load_integer(literal);
 
     getSymbol();
@@ -3525,6 +3557,14 @@ void gr_statement() {
   else if (symbol == SYM_IF) {
     gr_if();
   }
+  else if(symbol == SYM_INCREMENT) {
+      	  gr_term();
+      
+      	  if (symbol == SYM_SEMICOLON)
+                  getSymbol();
+            else
+                  syntaxErrorSymbol(SYM_SEMICOLON);
+        }
   // return statement?
   else if (symbol == SYM_RETURN) {
     gr_return();
@@ -3534,6 +3574,7 @@ void gr_statement() {
     else
       syntaxErrorSymbol(SYM_SEMICOLON);
   }
+    
 }
 
 int gr_type() {
@@ -7061,6 +7102,19 @@ int selfie() {
   return 0;
 }
 
+void test(){
+    int i;
+    i = 0;
+    printInteger(i);
+    println();
+    
+    ++i;
+    
+    printInteger(i);
+    println();
+    
+}
+
 int main(int argc, int* argv) {
   int exitCode;
 
@@ -7068,8 +7122,11 @@ int main(int argc, int* argv) {
 
   initLibrary();
     
+
+  
   print((int*) "This is WeirdOS Selfie");
   println();
+  test();
 
   exitCode = selfie();
 
