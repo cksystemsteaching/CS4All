@@ -2643,9 +2643,24 @@ int load_variable_with_pre_inc(int* variable) {
   // preinc here? ADDIU - SW, no additional LW needed
   // in future we'll also need pre_dec, post_inc and post_dec
   // does not work for deref yet!
-
   emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
   emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
+  // pre decrement
+  // emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+  // emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
+  // post increment
+  // talloc();
+  // emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 1);
+  // emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+  // tfree(1);
+
+  // post decrement
+  // talloc();
+  // emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), -1);
+  // emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+  // tfree(1);
 
   return getType(entry);
 }
