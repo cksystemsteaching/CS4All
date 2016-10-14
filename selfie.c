@@ -2375,6 +2375,8 @@ int isExpression() {
     return 1;
   else if (symbol == SYM_CHARACTER)
     return 1;
+  else if (symbol == SYM_INCREMENT)
+    return 1;
   else
     return 0;
 }
@@ -2928,14 +2930,28 @@ int gr_factor() {
       // reset return register to initial return value
       // for missing return expressions
       emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
-    } else
+    //postfix
+    } else if (symbol == SYM_INCREMENT) {
+        getSymbol();
+        type = load_variable(variableOrProcedureName);
+        //add and store
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        entry = getVariable(variableOrProcedureName);
+        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+        
+        //decrement in register
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+    }
+    
+    
+    else
       // variable access: identifier
       type = load_variable(variableOrProcedureName);
      
   //increment?
-  } else if(symbol == SYM_INCREMENT){
+  } else if (symbol == SYM_INCREMENT){
 	  getSymbol();
-	  if(symbol == SYM_IDENTIFIER){
+	  if (symbol == SYM_IDENTIFIER){
 		  getSymbol();
 		  //exclude methods
 		  //if(symbol == SYM_LPARENTHESIS){
@@ -2943,7 +2959,7 @@ int gr_factor() {
 		  //}
 
 		  type = load_variable(identifier);
-          if(type != INT_T)
+          if (type != INT_T)
               typeWarning(INT_T, type);
           
           emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
@@ -2951,7 +2967,12 @@ int gr_factor() {
           emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
 
 
-      }else syntaxErrorSymbol(SYM_IDENTIFIER);
+      } else {
+          type = load_variable(identifier);
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+          entry = getVariable(identifier);
+          emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+      }
   }
 
   // integer?
@@ -3541,11 +3562,14 @@ void gr_statement() {
       tfree(1);
 
       numberOfAssignments = numberOfAssignments + 1;
+        
 
       if (symbol == SYM_SEMICOLON)
         getSymbol();
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
+    } else if (symbol == SYM_INCREMENT) {
+        gr_expression();
     } else
       syntaxErrorUnexpected();
   }
@@ -3558,7 +3582,7 @@ void gr_statement() {
     gr_if();
   }
   else if(symbol == SYM_INCREMENT) {
-      	  gr_term();
+      	  gr_expression();
       
       	  if (symbol == SYM_SEMICOLON)
                   getSymbol();
@@ -7109,6 +7133,19 @@ void test(){
     println();
     
     ++i;
+    
+    printInteger(i);
+    println();
+    
+    printInteger(++i);
+    println();
+    
+    i++;
+    printInteger(i);
+    println();
+    
+    printInteger(i++);
+    println();
     
     printInteger(i);
     println();
