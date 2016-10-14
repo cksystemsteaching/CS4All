@@ -316,6 +316,7 @@ int SYM_NOTEQ        = 24; // !=
 int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
+int SYM_PLUSPLUS     = 28; // ++
 
 int* SYMBOLS; // strings representing symbols
 
@@ -352,7 +353,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(28 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(29 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -382,6 +383,7 @@ void initScanner () {
   *(SYMBOLS + SYM_MOD)          = (int) "%";
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
+  *(SYMBOLS + SYM_PLUSPLUS)     = (int) "++";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -2126,7 +2128,16 @@ void getSymbol() {
       } else if (character == CHAR_PLUS) {
         getCharacter();
 
-        symbol = SYM_PLUS;
+        if (character == CHAR_PLUS) {
+
+          symbol = SYM_PLUSPLUS;
+          getCharacter();
+
+        } else {
+
+          symbol = SYM_PLUS;
+
+        }
 
       } else if (character == CHAR_DASH) {
         getCharacter();
@@ -2423,6 +2434,8 @@ int lookForFactor() {
   if (symbol == SYM_LPARENTHESIS)
     return 0;
   else if (symbol == SYM_ASTERISK)
+    return 0;
+  else if (symbol == SYM_PLUSPLUS)
     return 0;
   else if (symbol == SYM_IDENTIFIER)
     return 0;
