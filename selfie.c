@@ -317,6 +317,7 @@ int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
 int SYM_INCREMENT    = 28; // ++
+int SYM_DECREMENT    = 29; // --
 
 int* SYMBOLS; // strings representing symbols
 
@@ -353,7 +354,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(29 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(30 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -384,6 +385,7 @@ void initScanner () {
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
   *(SYMBOLS + SYM_INCREMENT)    = (int) "++";
+  *(SYMBOLS + SYM_DECREMENT)    = (int) "--";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -2127,18 +2129,23 @@ void getSymbol() {
 
       } else if (character == CHAR_PLUS) {
         getCharacter();
-		
+
 		if(character == CHAR_PLUS){
-			getCharacter();
-			symbol = SYM_INCREMENT;
+	      getCharacter();
+		  symbol = SYM_INCREMENT;
 		} else {
-			symbol = SYM_PLUS;
-		}      
+		  symbol = SYM_PLUS;
+		}
 
       } else if (character == CHAR_DASH) {
         getCharacter();
 
-        symbol = SYM_MINUS;
+        if(character == CHAR_DASH){
+          getCharacter();
+          symbol = SYM_DECREMENT;
+        } else {
+          symbol = SYM_MINUS;
+        }
 
       } else if (character == CHAR_ASTERISK) {
         getCharacter();
@@ -2376,6 +2383,10 @@ int isExpression() {
     return 1;
   else if (symbol == SYM_CHARACTER)
     return 1;
+  else if (symbol == SYM_INCREMENT)
+    return 1;
+  else if (symbol == SYM_DECREMENT)
+    return 1;
   else
     return 0;
 }
@@ -2443,6 +2454,8 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_INCREMENT)
     return 0;
+  else if (symbol == SYM_DECREMENT)
+    return 0;
   else
     return 1;
 }
@@ -2461,6 +2474,8 @@ int lookForStatement() {
   else if (symbol == SYM_EOF)
     return 0;
   else if (symbol == SYM_INCREMENT)
+    return 0;
+  else if (symbol == SYM_DECREMENT)
     return 0;
   else
     return 1;
@@ -2628,10 +2643,10 @@ int load_variable(int* variable) {
 
 void store_variable(int* variable) {
 	int* entry;
-	
+
 	entry = getVariable(variable);
-	
-	emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));	
+
+	emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
 }
 
 void load_integer(int value) {
@@ -2917,22 +2932,47 @@ int gr_factor() {
 
     type = INT_T;
 
-  //increment?
-  } else if(symbol == SYM_INCREMENT) {	  
+  // increment?
+  } else if(symbol == SYM_INCREMENT) {
+    getSymbol();
+
+    // prefix increment
+    if(symbol == SYM_IDENTIFIER){
 	  getSymbol();
-	  
-	   if(symbol == SYM_IDENTIFIER){
-		  getSymbol();		  
-		  type = load_variable(identifier);
-		  if(type != INT_T)
-			  typeWarning(INT_T, type);
-		  emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
-		  store_variable(identifier);
-		  
-	  } else {
-		  syntaxErrorSymbol(SYM_IDENTIFIER);
-	  }
-	
+	  type = load_variable(identifier);
+	  if(type != INT_T)
+	    typeWarning(INT_T, type);
+	  emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+	  store_variable(identifier);
+
+    // postfix increment
+	} else {
+      type = load_variable(identifier);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      store_variable(identifier);
+	}
+
+  // decrement?
+  } else if(symbol == SYM_DECREMENT) {
+    getSymbol();
+
+    // prefix decrement
+    if(symbol == SYM_IDENTIFIER) {
+      getSymbol();
+      type = load_variable(identifier);
+      if(type != INT_T)
+        typeWarning(INT_T, type);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+      store_variable(identifier);
+
+    // postfix decrement
+  } else {
+    type = load_variable(identifier);
+    emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+    store_variable(identifier);
+  }
+
+
   // identifier?
   } else if (symbol == SYM_IDENTIFIER) {
     variableOrProcedureName = identifier;
@@ -2953,8 +2993,27 @@ int gr_factor() {
       // reset return register to initial return value
       // for missing return expressions
       emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
+
+      // variable access: identifier increment
+    } else if(symbol == SYM_INCREMENT) {
+      getSymbol();
+
+      type = load_variable(variableOrProcedureName);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      store_variable(variableOrProcedureName);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+
+      // variable access: identifier decrement
+    } else if(symbol == SYM_DECREMENT) {
+      getSymbol();
+
+      type = load_variable(variableOrProcedureName);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+      store_variable(variableOrProcedureName);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+
+    // variable access: identifier
     } else
-      // variable access: identifier
       type = load_variable(variableOrProcedureName);
 
   // integer?
@@ -3505,7 +3564,7 @@ void gr_statement() {
     } else
       syntaxErrorSymbol(SYM_LPARENTHESIS);
   }
-  // identifier "=" expression | call
+  // identifier "=" expression | call | identifier++
   else if (symbol == SYM_IDENTIFIER) {
     variableOrProcedureName = identifier;
 
@@ -3520,11 +3579,6 @@ void gr_statement() {
       // reset return register to initial return value
       // for missing return expressions
       emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
-
-      if (symbol == SYM_SEMICOLON)
-        getSymbol();
-      else
-        syntaxErrorSymbol(SYM_SEMICOLON);
 
     // identifier = expression
     } else if (symbol == SYM_ASSIGN) {
@@ -3545,12 +3599,20 @@ void gr_statement() {
 
       numberOfAssignments = numberOfAssignments + 1;
 
+    // identifier ++
+    } else if(symbol == SYM_INCREMENT) {
+      gr_expression();
+    // identifier --
+    } else if(symbol == SYM_DECREMENT) {
+      gr_expression();
+
+    } else
+      syntaxErrorUnexpected();
+
       if (symbol == SYM_SEMICOLON)
         getSymbol();
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
-    } else
-      syntaxErrorUnexpected();
   }
   // while statement?
   else if (symbol == SYM_WHILE) {
@@ -3559,18 +3621,27 @@ void gr_statement() {
   // if statement?
   else if (symbol == SYM_IF) {
     gr_if();
-  }
+
   // increment statement?
-  else if(symbol == SYM_INCREMENT) {
-	  gr_term();
-	  
-	  if (symbol == SYM_SEMICOLON)
-        getSymbol();
-      else
-        syntaxErrorSymbol(SYM_SEMICOLON);
-  }
+  } else if(symbol == SYM_INCREMENT) {
+	gr_expression();
+
+	if (symbol == SYM_SEMICOLON)
+      getSymbol();
+    else
+      syntaxErrorSymbol(SYM_SEMICOLON);
+
+  // decrement statement?
+  } else if(symbol == SYM_DECREMENT) {
+    gr_expression();
+
+    if(symbol == SYM_SEMICOLON)
+      getSymbol();
+    else
+      syntaxErrorSymbol(SYM_SEMICOLON);
+
   // return statement?
-  else if (symbol == SYM_RETURN) {
+  } else if (symbol == SYM_RETURN) {
     gr_return();
 
     if (symbol == SYM_SEMICOLON)
@@ -7105,23 +7176,39 @@ int selfie() {
   return 0;
 }
 
-void testIncrement(){
-	int i;
-	
-	i = 0;
-	
-	printInteger(i);
-	println();
-	
-	++ i;
-	
-	printInteger(i);
-	println();
-	
-	++i;
-	
-	printInteger(i);
-	println();
+void testInAndDecrement(){
+  int i;
+
+  i = 0;
+
+  printInteger(i);
+  println();
+
+  i--;
+
+  printInteger(i--);
+  println();
+
+  printInteger(i);
+  println();
+
+  --i;
+
+  printInteger(--i);
+  println();
+
+  i++;
+
+  printInteger(i++);
+  println();
+
+  printInteger(i);
+  println();
+
+  ++i;
+
+  printInteger(++i);
+  println();
 }
 
 int main(int argc, int* argv) {
@@ -7133,9 +7220,9 @@ int main(int argc, int* argv) {
 
   print((int*) "This is TheSerializables Selfie");
   println();
-  
-  testIncrement();
-  
+
+  testInAndDecrement();
+
   exitCode = selfie();
 
   if (exitCode == USAGE) {
