@@ -516,7 +516,7 @@ void typeWarning(int expected, int found);
 
 int* getVariable(int* variable);
 int  load_variable(int* variable);
-eger(int value);
+void load_integer(int value);
 void load_string(int* string);
 
 int  help_call_codegen(int* entry, int* procedure);
@@ -3020,7 +3020,7 @@ int gr_factor() {
       getSymbol();
 
   // -- prefix
-    if(symbol == SYM_IDENTIFIER){
+    if (symbol == SYM_IDENTIFIER){
       getSymbol();
       type = load_variable_with_pre_dec(identifier);
 
@@ -3530,6 +3530,202 @@ void gr_return() {
   numberOfReturn = numberOfReturn + 1;
 }
 
+//
+// void gr_statement() {
+//   int ltype;
+//   int rtype;
+//   int* variableOrProcedureName;
+//   int* entry;
+//
+//   // assert: allocatedTemporaries == 0;
+//
+//   while (lookForStatement()) {
+//     syntaxErrorUnexpected();
+//
+//     if (symbol == SYM_EOF)
+//       exit(-1);
+//     else
+//       getSymbol();
+//   }
+//
+//   // ["*"]
+//   if (symbol == SYM_ASTERISK) {
+//     getSymbol();
+//
+//     // "*" identifier
+//     if (symbol == SYM_IDENTIFIER) {
+//       ltype = load_variable(identifier);
+//
+//       if (ltype != INTSTAR_T)
+//         typeWarning(INTSTAR_T, ltype);
+//
+//       getSymbol();
+//
+//       // "*" identifier "="
+//       if (symbol == SYM_ASSIGN) {
+//         getSymbol();
+//
+//         rtype = gr_expression();
+//
+//         if (rtype != INT_T)
+//           typeWarning(INT_T, rtype);
+//
+//         emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+//
+//         tfree(2);
+//
+//         numberOfAssignments = numberOfAssignments + 1;
+//       } else {
+//         syntaxErrorSymbol(SYM_ASSIGN);
+//
+//         tfree(1);
+//       }
+//
+//       if (symbol == SYM_SEMICOLON)
+//         getSymbol();
+//       else
+//         syntaxErrorSymbol(SYM_SEMICOLON);
+//
+//     // "*" "(" expression ")"
+//     } else if (symbol == SYM_LPARENTHESIS) {
+//       getSymbol();
+//
+//       ltype = gr_expression();
+//
+//       if (ltype != INTSTAR_T)
+//         typeWarning(INTSTAR_T, ltype);
+//
+//       if (symbol == SYM_RPARENTHESIS) {
+//         getSymbol();
+//
+//         // "*" "(" expression ")" "="
+//         if (symbol == SYM_ASSIGN) {
+//           getSymbol();
+//
+//           rtype = gr_expression();
+//
+//           if (rtype != INT_T)
+//             typeWarning(INT_T, rtype);
+//
+//           emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+//
+//           tfree(2);
+//
+//           numberOfAssignments = numberOfAssignments + 1;
+//         } else {
+//           syntaxErrorSymbol(SYM_ASSIGN);
+//
+//           tfree(1);
+//         }
+//
+//         if (symbol == SYM_SEMICOLON)
+//           getSymbol();
+//         else
+//           syntaxErrorSymbol(SYM_SEMICOLON);
+//       } else
+//         syntaxErrorSymbol(SYM_RPARENTHESIS);
+//     } else
+//       syntaxErrorSymbol(SYM_LPARENTHESIS);
+//   }
+//   // identifier "=" expression | call | identifier (++|--)
+//   else if (symbol == SYM_IDENTIFIER) {
+//     variableOrProcedureName = identifier;
+//
+//     getSymbol();
+//
+//     // procedure call
+//     if (symbol == SYM_LPARENTHESIS) {
+//       getSymbol();
+//
+//       gr_call(variableOrProcedureName);
+//
+//       // reset return register to initial return value
+//       // for missing return expressions
+//       emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
+//
+//       if (symbol == SYM_SEMICOLON)
+//         getSymbol();
+//       else
+//         syntaxErrorSymbol(SYM_SEMICOLON);
+//
+//     // identifier = expression
+//     } else if (symbol == SYM_ASSIGN) {
+//       entry = getVariable(variableOrProcedureName);
+//
+//       ltype = getType(entry);
+//
+//       getSymbol();
+//
+//       rtype = gr_expression();
+//
+//       if (ltype != rtype)
+//         typeWarning(ltype, rtype);
+//
+//       emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+//
+//       tfree(1);
+//
+//       numberOfAssignments = numberOfAssignments + 1;
+//
+//
+//     //identifier ++
+//   } else if (symbol == SYM_PLUSPLUS){
+//     gr_expression();
+//
+//     //identifier --
+//   } else if (symbol == SYM_MINUSMINUS){
+//     gr_expression();
+//
+//   } else
+//     syntaxErrorUnexpected();
+//
+//     if (symbol == SYM_SEMICOLON)
+//       getSymbol();
+//     else
+//       syntaxErrorSymbol(SYM_SEMICOLON);
+//
+//   }
+//   // while statement?
+//   else if (symbol == SYM_WHILE) {
+//     gr_while();
+//
+//
+//   // incrementing statement?
+//   } else if (symbol == SYM_PLUSPLUS) {
+//     gr_expression();
+//
+//     if (symbol == SYM_SEMICOLON)
+//       getSymbol();
+//     else
+//       syntaxErrorSymbol(SYM_SEMICOLON);
+//
+//   // decrementing statement?
+//   } else if (symbol == SYM_MINUSMINUS) {
+//     gr_expression();
+//
+//     if(symbol == SYM_SEMICOLON)
+//       getSymbol();
+//     else
+//       syntaxErrorSymbol(SYM_SEMICOLON);
+//
+//
+//   // if statement?
+//   } else if (symbol == SYM_IF) {
+//     gr_if();
+//   }
+//   // return statement?
+//   else if (symbol == SYM_RETURN) {
+//     gr_return();
+//
+//     if (symbol == SYM_SEMICOLON)
+//       getSymbol();
+//     else
+//       syntaxErrorSymbol(SYM_SEMICOLON);
+//   }
+// }
+//
+
+
 
 void gr_statement() {
   int ltype;
@@ -3627,7 +3823,7 @@ void gr_statement() {
     } else
       syntaxErrorSymbol(SYM_LPARENTHESIS);
   }
-  // identifier "=" expression | call | identifier (++|--)
+  // identifier "=" expression | call
   else if (symbol == SYM_IDENTIFIER) {
     variableOrProcedureName = identifier;
 
@@ -3667,50 +3863,19 @@ void gr_statement() {
 
       numberOfAssignments = numberOfAssignments + 1;
 
-
-    //identifier ++
-  } else if (symbol == SYM_PLUSPLUS){
-    gr_expression();
-
-    //identifier --
-  } else if (symbol == SYM_MINUSMINUS){
-    gr_expression();
-
-  } else
-    syntaxErrorUnexpected();
-
-    if (symbol == SYM_SEMICOLON)
-      getSymbol();
-    else
-      syntaxErrorSymbol(SYM_SEMICOLON);
-
+      if (symbol == SYM_SEMICOLON)
+        getSymbol();
+      else
+        syntaxErrorSymbol(SYM_SEMICOLON);
+    } else
+      syntaxErrorUnexpected();
   }
   // while statement?
   else if (symbol == SYM_WHILE) {
     gr_while();
-
-
-  // incrementing statement?
-} else if (symbol == SYM_PLUSPLUS) {
-  gr_expression();
-
-  if (symbol == SYM_SEMICOLON)
-      getSymbol();
-    else
-      syntaxErrorSymbol(SYM_SEMICOLON);
-
-  // decrementing statement?
-} else if (symbol == SYM_MINUSMINUS) {
-  gr_expression();
-
-  if(symbol == SYM_SEMICOLON)
-    getSymbol();
-  else
-    syntaxErrorSymbol(SYM_SEMICOLON);
-
-
+  }
   // if statement?
-} else if (symbol == SYM_IF) {
+  else if (symbol == SYM_IF) {
     gr_if();
   }
   // return statement?
@@ -3723,6 +3888,8 @@ void gr_statement() {
       syntaxErrorSymbol(SYM_SEMICOLON);
   }
 }
+
+
 
 int gr_type() {
   int type;
