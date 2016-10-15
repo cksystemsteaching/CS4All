@@ -2923,6 +2923,7 @@ int gr_factor() {
   int type;
 
   int* variableOrProcedureName;
+  int* entry;
 
   // assert: n = allocatedTemporaries
 
@@ -3052,7 +3053,7 @@ int gr_factor() {
       getSymbol();
 
       type = load_variable(variableOrProcedureName);
-      int* entry;
+
       entry = getVariable(variableOrProcedureName);
       emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
       emitIFormat(OP_SW, getScope(entry),currentTemporary(),getAddress(entry) );
@@ -3064,7 +3065,7 @@ int gr_factor() {
 
       type = load_variable(variableOrProcedureName);
       emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
-      int* entry;
+
       entry = getVariable(variableOrProcedureName);
 
       emitIFormat(OP_SW, getScope(entry),currentTemporary(),getAddress(entry) );
