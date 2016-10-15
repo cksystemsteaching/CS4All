@@ -1224,7 +1224,7 @@ void mapUnmappedPages(int* table);
 void down_mapPageTable(int* context);
 
 int runUntilExitWithoutExceptionHandling(int toID);
-int runOrHostUntilExitWithPageFaultHandling(int toID);
+int runOrHostUntilExitWithPageFaultHandling(int toID,int contextCount);
 
 int bootminmob(int argc, int* argv, int machine);
 int boot(int argc, int* argv);
@@ -6765,7 +6765,7 @@ int runUntilExitWithoutExceptionHandling(int toID) {
   }
 }
 
-int runOrHostUntilExitWithPageFaultHandling(int toID) {
+int runOrHostUntilExitWithPageFaultHandling(int toID,int contextCount) {
   // works with mipsters and hypsters
   int fromID;
   int* fromContext;
@@ -6776,6 +6776,8 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int exceptionNumber;
   int exceptionParameter;
   int frame;
+	int contextTerminationCount;
+	contextTerminationCount=0;
 	//new	
 //timer = 3;
   while (1) {
@@ -6805,13 +6807,17 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         selfie_map(fromID, exceptionParameter, frame);
       } else if (exceptionNumber == EXCEPTION_EXIT){
         // TODO: only return if all contexts have exited
-				print((int*)"EXCEPTION WTF!!!!");
+				print((int*)"EXIT of: ");
+				printInteger(fromID);
+				println();
+				contextTerminationCount=contextTerminationCount+1;
+				printInteger(contextTerminationCount);				
+				println();
+				if (contextTerminationCount==contextCount)
+       		return exceptionParameter;
 				//new				
-				nextContext = getNextContext(fromContext);
-				toID = getID(fromContext);
-				//printInteger(toID);
-				//println();
-        return exceptionParameter;
+			 	nextContext = getPrevContext(fromContext);
+				toID = getID(nextContext);
 			}
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
@@ -6905,6 +6911,7 @@ int boot(int argc, int* argv) {
   int exitCode;
 	int count;
 	int firstID;
+	int n=3;
 	count=0;
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6922,7 +6929,7 @@ int boot(int argc, int* argv) {
 		resetInterpreter();
 
 		resetMicrokernel();
-	while(count<3){
+	while(count<n){
 		// create initial context on microkernel boot level
 		initID = selfie_create();
 		if(count==0)
@@ -6944,7 +6951,7 @@ int boot(int argc, int* argv) {
 	}
 
   // mipsters and hypsters handle page faults
-  exitCode = runOrHostUntilExitWithPageFaultHandling(firstID);
+  exitCode = runOrHostUntilExitWithPageFaultHandling(firstID,n);
 
   print(selfieName);
   print((int*) ": this is selfie's ");
