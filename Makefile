@@ -29,7 +29,7 @@ test: selfie
 	./selfie -c -mob 1
 	
 assign2: selfie
-	./selfie -c assign2test.c -o assign2test.m -m 32 -l assign2test.m -m 32
+	./selfie -c assign2test.c -o assign2test.m -m 32 -l assign2test.m -m 4
 	
 cleanWin:
 	del *.m

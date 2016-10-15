@@ -1,29 +1,33 @@
 
 
-int *dumbATOI(int number, int *stringBuf);
+int zero = 48;
+int EOString = 0;
+int newline = 10;
+int *dumbATOI(int number, int* stringBuf);
 
-int *dumbATOI(int number, int *stringBuf) {
+int *dumbATOI(int number, int* stringBuf) {
     int tmpNumber;
     int* startPointer;
 
+    number = number * 10;
     startPointer = stringBuf;
 
     if (number == 0) {
-        *stringBuf = (int) "0";
-        stringBuf = (int*) (((int)stringBuf) + 1);
-        *stringBuf = (int) "\0";
+        *stringBuf = zero;
+        //write(1, stringBuf, 1);
+        stringBuf = stringBuf + 1;
     } else {
         while (number > 0) {
             tmpNumber = number % 10;
-            *stringBuf = (int) ("0" + tmpNumber);
-            stringBuf = (int*) (((int)stringBuf) + 1);
-            number = (int) number / 10;
-
+            *stringBuf = zero + tmpNumber;
+            //write(1, stringBuf, 1);
+            stringBuf = stringBuf + 1;
+            number = number / 10;
         }
-        *stringBuf = (int) "\0";
     }
-    write(1, "0", 2);
-    return stringBuf;
+    *stringBuf = EOString;
+
+    return startPointer;
 }
 
 int main(int argc, int *argv) {
@@ -32,10 +36,6 @@ int main(int argc, int *argv) {
     int someMath3;
     int hypsterIDVar;
     int *stringBuff;
-
-    stringBuff = "test output";
-
-    write(1, stringBuff, 12);
 
     someMath = 2;
     someMath2 = 3;
@@ -50,10 +50,15 @@ int main(int argc, int *argv) {
     someMath2 = someMath3 - someMath;
 
     //1 == filedescriptor for shell
-    write(1, (int *) "          assign2text executed with result      ", 50);
-    hypsterIDVar = hypster_ID();
+    write(1, (int *) "assign2text executed with result: ", 50);
+    hypsterIDVar = 11;//hypster_ID();
     dumbATOI(hypsterIDVar, stringBuff);
-    write(1, stringBuff, 2);
+    while (*stringBuff != 0){
+        write(1, stringBuff, 1);
+        stringBuff = stringBuff + 1;
+    }
+    *stringBuff = newline; //newline
+    write(1, stringBuff, 1);
 
     return 0;
 }

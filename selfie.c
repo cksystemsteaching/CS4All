@@ -855,7 +855,7 @@ void implementID();
 int selfie_ID();
 
 void emitCreate();
-int  doCreate(int parentID);
+int  doCreateContext(int parentID);
 void implementCreate();
 
 int selfie_create();
@@ -932,7 +932,7 @@ void mapAndStoreVirtualMemory(int* table, int vaddr, int data);
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int debug_tlb = 0;
+int debug_tlb = 1;
 
 int MEGABYTE = 1048576;
 
@@ -5072,7 +5072,7 @@ void emitCreate() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
-int doCreate(int parentID) {
+int doCreateContext(int parentID) {
   if (bumpID < INT_MAX) {
     bumpID = createID(bumpID);
 
@@ -5099,17 +5099,17 @@ int doCreate(int parentID) {
 }
 
 void implementCreate() {
-  *(registers+REG_V0) = doCreate(getID(currentContext));
+  *(registers+REG_V0) = doCreateContext(getID(currentContext));
 }
 
 int hypster_create() {
   // this procedure is only executed at boot level zero
-  return doCreate(selfie_ID());
+  return doCreateContext(selfie_ID());
 }
 
 int selfie_create() {
   if (mipster)
-    return doCreate(selfie_ID());
+    return doCreateContext(selfie_ID());
   else
     return hypster_create();
 }
@@ -5203,31 +5203,37 @@ int selfie_switch(int toID) {
     return hypster_switch(toID);
 }
 
-int scheduleRoundRobin(int fromID){
-    int nextID;
-    int* nextContext;
-    int* currentContext;
-    //get current context
-    currentContext = findContext(fromID, usedContexts);
-    // find next context
-    nextContext = getNextContext(nextContext);
+int scheduleRoundRobin(int fromID) {
+  int nextID;
+  int *nextContext;
+  int *currContext;
+  //get current context
+  currContext = findContext(fromID, usedContexts);
+  // find next context
+  nextContext = getNextContext(currContext);
 
-    //next context existing -> choose this context according to the round robin scheduling
-    if (((int)nextContext) != 0){
-        nextID = getID(nextContext);
-    }
+  if (nextContext != (int *) 0) {
+    nextID = getID(nextContext);
+  } else {
+    nextID = getID(usedContexts);
+  }
+
+  //next context existing -> choose this context according to the round robin scheduling
+  /*if (nextContext != (int *) 0) {
+    nextID = getID(nextContext);
+  }
     //next context not existing == end of the list -> choose first context in double linked list
-    else {
-        nextContext = getPrevContext(currentContext);
-        while (((int) nextContext) != 0){
-            currentContext = nextContext;
-            nextContext = getPrevContext(currentContext);
-        }
-        //id of first element in list
-        nextID = getID(currentContext);
+  else {
+    nextContext = getPrevContext(currContext);
+    while (nextContext != (int *) 0) {
+      currContext = nextContext;
+      nextContext = getPrevContext(currContext);
     }
+    //id of first element in list
+    nextID = getID(currContext);
+  }*/
 
-    return nextID;
+  return nextID;
 }
 
 void emitStatus() {
@@ -6802,8 +6808,17 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int exceptionParameter;
   int frame;
 
+  print("reached this!!");
+
   while (1) {
+    print("switching to ");
+    printInteger(toID);
+    println();
+
     fromID = selfie_switch(toID);
+
+    print("DEBUG RUPI: switching success!!");
+    println();
 
     fromContext = findContext(fromID, usedContexts);
 
@@ -6869,7 +6884,7 @@ int bootminmob(int argc, int* argv, int machine) {
   resetMicrokernel();
 
   // create initial context on our boot level
-  initID = doCreate(MIPSTER_ID);
+  initID = doCreateContext(MIPSTER_ID);
 
   up_loadBinary(getPT(usedContexts));
 
@@ -6905,6 +6920,7 @@ int boot(int argc, int* argv) {
   // works with mipsters and hypsters
   int initID;
   int exitCode;
+  int tempContext;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6938,6 +6954,13 @@ int boot(int argc, int* argv) {
 
   // propagate page table of initial context to microkernel boot level
   down_mapPageTable(usedContexts);
+
+  //TODO RUPI @Michi: wie lade ich den Speicher für einen Context mit den binary daten korrekt? so gehts ja anscheinend ned.
+  // bzw meine Vermutung ist ja, dass der counter vom binary file nicht am anfang ist und deswegen failed.
+  tempContext = findContext(doCreateContext(selfie_ID()), usedContexts);
+  up_loadBinary(getPT(tempContext)); // <<--- TODO RUPI ERROR IS HERE RIGHT NOW
+  /*up_loadArguments(getPT(tempContext), argc, argv);
+  down_mapPageTable(tempContext);*/
 
   // mipsters and hypsters handle page faults
   exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
