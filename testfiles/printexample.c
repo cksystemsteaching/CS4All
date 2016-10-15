@@ -1,14 +1,20 @@
 
 
 int main(int argc, int *argv){
-	int test;
-	test = 125215125;
+
+	putCharacter(97);
 	println();
+	putCharacter(98);
 	println();
+	putCharacter(99);
 	println();
+	putCharacter(100);
 	println();
+	putCharacter(101);
 	println();
 
-	printInteger(test);
+	print((int*) "TEST TEXT");
+	println();
+
 	return 0;
 }

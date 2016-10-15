@@ -188,3 +188,8 @@ make && ./selfie -c testfiles/sample.c -o sample.m && ./selfie -l sample.m -m 1
 
 Run first sample 3 times and with round robin scheduling every 3rd instruction
 make && ./selfie -c testfiles/sample.c -o sample.m && ./selfie -l sample.m -conc 3 -inst 3 -m 1
+
+Run print string sample3 times and with round robin scheduling every 1st instruction
+make && ./selfie -c testfiles/printexample.c selfie.c -conc 3 -inst 1 -m 32
+
+
