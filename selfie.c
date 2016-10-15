@@ -6779,7 +6779,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID,int contextCount) {
 	int contextTerminationCount;
 	contextTerminationCount=0;
 	//new	
-//timer = 3;
+	timer = 3;
   while (1) {
     fromID = selfie_switch(toID);
 		
@@ -6815,9 +6815,6 @@ int runOrHostUntilExitWithPageFaultHandling(int toID,int contextCount) {
 				println();
 				if (contextTerminationCount==contextCount)
        		return exceptionParameter;
-				//new				
-			 	nextContext = getPrevContext(fromContext);
-				toID = getID(nextContext);
 			}
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
@@ -6831,24 +6828,29 @@ int runOrHostUntilExitWithPageFaultHandling(int toID,int contextCount) {
 
       // TODO: scheduler should go here
       //toID = fromID;
-			//toID = schedule(fromID);
+			toID=schedule(fromID);
     }
   }
 }
 //triggered by timer exception at the moment 
 int schedule(int fromID){
+	int* fromContext;
+	int* nextContext;
+	int nextContextID;
 	int* cContext;
-	cContext = findContext(fromID, usedContexts);
-	print((int*)"Scheduling context: ");
-	printInteger(getID(cContext));
-	println();
-	print((int*)"PC: ");
-	printInteger(getPC(cContext));
-	println();
-	
-	
-
-	return fromID;
+	fromContext = findContext(fromID, usedContexts);	
+	nextContext = getPrevContext(fromContext);
+	if((nextContext)!=(int*)0)
+			nextContextID=getID(nextContext);
+	else{
+		nextContext=fromContext;
+		while(nextContext!=(int*)0){
+			cContext=nextContext;
+			nextContext = getNextContext(nextContext);
+		}
+		nextContextID=getID(cContext);		
+	}
+	return nextContextID;
 
 }
 
