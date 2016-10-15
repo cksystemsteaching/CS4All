@@ -3094,32 +3094,34 @@ int gr_factor() {
         type = gr_lvalue();
 
         // "*var", "*(var+1)"
-        if (type == INTSTAR_T && isDereferenced) {
-            //allocate new register
-            talloc();
-            //dereference previous register and store its value in new register
-            emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
-            //increment/decrement its value by 1
-            emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), incrDecrValue);
-            //store content of new register into memory location of old register
-            emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
-            //deallocate register again
-            tfree(1);
-            //dereference register again for further operations
-            emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
-            //type of the factor is INT afterwards
-            type = INT_T;
-        } else {
-            // "var". Check now if "var" is a pointer (NOT dereferenced). In this case, we must
-            // add/subtract WORDSIZE to its value in order to increment/decrement it. If "var" is just a
-            // variable and not a pointer, add/subtract 1
-            if (type == INTSTAR_T) {
-                incrDecrValue = incrDecrValue * WORDSIZE;
+        if (type == INTSTAR_T) {
+            if (isDereferenced) {
+                //allocate new register
+                talloc();
+                //dereference previous register and store its value in new register
+                emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+                //increment/decrement its value by 1
+                emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), incrDecrValue);
+                //store content of new register into memory location of old register
+                emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+                //deallocate register again
+                tfree(1);
+                //dereference register again for further operations
+                emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+                //type of the factor is INT afterwards
+                type = INT_T;
             }
+            else {
+                entry = getVariable(identifier);
+                emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), incrDecrValue * WORDSIZE);
+                emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+            }
+        } else {
             entry = getVariable(identifier);
             emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), incrDecrValue);
             emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
         }
+
 
 
     } else if (symbol == SYM_ASTERISK) {
@@ -3945,27 +3947,27 @@ void gr_statement() {
         // Evaluate the remaining statement.
         ltype = gr_lvalue();
 
-        // "*var", "*(var+1)"
-        if (ltype == INTSTAR_T && isDereferenced) {
-            //allocate new register
-            talloc();
-            //dereference previous register and store its value in new register
-            emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
-            //increment/decrement its value by 1
-            emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), incrDecrValue);
-            //store content of new register into memory location of old register
-            emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
-            //deallocate register again
-            tfree(1);
-            //dereference register again for further operations
-            emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);;
-        } else {
-            // "var". Check now if "var" is a pointer (NOT dereferenced). In this case, we must
-            // add/subtract WORDSIZE to its value in order to increment/decrement it. If "var" is just a
-            // variable and not a pointer, add/subtract 1
-            if (ltype == INTSTAR_T) {
-                incrDecrValue = incrDecrValue * WORDSIZE;
+        if (ltype == INTSTAR_T) {
+            if (isDereferenced) {
+                //allocate new register
+                talloc();
+                //dereference previous register and store its value in new register
+                emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+                //increment/decrement its value by 1
+                emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), incrDecrValue);
+                //store content of new register into memory location of old register
+                emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+                //deallocate register again
+                tfree(1);
+                //dereference register again for further operations
+                emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
             }
+            else {
+                entry = getVariable(identifier);
+                emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), incrDecrValue * WORDSIZE);
+                emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+            }
+        } else {
             entry = getVariable(identifier);
             emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), incrDecrValue);
             emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
