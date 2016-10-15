@@ -8,6 +8,16 @@ test_pre_increment:
 	../selfie -c pre_increment/preinc2.c -d 1 | grep -E 'exit code 10'
 	../selfie -c pre_increment/preinc3.c
 	../selfie -c pre_increment/preinc3.c -d 1 | grep -E 'exit code 6'
+	../selfie -c pre_increment/postinc1.c
+	../selfie -c pre_increment/postinc1.c -d 1 | grep -E 'exit code 4'
+	../selfie -c pre_increment/postinc2.c
+	../selfie -c pre_increment/postinc2.c -d 1 | grep -E 'exit code 9'
+	../selfie -c pre_increment/postinc3.c
+	../selfie -c pre_increment/postinc3.c -d 1 | grep -E 'exit code 5'
+	../selfie -c pre_increment/predec1.c
+	../selfie -c pre_increment/predec1.c -d 1 | grep -E 'exit code 2'
+	../selfie -c pre_increment/postdec1.c
+	../selfie -c pre_increment/postdec1.c -d 1 | grep -E 'exit code 2'
 
 clean:
 	rm -rf *.s

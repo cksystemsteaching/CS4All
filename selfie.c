@@ -2681,8 +2681,10 @@ int load_variable_with_post_inc(int* variable) {
   talloc();
   emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
 
+  talloc();
   emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 1);
   emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+  tfree(1);
   return getType(entry);
 }
 
@@ -2705,8 +2707,10 @@ int load_variable_with_post_dec(int* variable) {
   talloc();
   emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
 
+  talloc();
   emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), -1);
   emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+  tfree(1);
   return getType(entry);
 
 }
