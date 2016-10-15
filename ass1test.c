@@ -23,7 +23,14 @@ void dumbITOA(int number) {
 }
 
 int main(int argc, int *argv) {
-	funcC();
+    int a;
+    int b;
+    a = 5;
+    b = 0;
+
+    b = --a + 4;
+    dumbITOA(a);
+    dumbITOA(b);
 }
 
 void funcA() {
