@@ -6774,17 +6774,23 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int frame;
 
   while (1) {
+    // ***PATRICK*** selfie_switch() is part of Hypster Syscalls which is part of Interface;
+    // ***PATRICK*** switches to MIPSTER or HYPSTER depending on toID param ???
     fromID = selfie_switch(toID);
 
+    // ***PATRICK*** findContext() is part of Contexts which is part of emul;
     fromContext = findContext(fromID, usedContexts);
 
     // assert: fromContext must be in usedContexts (created here)
 
+    // ***PATRICK*** getParent() is part of Contexts/Emulator; 
+    // ***PATRICK*** selfie_ID() is part of Hypster Syscalls which is part of Interface; retuns mipster or hypster id
     if (getParent(fromContext) != selfie_ID())
       // switch to parent which is in charge of handling exceptions
       toID = getParent(fromContext);
     else {
       // we are the parent in charge of handling exceptions
+      // ***PATRICK*** selfie_status() is part of Hypster Syscalls/Interface; returns status (?) of hypster or mipster
       savedStatus = selfie_status();
 
       exceptionNumber    = decodeExceptionNumber(savedStatus);
@@ -6886,13 +6892,17 @@ int boot(int argc, int* argv) {
   print((int*) " executing ");
   print(binaryName);
   print((int*) " with ");
+  // ***PATRICK*** pageFrameMemory is a global var in the emulator; value set during init via command line param
   printInteger(pageFrameMemory / MEGABYTE);
   print((int*) "MB of physical memory");
   println();
 
   // resetting interpreter is only necessary for mipsters
+  // ***PATRICK*** resetInterpreter() is part of interpreter which is part of emulator; resets interpreters globals
+  // ***PATRICK*** vars such as PC, IR, ...
   resetInterpreter();
 
+  // ***PATRICK*** resetMicrokernel() is part of Microkernel which is part of emulator; deletes currently used context
   resetMicrokernel();
 
 	//abstract prototype of context creation for concurrent program execution
@@ -6904,15 +6914,20 @@ int boot(int argc, int* argv) {
 	    // create duplicate of the initial context on our boot level
 	    usedContexts = createContext(initID, selfie_ID(), (int*) 0);	// 3rd arg = id of previous context)
 
+    // ***PATRICK*** up_loadBinary() is part of Kernel which is part of emulator; mapAndStoreVirtualMemory() in param table
+    // ***PATRICK*** getPT() is part of Context which is part of emulator
 	  up_loadBinary(getPT(usedContexts));
 
+    // ***PATRICK*** up_loadArguments() is part of kernel which is part of emul; pushes arguments on stack
 	  up_loadArguments(getPT(usedContexts), argc, argv);
 
 	  // propagate page table of initial context to microkernel boot level
+    // ***PATRICK*** down_mapPageTable() is part of kernel which is part of emulator;
 	  down_mapPageTable(usedContexts);
 	}
 
 	// mipsters and hypsters handle page faults
+  // ***PATRICK*** runOrHostUntilExitWithPageFaultHandling() is part of kernel which is part of emul;
 	exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
 
   print(selfieName);
