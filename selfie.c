@@ -6949,7 +6949,8 @@ int boot(int argc, int* argv) {
 
 int selfie_run(int engine, int machine, int debugger) {
   int exitCode;
-
+	int count;
+	count=0;
   if (binaryLength == 0) {
     print(selfieName);
     print((int*) ": nothing to run, debug, or host");
@@ -6972,11 +6973,15 @@ int selfie_run(int engine, int machine, int debugger) {
     if (debugger)
       debug = 1;
 
-    if (machine == MIPSTER)
-      exitCode = boot(numberOfRemainingArguments(), remainingArguments());
-    else
+    if (machine == MIPSTER){
+			while(count<5){
+      	exitCode = boot(numberOfRemainingArguments(), remainingArguments());
+				count=count+1;
+			}
+		}
+    else{
       exitCode = bootminmob(numberOfRemainingArguments(), remainingArguments(), machine);
-
+		}
     debug   = 0;
     mipster = 0;
 
@@ -7037,7 +7042,8 @@ void setArgument(int* argv) {
 
 int selfie() {
   int* option;
-
+	int c;
+	c=0;
   if (numberOfRemainingArguments() == 0)
     return USAGE;
   else {
@@ -7058,8 +7064,8 @@ int selfie() {
         selfie_output();
       else if (stringCompare(option, (int*) "-s"))
         selfie_disassemble();
-      else if (stringCompare(option, (int*) "-l"))
-        selfie_load();
+      else if (stringCompare(option, (int*) "-l"))		
+        	selfie_load();	
       else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
