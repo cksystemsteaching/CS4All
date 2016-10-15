@@ -6769,11 +6769,15 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   // works with mipsters and hypsters
   int fromID;
   int* fromContext;
+	//new
+	int* nextContext;	
+
   int savedStatus;
   int exceptionNumber;
   int exceptionParameter;
   int frame;
-	timer = 3;
+	//new	
+//timer = 3;
   while (1) {
     fromID = selfie_switch(toID);
 		
@@ -6799,9 +6803,16 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT)
+      } else if (exceptionNumber == EXCEPTION_EXIT){
         // TODO: only return if all contexts have exited
+				print((int*)"EXCEPTION WTF!!!!");
+				//new				
+				nextContext = getNextContext(fromContext);
+				toID = getID(fromContext);
+				//printInteger(toID);
+				//println();
         return exceptionParameter;
+			}
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
@@ -6813,8 +6824,8 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       }
 
       // TODO: scheduler should go here
-      toID = fromID;
-			toID = schedule(fromID);
+      //toID = fromID;
+			//toID = schedule(fromID);
     }
   }
 }
@@ -6888,12 +6899,13 @@ int bootminmob(int argc, int* argv, int machine) {
 
   return exitCode;
 }
-
 int boot(int argc, int* argv) {
   // works with mipsters and hypsters
   int initID;
   int exitCode;
-
+	int count;
+	int firstID;
+	count=0;
   print(selfieName);
   print((int*) ": this is selfie's ");
   if (mipster)
@@ -6906,28 +6918,33 @@ int boot(int argc, int* argv) {
   printInteger(pageFrameMemory / MEGABYTE);
   print((int*) "MB of physical memory");
   println();
+	// resetting interpreter is only necessary for mipsters
+		resetInterpreter();
 
-  // resetting interpreter is only necessary for mipsters
-  resetInterpreter();
+		resetMicrokernel();
+	while(count<3){
+		// create initial context on microkernel boot level
+		initID = selfie_create();
+		if(count==0)
+			firstID=initID;
 
-  resetMicrokernel();
+		printInteger(initID);
+		println();
+		if (usedContexts == (int*) 0)
+		  // create duplicate of the initial context on our boot level
+		  usedContexts = createContext(initID, selfie_ID(), (int*) 0);
 
-  // create initial context on microkernel boot level
-  initID = selfie_create();
-
-  if (usedContexts == (int*) 0)
-    // create duplicate of the initial context on our boot level
-    usedContexts = createContext(initID, selfie_ID(), (int*) 0);
-
-  up_loadBinary(getPT(usedContexts));
+		up_loadBinary(getPT(usedContexts));
 	
-  up_loadArguments(getPT(usedContexts), argc, argv);
+		up_loadArguments(getPT(usedContexts), argc, argv);
 
-  // propagate page table of initial context to microkernel boot level
-  down_mapPageTable(usedContexts);
+		// propagate page table of initial context to microkernel boot level
+		down_mapPageTable(usedContexts);
+		count++;
+	}
 
   // mipsters and hypsters handle page faults
-  exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
+  exitCode = runOrHostUntilExitWithPageFaultHandling(firstID);
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6949,8 +6966,8 @@ int boot(int argc, int* argv) {
 
 int selfie_run(int engine, int machine, int debugger) {
   int exitCode;
-	int count;
-	count=0;
+	
+
   if (binaryLength == 0) {
     print(selfieName);
     print((int*) ": nothing to run, debug, or host");
@@ -6973,11 +6990,8 @@ int selfie_run(int engine, int machine, int debugger) {
     if (debugger)
       debug = 1;
 
-    if (machine == MIPSTER){
-			while(count<5){
-      	exitCode = boot(numberOfRemainingArguments(), remainingArguments());
-				count=count+1;
-			}
+    if (machine == MIPSTER){		
+      	exitCode = boot(numberOfRemainingArguments(), remainingArguments());		
 		}
     else{
       exitCode = bootminmob(numberOfRemainingArguments(), remainingArguments(), machine);
