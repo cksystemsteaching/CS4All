@@ -316,6 +316,7 @@ int SYM_NOTEQ        = 24; // !=
 int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
+int SYM_PLUSPLUS     = 28; // ++
 
 int* SYMBOLS; // strings representing symbols
 
@@ -352,7 +353,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(28 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(29 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -382,6 +383,7 @@ void initScanner () {
   *(SYMBOLS + SYM_MOD)          = (int) "%";
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
+  *(SYMBOLS + SYM_PLUSPLUS)     = (int) "++";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -2125,8 +2127,12 @@ void getSymbol() {
 
       } else if (character == CHAR_PLUS) {
         getCharacter();
+        if(character == CHAR_PLUS){
+            symbol = SYM_PLUSPLUS;
+            getCharacter();
+        }else
+            symbol = SYM_PLUS;
 
-        symbol = SYM_PLUS;
 
       } else if (character == CHAR_DASH) {
         getCharacter();
@@ -2434,6 +2440,8 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_EOF)
     return 0;
+  else if (symbol == SYM_PLUSPLUS)
+    return 0;
   else
     return 1;
 }
@@ -2450,6 +2458,8 @@ int lookForStatement() {
   else if (symbol == SYM_RETURN)
     return 0;
   else if (symbol == SYM_EOF)
+    return 0;
+  else if (symbol == SYM_PLUSPLUS)
     return 0;
   else
     return 1;
@@ -2958,6 +2968,21 @@ int gr_factor() {
       getSymbol();
     else
       syntaxErrorSymbol(SYM_RPARENTHESIS);
+    //PLUSPLUS
+  } else if(symbol == SYM_PLUSPLUS){
+      getSymbol();
+
+	   if(symbol == SYM_IDENTIFIER){
+		  getSymbol();
+		  type = load_variable(identifier);
+		  if(type != INT_T)
+			  typeWarning(INT_T, type);
+		  emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      emitIFormat(OP_SW, getScope(getVariable(identifier)), currentTemporary(), getAddress(getVariable(identifier)));
+	  } else {
+		  syntaxErrorSymbol(SYM_IDENTIFIER);
+	  }
+
   } else
     syntaxErrorUnexpected();
 
@@ -3533,6 +3558,9 @@ void gr_statement() {
       getSymbol();
     else
       syntaxErrorSymbol(SYM_SEMICOLON);
+  }
+  else if(symbol == SYM_PLUSPLUS){
+      gr_term();
   }
 }
 
@@ -7063,7 +7091,8 @@ int selfie() {
 
 int main(int argc, int* argv) {
   int exitCode;
-
+  int testPLUSPLUS;
+  testPLUSPLUS = 0;
   initSelfie(argc, (int*) argv);
 
   initLibrary();
@@ -7072,6 +7101,19 @@ int main(int argc, int* argv) {
 
   print((int*)"This is knights Selfie");
   println();
+
+
+  //test Ass_1: PLUSPLUS
+  printInteger(testPLUSPLUS);
+  println();
+
+
+  ++testPLUSPLUS;
+  printInteger(testPLUSPLUS);
+  println();
+  //
+
+
 
   if (exitCode == USAGE) {
     print(selfieName);
