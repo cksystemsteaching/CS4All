@@ -6776,9 +6776,9 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 	timer = 3;
   while (1) {
     fromID = selfie_switch(toID);
-
+		
     fromContext = findContext(fromID, usedContexts);
-
+		
     // assert: fromContext must be in usedContexts (created here)
 
     if (getParent(fromContext) != selfie_ID())
@@ -6820,9 +6820,17 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 }
 //triggered by timer exception at the moment 
 int schedule(int fromID){
-	print((int*)"Scheduling cContext: ");
-	printInteger(fromID);
+	int* cContext;
+	cContext = findContext(fromID, usedContexts);
+	print((int*)"Scheduling context: ");
+	printInteger(getID(cContext));
 	println();
+	print((int*)"PC: ");
+	printInteger(getPC(cContext));
+	println();
+	
+	
+
 	return fromID;
 
 }
@@ -6912,7 +6920,7 @@ int boot(int argc, int* argv) {
     usedContexts = createContext(initID, selfie_ID(), (int*) 0);
 
   up_loadBinary(getPT(usedContexts));
-
+	
   up_loadArguments(getPT(usedContexts), argc, argv);
 
   // propagate page table of initial context to microkernel boot level
@@ -6951,7 +6959,7 @@ int selfie_run(int engine, int machine, int debugger) {
   }
 
   initMemory(atoi(peekArgument()));
-
+	
   // pass binary name as first argument by replacing memory size
   setArgument(binaryName);
 

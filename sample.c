@@ -1,10 +1,10 @@
 int main(int argc, int *argv){
-	int *out;
-	int hypsterID;
-	initLibrary();
-	hypsterID=hypster_ID();
-	print("Executing: ");
-	printInteger(hypsterID);
-	println();
+	int a;
+	int b;
+	int c;
+	a=11+42;
+	b=52+64;
+	c=102+78;
+	
 	return 0;
 }
