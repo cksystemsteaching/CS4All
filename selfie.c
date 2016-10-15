@@ -791,6 +791,8 @@ int* touch(int* memory, int length);
 
 void selfie_load();
 
+
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int maxBinaryLength = 131072; // 128KB
@@ -884,7 +886,12 @@ void implementMap();
 
 void selfie_map(int ID, int page, int frame);
 
+// new 
 int schedule(int* fromContext);
+void setConcurrentCount();
+void setInstructionTimer();
+
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_create = 0;
@@ -6776,8 +6783,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID,int contextCount) {
   int exceptionNumber;
   int exceptionParameter;
   int frame;
-	int contextTerminationCount;
-	contextTerminationCount=0;
+
 	//new	
 	timer = 3;
   while (1) {
@@ -6810,9 +6816,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID,int contextCount) {
 				print((int*)"EXIT of: ");
 				printInteger(fromID);
 				println();
-				contextTerminationCount=contextTerminationCount+1;
-				printInteger(contextTerminationCount);				
-				println();
+
 			
 				int* next=getNextContext(fromContext);
 				if(next!=(int*)0){
@@ -7099,6 +7103,10 @@ int selfie() {
         selfie_disassemble();
       else if (stringCompare(option, (int*) "-l"))		
         	selfie_load();	
+      else if (stringCompare(option, (int*) "-conc"))
+        setConcurrentCount();
+      else if (stringCompare(option, (int*) "-inst"))
+        setInstructionTimer();
       else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
@@ -7116,6 +7124,22 @@ int selfie() {
 
   return 0;
 }
+
+
+void setConcurrentCount(){
+  print((int*) "Concurrent Instructions set");
+  println();
+  print((int*)getArgument());
+  println();
+}
+
+void setInstructionTimer(){
+  print((int*) "Instruction Timer set");
+  println();
+  print((int*)getArgument());
+  println();
+}
+
 
 int main(int argc, int* argv) {
   int exitCode;
