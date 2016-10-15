@@ -6784,8 +6784,6 @@ int runOrHostUntilExitWithPageFaultHandling(int toID,int contextCount) {
   int exceptionParameter;
   int frame;
 
-	//new	
-	timer = 3;
   while (1) {
     fromID = selfie_switch(toID);
 		
@@ -7136,7 +7134,8 @@ void setConcurrentCount(){
 void setInstructionTimer(){
   print((int*) "Instruction Timer set");
   println();
-  print((int*)getArgument());
+  TIMESLICE = atoi(getArgument());
+  printInteger(TIMESLICE);
   println();
 }
 
