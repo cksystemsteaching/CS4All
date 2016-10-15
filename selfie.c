@@ -6782,7 +6782,8 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int* fromContext;
 	//new
 	int* nextContext;	
-
+	int* next;
+	int* prev;
   int savedStatus;
   int exceptionNumber;
   int exceptionParameter;
@@ -6819,13 +6820,12 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 				printInteger(fromID);
 				println();
 
-			
-				int* next=getNextContext(fromContext);
+				next=getNextContext(fromContext);
 				if(next!=(int*)0){
 							doDelete(fromID);		
 							fromContext=next;
 				}else{
-					int* prev=getPrevContext(fromContext);
+					prev=getPrevContext(fromContext);
 					if(prev==(int*)0)
 		     		return exceptionParameter;
 
@@ -6965,7 +6965,8 @@ int boot(int argc, int* argv) {
 
 		// propagate page table of initial context to microkernel boot level
 		down_mapPageTable(usedContexts);
-		count++;
+
+		count = count + 1;
 	}
 
   // mipsters and hypsters handle page faults
@@ -7129,7 +7130,7 @@ int selfie() {
 
 
 void setConcurrentCount(){
-  print((int*) "Concurrent Instructions set");
+  print((int*) "Concurrent Instructions set to:");
   println();
   processCallNumber = atoi(getArgument());
   printInteger(processCallNumber);
@@ -7137,7 +7138,7 @@ void setConcurrentCount(){
 }
 
 void setInstructionTimer(){
-  print((int*) "Instruction Timer set");
+  print((int*) "Instruction Timer set to:");
   println();
   TIMESLICE = atoi(getArgument());
   printInteger(TIMESLICE);
@@ -7158,7 +7159,7 @@ int main(int argc, int* argv) {
  
   if (exitCode == USAGE) {
     print(selfieName);
-    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary } [ (-m | -d | -y | -min | -mob ) size ... ] ");
+    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary } [-m | -d | -y | -min | -mob ) size ... ] ");
     println();
 
     return 0;
