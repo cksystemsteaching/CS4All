@@ -1,6 +1,6 @@
 int main(int argc, int *argv){
 	int *out;
-	int mipsterID;
+	int hypsterID;
 	initLibrary();
 	hypsterID=hypster_ID();
 	print("Executing: ");

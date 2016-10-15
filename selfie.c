@@ -884,6 +884,7 @@ void implementMap();
 
 void selfie_map(int ID, int page, int frame);
 
+int schedule(int fromID);
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_create = 0;
@@ -1021,7 +1022,7 @@ int EXCEPTION_PAGEFAULT          = 7;
 
 int* EXCEPTIONS; // strings representing exceptions
 
-int debug_exception = 0;
+int debug_exception = 1;
 
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
@@ -6772,7 +6773,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int exceptionNumber;
   int exceptionParameter;
   int frame;
-
+	timer = 3;
   while (1) {
     fromID = selfie_switch(toID);
 
@@ -6808,14 +6809,22 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         print((int*) " throws uncaught ");
         printStatus(savedStatus);
         println();
-
         return -1;
       }
 
       // TODO: scheduler should go here
       toID = fromID;
+			toID = schedule(fromID);
     }
   }
+}
+//triggered by timer exception at the moment 
+int schedule(int fromID){
+	print((int*)"Scheduling cContext: ");
+	printInteger(fromID);
+	println();
+	return fromID;
+
 }
 
 int bootminmob(int argc, int* argv, int machine) {
