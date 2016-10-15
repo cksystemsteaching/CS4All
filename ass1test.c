@@ -23,14 +23,7 @@ void dumbITOA(int number) {
 }
 
 int main(int argc, int *argv) {
-    int a;
-    int b;
-    a = 5;
-    b = 0;
-
-    b = --a + 4;
-    dumbITOA(a);
-    dumbITOA(b);
+    funcH();
 }
 
 void funcA() {
@@ -75,7 +68,7 @@ void funcC() {
 
 	while (i < 4) {
 		dumbITOA(*(c+i));
-		i = i + 1;
+        ++i;
 	}
 	write(1, "result: ", 10);
 	dumbITOA(result);
@@ -114,14 +107,54 @@ void funcE() {
 }
 
 void funcF() {
-	int *a;
-	a = malloc(4);
-	*a = 0;
+    int *a;
+    a = malloc(4);
+    *a = 0;
 
-	++*a;
-	++*a;
-	*a = *a + 3;
-	++*a;
+    ++*a;
+    ++*a;
+    *a = *a + 3;
+    ++*a;
 
-	dumbITOA(*a);
+    dumbITOA(*a);
+
+}
+
+void funcG() {
+    int *a;
+
+    a = malloc(8);
+    *a = 33;
+    *(a+1) = 66;
+
+    ++a;
+    *a = 99;
+    --a;
+    *a = 11;
+
+    dumbITOA(*a);
+    dumbITOA(*(a+1));
+}
+
+void funcH() {
+    int *a;
+    int *b;
+    int *c;
+    int i;
+    i = 0;
+    a = malloc(7 * 4);
+    c = a;
+    while (i < 7) {
+        *(a+i) = i;
+        ++i;
+    }
+
+    b = ++a + 4;
+    *b = 88;
+
+    i = 0;
+    while (i < 7) {
+        dumbITOA(*(c+i));
+        ++i;
+    }
 }
