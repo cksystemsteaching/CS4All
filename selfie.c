@@ -1076,6 +1076,10 @@ int* loadsPerAddress = (int*) 0; // number of executed loads per load operation
 int  stores           = 0;        // total number of executed memory stores
 int* storesPerAddress = (int*) 0; // number of executed stores per store operation
 
+
+
+int processCallNumber = 1;
+
 // ------------------------- INITIALIZATION ------------------------
 
 void initInterpreter() {
@@ -1231,7 +1235,7 @@ void mapUnmappedPages(int* table);
 void down_mapPageTable(int* context);
 
 int runUntilExitWithoutExceptionHandling(int toID);
-int runOrHostUntilExitWithPageFaultHandling(int toID,int contextCount);
+int runOrHostUntilExitWithPageFaultHandling(int toID);
 
 int bootminmob(int argc, int* argv, int machine);
 int boot(int argc, int* argv);
@@ -6772,7 +6776,7 @@ int runUntilExitWithoutExceptionHandling(int toID) {
   }
 }
 
-int runOrHostUntilExitWithPageFaultHandling(int toID,int contextCount) {
+int runOrHostUntilExitWithPageFaultHandling(int toID) {
   // works with mipsters and hypsters
   int fromID;
   int* fromContext;
@@ -6925,7 +6929,6 @@ int boot(int argc, int* argv) {
   int exitCode;
 	int count;
 	int firstID;
-	int n=3;
 	count=0;
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6940,10 +6943,11 @@ int boot(int argc, int* argv) {
   print((int*) "MB of physical memory");
   println();
 	// resetting interpreter is only necessary for mipsters
-		resetInterpreter();
+  resetInterpreter();
 
-		resetMicrokernel();
-	while(count<n){
+  resetMicrokernel();
+		
+	while(count < processCallNumber){
 		// create initial context on microkernel boot level
 		initID = selfie_create();
 		if(count==0)
@@ -6965,7 +6969,7 @@ int boot(int argc, int* argv) {
 	}
 
   // mipsters and hypsters handle page faults
-  exitCode = runOrHostUntilExitWithPageFaultHandling(firstID,n);
+  exitCode = runOrHostUntilExitWithPageFaultHandling(firstID);
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -7127,7 +7131,8 @@ int selfie() {
 void setConcurrentCount(){
   print((int*) "Concurrent Instructions set");
   println();
-  print((int*)getArgument());
+  processCallNumber = atoi(getArgument());
+  printInteger(processCallNumber);
   println();
 }
 
