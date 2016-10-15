@@ -884,7 +884,7 @@ void implementMap();
 
 void selfie_map(int ID, int page, int frame);
 
-int schedule(int fromID);
+int schedule(int* fromContext);
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_create = 0;
@@ -6813,8 +6813,19 @@ int runOrHostUntilExitWithPageFaultHandling(int toID,int contextCount) {
 				contextTerminationCount=contextTerminationCount+1;
 				printInteger(contextTerminationCount);				
 				println();
-				if (contextTerminationCount==contextCount)
-       		return exceptionParameter;
+			
+				int* next=getNextContext(fromContext);
+				if(next!=(int*)0){
+							doDelete(fromID);		
+							fromContext=next;
+				}else{
+					int* prev=getPrevContext(fromContext);
+					if(prev==(int*)0)
+		     		return exceptionParameter;
+
+					doDelete(fromID);
+					fromContext=prev;
+				}
 			}
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
@@ -6828,17 +6839,16 @@ int runOrHostUntilExitWithPageFaultHandling(int toID,int contextCount) {
 
       // TODO: scheduler should go here
       //toID = fromID;
-			toID=schedule(fromID);
+			toID=schedule(fromContext);
     }
   }
 }
 //triggered by timer exception at the moment 
-int schedule(int fromID){
-	int* fromContext;
+int schedule(int* fromContext){
 	int* nextContext;
 	int nextContextID;
 	int* cContext;
-	fromContext = findContext(fromID, usedContexts);	
+
 	nextContext = getPrevContext(fromContext);
 	if((nextContext)!=(int*)0)
 			nextContextID=getID(nextContext);
