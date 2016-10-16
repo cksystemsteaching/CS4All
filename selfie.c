@@ -6847,8 +6847,11 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
           print((int*) " ");
           //delete current context
           usedContexts = deleteContext(fromContext, usedContexts);
+
+          //if context list is empty -> terminate
           if (usedContexts == (int*) 0)
               return exceptionParameter;
+              //otherwise: set fromID for scheduling in the next step (default: take first ID in list)
           else
               fromID = getID(usedContexts);
 
