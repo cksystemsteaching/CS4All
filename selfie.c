@@ -2455,6 +2455,10 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_STRING)
     return 0;
+  else if (symbol == SYM_INC)
+    return 0;
+  else if (symbol == SYM_DEC)
+    return 0;
   else if (symbol == SYM_EOF)
     return 0;
   else
@@ -3651,6 +3655,8 @@ void gr_statement() {
   } else if (symbol == SYM_INC) {
     gr_increment_decrement(0, (int*) 0);
 
+    tfree(1);
+
     if (symbol == SYM_SEMICOLON)
       getSymbol();
     else
@@ -3659,6 +3665,8 @@ void gr_statement() {
   // --identifier;
   } else if (symbol == SYM_DEC) {
     gr_increment_decrement(0, (int*) 0);
+
+    tfree(1);
 
     if (symbol == SYM_SEMICOLON)
       getSymbol();
