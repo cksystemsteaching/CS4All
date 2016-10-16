@@ -537,6 +537,7 @@ void gr_procedure(int* procedure, int type);
 void gr_cstar();
 
 // ------------------------ GLOBAL VARIABLES -----------------------
+int plusPlusFound = 0;
 
 int allocatedTemporaries = 0; // number of allocated temporaries
 
@@ -2626,6 +2627,13 @@ int load_variable(int* variable) {
 
   emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
 
+  if(plusPlusFound == 1){
+    emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+    emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+    plusPlusFound = 0;
+  }
+
+
   return getType(entry);
 }
 
@@ -2852,17 +2860,21 @@ int gr_factor() {
   }
 
   if (symbol == SYM_PLUSPLUS) {
+    plusPlusFound = 1;
     getSymbol();
     if (symbol == SYM_IDENTIFIER) {
       load_variable(identifier);
-      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
-      emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+      //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
     } else if (symbol == SYM_ASTERISK) {
       getSymbol();
       if (symbol == SYM_IDENTIFIER) {
+        load_variable(identifier);
+        talloc();
         getSymbol();
-        emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
-        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        //emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+        //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        //emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+        tfree(1);
       } else if (symbol == SYM_LPARENTHESIS) {
         gr_expression();
         emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
@@ -7099,6 +7111,7 @@ int main(int argc, int* argv) {
   int exitCode;
   int i;
   int j;
+  int *x;
 
   initSelfie(argc, (int*) argv);
 
@@ -7107,8 +7120,9 @@ int main(int argc, int* argv) {
   print((int *)"This is the Starc Mipsdustries Selfie");
   println();
 
-  i = 99999;
-  j = ++i;
+  i = 9999;
+  j = ++i + i;
+
   printInteger(j);
 
 
