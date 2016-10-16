@@ -2433,6 +2433,24 @@ int isComparison() {
     return 0;
 }
 
+int isLvalue() {
+  if (symbol == SYM_ASTERISK)
+    return 1;
+  else if (symbol == SYM_IDENTIFIER)
+    return 1;
+  else
+    return 0;
+}
+
+int isIncrementOrDecrement() {
+  if (symbol == SYM_PLUSPLUS)
+    return 1;
+  else if (symbol == SYM_MINUSMINUS)
+    return 1;
+  else
+    return 0;
+}
+
 int lookForFactor() {
   if (symbol == SYM_LPARENTHESIS)
     return 0;
@@ -2445,6 +2463,10 @@ int lookForFactor() {
   else if (symbol == SYM_CHARACTER)
     return 0;
   else if (symbol == SYM_STRING)
+    return 0;
+  else if (symbol == SYM_PLUSPLUS)
+    return 0;
+  else if (symbol == SYM_MINUSMINUS)
     return 0;
   else if (symbol == SYM_EOF)
     return 0;
@@ -2833,6 +2855,9 @@ int gr_factor() {
   int hasCast;
   int cast;
   int type;
+  int hasPrefixOperator;
+  int operator;
+  int* entry;
 
   int* variableOrProcedureName;
 
@@ -2881,6 +2906,19 @@ int gr_factor() {
     }
   }
 
+  hasPrefixOperator = 0;
+
+  // increment/decrement?
+  if (isIncrementOrDecrement()) {
+    operator = symbol;
+    getSymbol();
+
+    if (isLvalue())
+      hasPrefixOperator = 1;
+    else
+      syntaxErrorMessage((int*) "increment/decrement operator only with lvalues");
+  }
+
   // dereference?
   if (symbol == SYM_ASTERISK) {
     getSymbol();
@@ -2908,7 +2946,19 @@ int gr_factor() {
       typeWarning(INTSTAR_T, type);
 
     // dereference
-    emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+    if (hasPrefixOperator) {
+      talloc();
+      emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
+      emitIFormat(OP_LW, previousTemporary(), previousTemporary(), 0);
+      if (operator == SYM_PLUSPLUS)
+        emitIFormat(OP_ADDIU, previousTemporary(), previousTemporary(), 1);
+      else
+        emitIFormat(OP_ADDIU, previousTemporary(), previousTemporary(), -1);
+      emitIFormat(OP_SW, currentTemporary(), previousTemporary(), 0);
+      tfree(1);
+    }
+    else
+      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
     type = INT_T;
 
@@ -2919,6 +2969,9 @@ int gr_factor() {
     getSymbol();
 
     if (symbol == SYM_LPARENTHESIS) {
+      if (hasPrefixOperator)
+        syntaxErrorMessage((int*) "increment/decrement operator only with lvalues");
+
       getSymbol();
 
       // procedure call: identifier "(" ... ")"
@@ -2932,9 +2985,21 @@ int gr_factor() {
       // reset return register to initial return value
       // for missing return expressions
       emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
-    } else
+    } else {
       // variable access: identifier
       type = load_variable(variableOrProcedureName);
+
+      if (hasPrefixOperator) {
+        if (operator == SYM_PLUSPLUS)
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        else
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+
+        entry = getVariable(variableOrProcedureName);
+
+        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+      }
+    }
 
   // integer?
   } else if (symbol == SYM_INTEGER) {
