@@ -317,6 +317,7 @@ int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
 int SYM_PLUSPLUS     = 28; // ++
+int SYM_MINUSMINUS   = 29;  // --
 
 int* SYMBOLS; // strings representing symbols
 
@@ -384,6 +385,7 @@ void initScanner () {
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
   *(SYMBOLS + SYM_PLUSPLUS)     = (int) "++";
+  *(SYMBOLS + SYM_MINUSMINUS)   = (int) "--";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -2137,7 +2139,11 @@ void getSymbol() {
       } else if (character == CHAR_DASH) {
         getCharacter();
 
-        symbol = SYM_MINUS;
+        if(character == CHAR_DASH){
+          getCharacter();
+          symbol = SYM_MINUSMINUS;
+        }else
+          symbol = SYM_MINUS;
 
       } else if (character == CHAR_ASTERISK) {
         getCharacter();
@@ -2442,6 +2448,8 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_PLUSPLUS)
     return 0;
+  else if (symbol == SYM_MINUSMINUS)
+    return 0;
   else
     return 1;
 }
@@ -2460,6 +2468,8 @@ int lookForStatement() {
   else if (symbol == SYM_EOF)
     return 0;
   else if (symbol == SYM_PLUSPLUS)
+    return 0;
+  else if(symbol == SYM_MINUSMINUS)
     return 0;
   else
     return 1;
@@ -2979,11 +2989,22 @@ int gr_factor() {
 			  typeWarning(INT_T, type);
 		  emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
       emitIFormat(OP_SW, getScope(getVariable(identifier)), currentTemporary(), getAddress(getVariable(identifier)));
-	  } else {
+	  } else
 		  syntaxErrorSymbol(SYM_IDENTIFIER);
-	  }
-
-  } else
+  } else if(SYM_MINUSMINUS){
+    getSymbol();
+    if(symbol == SYM_IDENTIFIER){
+      getSymbol();
+      type = load_variable(identifier);
+      if(type != INT_T)
+        typeWarning(INT_T, type);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+      emitIFormat(OP_SW, getScope(getVariable(identifier)), currentTemporary(), getAddress(getVariable(identifier)));
+    }
+    else
+      syntaxErrorSymbol(SYM_IDENTIFIER);
+  }
+  else
     syntaxErrorUnexpected();
 
   // assert: allocatedTemporaries == n + 1
@@ -3561,6 +3582,9 @@ void gr_statement() {
   }
   else if(symbol == SYM_PLUSPLUS){
       gr_term();
+  }
+  else if(symbol == SYM_MINUSMINUS){
+    gr_term();
   }
 }
 
@@ -7104,11 +7128,18 @@ int main(int argc, int* argv) {
 
 
   //test Ass_1: PLUSPLUS
+  print((int*)"Startwert (0): ");
   printInteger(testPLUSPLUS);
   println();
 
 
   ++testPLUSPLUS;
+  print((int*)"nach ++ (1): ");
+  printInteger(testPLUSPLUS);
+  println();
+
+  --testPLUSPLUS;
+  print((int*)"nach -- (0): ");
   printInteger(testPLUSPLUS);
   println();
   //

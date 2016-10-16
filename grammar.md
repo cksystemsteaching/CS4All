@@ -10,7 +10,7 @@ C\* is a small Turing-complete subset of C that includes dereferencing (the `*` 
 
 C\* Keywords: `int`, `while`, `if`, `else`, `return`, `void`
 
-C\* Symbols: `;`, `+`, `-`, `*`, `/`, `%`, `==`, `=`, `(`, `)`, `{`, `}`, `,`, `<`, `<=`, `>`, `>=`, `!=`, `++``, integer, identifier, character, string
+C\* Symbols: `;`, `+`, `-`, `*`, `/`, `%`, `==`, `=`, `(`, `)`, `{`, `}`, `,`, `<`, `<=`, `>`, `>=`, `!=`, `++`,`--`, integer, identifier, character, string
 
 with:
 
@@ -49,8 +49,9 @@ procedure        = "(" [ variable { "," variable } ] ")"
 
 variable         = type identifier .
 
-statement        = call ";" | while | if | return ";" | "++" |
-                   ( [ "*" ] identifier | "*" "(" expression ")" )
+statement        = call ";" | while | if | return ";" |
+                 ( [ "*" ] identifier | "*" "(" expression ")" ) |
+                 ("++"|"--") identifier | identifier ("++"|"--")
                      "=" expression ";" .
 
 call             = identifier "(" [ expression { "," expression } ] ")" .
@@ -63,7 +64,7 @@ term             = factor { ( "*" | "/" | "%" ) factor } .
 
 factor           = [ cast ]
                     ( [ "*" ] ( identifier | "(" expression ")" ) |
-                      | "++" identifier | call |
+                      | ("++"|"--") identifier | identifier ("++"|"--") | call |
                       literal |
                       string ) .
 
