@@ -5,5 +5,5 @@ int main() {
   x = (int*) malloc(4);
   *x = 5;
   y = *x++;
-  return y; // 6
+  return y; // 5
 }

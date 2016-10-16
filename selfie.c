@@ -2925,6 +2925,12 @@ int gr_factor() {
   int* variableOrProcedureName;
   int* entry;
 
+  int do_pre_inc;
+  int do_pre_dec;
+
+  do_pre_inc = 0;
+  do_pre_dec = 0;
+
   // assert: n = allocatedTemporaries
 
   hasCast = 0;
@@ -2970,6 +2976,17 @@ int gr_factor() {
     }
   }
 
+  // [ "++" ] pre increment
+  if (symbol == SYM_PLUSPLUS) {
+    do_pre_inc = 1;
+    getSymbol();
+
+  // [ "--" ] pre decrement
+  } else if (symbol == SYM_MINUSMINUS) {
+    do_pre_dec = 1;
+    getSymbol();
+  }
+
   // dereference?
   if (symbol == SYM_ASTERISK) {
     getSymbol();
@@ -2996,39 +3013,81 @@ int gr_factor() {
     if (type != INTSTAR_T)
       typeWarning(INTSTAR_T, type);
 
-    // dereference
-    emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+    if (do_pre_inc) {
+      talloc();
+      emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+      emitIFormat(OP_ADDIU, currentTemporary(), previousTemporary(), 0);
+      tfree(1);
+      do_pre_inc = 0;
+
+    } else if (do_pre_dec) {
+      talloc();
+      emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+      emitIFormat(OP_ADDIU, currentTemporary(), previousTemporary(), 0);
+      tfree(1);
+      do_pre_dec = 0;
+
+    } else if (symbol == SYM_PLUSPLUS) {
+      getSymbol();
+
+      // Not working yet
+      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+      //talloc();
+      //emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+      //emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 1);
+      //emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+
+      //tfree(1);
+
+    } else if (symbol == SYM_MINUSMINUS) {
+      getSymbol();
+
+      // Not working yet
+      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
+      //talloc();
+      //emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), -1);
+      //emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+      //tfree(1);
+    } else {
+      // dereference
+      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+    }
 
     type = INT_T;
 
   // ++ incrementing
-  } else if (symbol == SYM_PLUSPLUS) {
-      getSymbol();
+  //} else if (symbol == SYM_PLUSPLUS) {
+  //    getSymbol();
 
   // ++ prefix
-    if (symbol == SYM_IDENTIFIER){
-      getSymbol();
-      type = load_variable_with_pre_inc(identifier);
+  //  if (symbol == SYM_IDENTIFIER){
+  //    getSymbol();
+  //    type = load_variable_with_pre_inc(identifier);
 
   // postfix ++
-    } else
-      type = load_variable_with_post_inc(identifier);
+  //  } else
+  //    type = load_variable_with_post_inc(identifier);
 
 
 
   // -- decrementing
-  } else if (symbol == SYM_MINUSMINUS){
-      getSymbol();
+  //} else if (symbol == SYM_MINUSMINUS){
+  //    getSymbol();
 
   // -- prefix
-    if (symbol == SYM_IDENTIFIER){
-      getSymbol();
-      type = load_variable_with_pre_dec(identifier);
+  //  if (symbol == SYM_IDENTIFIER){
+  //    getSymbol();
+  //    type = load_variable_with_pre_dec(identifier);
 
 
     // postfix --
-    } else
-      type = load_variable_with_post_dec(identifier);
+  //  } else
+  //    type = load_variable_with_post_dec(identifier);
 
 
   // identifier?
@@ -3052,32 +3111,41 @@ int gr_factor() {
     } else if(symbol == SYM_PLUSPLUS) {
       getSymbol();
 
-      type = load_variable(variableOrProcedureName);
+      type = load_variable_with_post_inc(variableOrProcedureName);
 
-      entry = getVariable(variableOrProcedureName);
-      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
-      emitIFormat(OP_SW, getScope(entry),currentTemporary(),getAddress(entry) );
-      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+      //entry = getVariable(variableOrProcedureName);
+      //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      //emitIFormat(OP_SW, getScope(entry),currentTemporary(),getAddress(entry) );
+      //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
 
       // variable access: identifier decrement
     } else if(symbol == SYM_MINUSMINUS) {
       getSymbol();
 
-      type = load_variable(variableOrProcedureName);
-      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+      type = load_variable_with_post_dec(variableOrProcedureName);
+      //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
 
-      entry = getVariable(variableOrProcedureName);
+      //entry = getVariable(variableOrProcedureName);
 
-      emitIFormat(OP_SW, getScope(entry),currentTemporary(),getAddress(entry) );
-      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      //emitIFormat(OP_SW, getScope(entry),currentTemporary(),getAddress(entry) );
+      //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
 
 
       // reset return register to initial return value
       // for missing return expressions
       // emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
-    } else
+    } else {
       // variable access: identifier
-      type = load_variable(variableOrProcedureName);
+      if (do_pre_inc) {
+        type = load_variable_with_pre_inc(variableOrProcedureName);
+        do_pre_inc = 0;
+      } else if (do_pre_dec) {
+        type = load_variable_with_pre_dec(variableOrProcedureName);
+        do_pre_dec = 0;
+      } else {
+        type = load_variable(variableOrProcedureName);
+      }
+    }
 
   // integer?
   } else if (symbol == SYM_INTEGER) {
