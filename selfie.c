@@ -6842,14 +6842,16 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         selfie_map(fromID, exceptionParameter, frame);
       } else if (exceptionNumber == EXCEPTION_EXIT) {
           // TODO: only return if all contexts have exited
-
-          // Terminate when there is no context left
+          print((int*)"TERMINATE Process ");
+          printInteger(getID(currentContext));
+          print((int*) " ");
+          //delete current context
+          usedContexts = deleteContext(fromContext, usedContexts);
           if (usedContexts == (int*) 0)
               return exceptionParameter;
-          else { //MICHI: so funktioniert das nicht :D
-              deleteContext(fromContext, usedContexts);
+          else
               fromID = getID(usedContexts);
-          }
+
       }
       //EXCEPTION_TIMER isn't actually an exception -> only means we should change context (== change process)
       else if (exceptionNumber != EXCEPTION_TIMER) {
