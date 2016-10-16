@@ -932,7 +932,7 @@ void mapAndStoreVirtualMemory(int* table, int vaddr, int data);
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int debug_tlb = 1;
+int debug_tlb = 0;
 
 int MEGABYTE = 1048576;
 
@@ -1028,7 +1028,7 @@ int debug_exception = 0;
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
-int TIMESLICE = 10000000;
+int TIMESLICE = 100;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -6304,7 +6304,6 @@ void execute() {
 
 void interrupt() {
   cycles = cycles + 1;
-
   if (timer > 0)
     if (cycles == timer) {
       cycles = 0;
@@ -6808,7 +6807,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int exceptionParameter;
   int frame;
 
-  print("reached this!!");
+  //print("reached this!!");
 
   while (1) {
     print("switching to ");
@@ -6823,7 +6822,6 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     fromContext = findContext(fromID, usedContexts);
 
     // assert: fromContext must be in usedContexts (created here)
-
     if (getParent(fromContext) != selfie_ID())
       // switch to parent which is in charge of handling exceptions
       toID = getParent(fromContext);
@@ -6842,9 +6840,17 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT)
-        // TODO: only return if all contexts have exited
-        return exceptionParameter;
+      } else if (exceptionNumber == EXCEPTION_EXIT) {
+          // TODO: only return if all contexts have exited
+
+          // Terminate when there is no context left
+          if (usedContexts == (int*) 0)
+              return exceptionParameter;
+          else { //MICHI: so funktioniert das nicht :D
+              deleteContext(fromContext, usedContexts);
+              fromID = getID(usedContexts);
+          }
+      }
       //EXCEPTION_TIMER isn't actually an exception -> only means we should change context (== change process)
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
@@ -6861,6 +6867,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     }
   }
 }
+
 
 int bootminmob(int argc, int* argv, int machine) {
   // works only with mipsters
@@ -6920,7 +6927,7 @@ int boot(int argc, int* argv) {
   // works with mipsters and hypsters
   int initID;
   int exitCode;
-  int tempContext;
+    int counter;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6957,10 +6964,15 @@ int boot(int argc, int* argv) {
 
   //TODO RUPI @Michi: wie lade ich den Speicher für einen Context mit den binary daten korrekt? so gehts ja anscheinend ned.
   // bzw meine Vermutung ist ja, dass der counter vom binary file nicht am anfang ist und deswegen failed.
-  tempContext = findContext(doCreateContext(selfie_ID()), usedContexts);
-  up_loadBinary(getPT(tempContext)); // <<--- TODO RUPI ERROR IS HERE RIGHT NOW
-  /*up_loadArguments(getPT(tempContext), argc, argv);
-  down_mapPageTable(tempContext);*/
+    //Michi: Paar prozesse basteln
+    counter = 0;
+    while (counter < 5) {
+        selfie_create();
+        up_loadBinary(getPT(usedContexts)); // <<--- TODO RUPI ERROR IS HERE RIGHT NOW
+        up_loadArguments(getPT(usedContexts), argc, argv);
+        down_mapPageTable(usedContexts);
+        counter = counter + 1;
+    }
 
   // mipsters and hypsters handle page faults
   exitCode = runOrHostUntilExitWithPageFaultHandling(initID);

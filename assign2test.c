@@ -36,6 +36,8 @@ int main(int argc, int *argv) {
     int someMath3;
     int hypsterIDVar;
     int *stringBuff;
+    int i;
+    i = 0;
 
     someMath = 2;
     someMath2 = 3;
@@ -49,16 +51,21 @@ int main(int argc, int *argv) {
 
     someMath2 = someMath3 - someMath;
 
-    //1 == filedescriptor for shell
-    write(1, (int *) "assign2text executed with result: ", 50);
-    hypsterIDVar = 11;//hypster_ID();
-    dumbATOI(hypsterIDVar, stringBuff);
-    while (*stringBuff != 0){
-        write(1, stringBuff, 1);
-        stringBuff = stringBuff + 1;
+    while (i < 130) {
+        i = i + 1;
     }
-    *stringBuff = newline; //newline
-    write(1, stringBuff, 1);
 
+
+    //1 == filedescriptor for shell
+    //write(1, (int *) "assign2text executed with result: ", 50);
+    //hypsterIDVar = 11;//hypster_ID();
+    //dumbATOI(hypsterIDVar, stringBuff);
+    //while (*stringBuff != 0){
+     //   write(1, stringBuff, 1);
+      //  stringBuff = stringBuff + 1;
+    //}
+    //*stringBuff = newline; //newline
+    //write(1, stringBuff, 1);
+    write(1, "DONE", 24);
     return 0;
 }
