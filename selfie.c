@@ -3575,10 +3575,10 @@ void gr_statement() {
       // for missing return expressions
       emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
 
-      if (symbol == SYM_SEMICOLON)
-        getSymbol();
-      else
-        syntaxErrorSymbol(SYM_SEMICOLON);
+      //if (symbol == SYM_SEMICOLON)
+        //getSymbol();
+      //else
+        //syntaxErrorSymbol(SYM_SEMICOLON);
 
     // identifier = expression
     } else if (symbol == SYM_ASSIGN) {
@@ -3600,16 +3600,19 @@ void gr_statement() {
       numberOfAssignments = numberOfAssignments + 1;
         
 
-      if (symbol == SYM_SEMICOLON)
-        getSymbol();
-      else
-        syntaxErrorSymbol(SYM_SEMICOLON);
     } else if (symbol == SYM_INCREMENT) {
         gr_expression();
     } else if (symbol == SYM_DECREMENT) {
         gr_expression();
-    } else
-      syntaxErrorUnexpected();
+    } else {
+        syntaxErrorUnexpected();
+    }
+    if (symbol == SYM_SEMICOLON)
+        getSymbol();
+    else
+        syntaxErrorSymbol(SYM_SEMICOLON);
+
+
   }
   // while statement?
   else if (symbol == SYM_WHILE) {
@@ -7185,7 +7188,7 @@ void test(){
     printInteger(i);
     println();
     
-    i--;
+    --i;
     
     printInteger(i);
     println();
