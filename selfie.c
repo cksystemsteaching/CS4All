@@ -6835,10 +6835,10 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         return -1;
       }
 
-      // TODO: scheduler should go here
-      toID = fromID;
+      // Get the next context id with the round robin scheduler
+      toID = roundRobinScheduler(fromID);
+        }
     }
-  }
 }
 
 int roundRobinScheduler(int currentID) {
