@@ -1029,7 +1029,7 @@ int EXCEPTION_PAGEFAULT          = 7;
 
 int* EXCEPTIONS; // strings representing exceptions
 
-int debug_exception = 1;
+int debug_exception = 0;
 
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
