@@ -17,7 +17,7 @@ test_pre_increment:
 	../selfie -c pre_increment/predec1.c
 	../selfie -c pre_increment/predec1.c -d 1 | grep -E 'exit code 2'
 	../selfie -c pre_increment/postdec1.c
-	../selfie -c pre_increment/postdec1.c -d 1 | grep -E 'exit code 2'
+	../selfie -c pre_increment/postdec1.c -d 1 | grep -E 'exit code 3'
 
 clean:
 	rm -rf *.s
