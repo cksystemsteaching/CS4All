@@ -7119,6 +7119,7 @@ int selfie() {
 }
 
 int main(int argc, int* argv) {
+  int exitCode;
 
   initSelfie(argc, (int*) argv);
 
