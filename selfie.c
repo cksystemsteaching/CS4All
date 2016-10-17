@@ -2982,6 +2982,7 @@ int gr_factor() {
   } else if(symbol == SYM_PLUSPLUS){
       getSymbol();
 
+      //prefix ++
 	   if(symbol == SYM_IDENTIFIER){
 		  getSymbol();
 		  type = load_variable(identifier);
@@ -2989,10 +2990,19 @@ int gr_factor() {
 			  typeWarning(INT_T, type);
 		  emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
       emitIFormat(OP_SW, getScope(getVariable(identifier)), currentTemporary(), getAddress(getVariable(identifier)));
-	  } else
-		  syntaxErrorSymbol(SYM_IDENTIFIER);
+      //postfix ++
+	  } else{
+      type = load_variable(identifier);
+      getSymbol();
+      if(type != INT_T)
+			  typeWarning(INT_T, type);
+		  emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      emitIFormat(OP_SW, getScope(getVariable(identifier)), currentTemporary(), getAddress(getVariable(identifier)));
+    }
+		  //syntaxErrorSymbol(SYM_IDENTIFIER);
   } else if(SYM_MINUSMINUS){
     getSymbol();
+    //prefix --
     if(symbol == SYM_IDENTIFIER){
       getSymbol();
       type = load_variable(identifier);
@@ -3001,8 +3011,17 @@ int gr_factor() {
       emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
       emitIFormat(OP_SW, getScope(getVariable(identifier)), currentTemporary(), getAddress(getVariable(identifier)));
     }
-    else
-      syntaxErrorSymbol(SYM_IDENTIFIER);
+    //postfix --
+    else{
+      type = load_variable(identifier);
+      getSymbol();
+      if(type != INT_T)
+        typeWarning(INT_T, type);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+      emitIFormat(OP_SW, getScope(getVariable(identifier)), currentTemporary(), getAddress(getVariable(identifier)));
+
+    }
+      //syntaxErrorSymbol(SYM_IDENTIFIER);
   }
   else
     syntaxErrorUnexpected();
@@ -3581,10 +3600,20 @@ void gr_statement() {
       syntaxErrorSymbol(SYM_SEMICOLON);
   }
   else if(symbol == SYM_PLUSPLUS){
-      gr_term();
+      //gr_term();
+      gr_expression();
+      if(symbol == SYM_SEMICOLON)
+        getSymbol();
+      else
+        syntaxErrorSymbol(SYM_SEMICOLON);
   }
   else if(symbol == SYM_MINUSMINUS){
-    gr_term();
+    //gr_term();
+    gr_expression();
+    if(symbol == SYM_SEMICOLON)
+      getSymbol();
+    else
+      syntaxErrorSymbol(SYM_SEMICOLON);
   }
 }
 
@@ -7132,17 +7161,45 @@ int main(int argc, int* argv) {
   printInteger(testPLUSPLUS);
   println();
 
-
-  ++testPLUSPLUS;
-  print((int*)"nach ++ (1): ");
-  printInteger(testPLUSPLUS);
-  println();
-
-  --testPLUSPLUS;
-  print((int*)"nach -- (0): ");
-  printInteger(testPLUSPLUS);
-  println();
+  //----------------------
+  // testPLUSPLUS = 1;
+  // --testPLUSPLUS;
+  // print((int*)"nach prefix -- (0): ");
+  // printInteger(testPLUSPLUS);
+  // println();
   //
+  // testPLUSPLUS++;
+  // print((int*)"testPLUSPLUS++ (1): ");
+  // printInteger(testPLUSPLUS);
+  // println();
+  //----------------------
+
+  print((int*)"nach prefix ++ (1): ");
+  testPLUSPLUS++;
+  printInteger(++testPLUSPLUS);
+  println();
+
+
+  print((int*)"nach prefix -- (0): ");
+  printInteger(--testPLUSPLUS);
+  println();
+
+  print((int*)"postfix ++ (0): ");
+  printInteger(testPLUSPLUS++);
+  println();
+
+  print((int*)"nach dem postix ++ (1): ");
+  printInteger(testPLUSPLUS);
+  println();
+
+  print((int*)"postfix -- (1): ");
+  printInteger(testPLUSPLUS--);
+  println();
+
+  print((int*)"nach dem postix -- (0): ");
+  printInteger(testPLUSPLUS);
+  println();
+
 
 
 
