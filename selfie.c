@@ -7209,15 +7209,20 @@ int main(int argc, int* argv) {
   int i;
   int j;
   int k;
+  int f;
   int temp;
 
   initSelfie(argc, (int*) argv);
 
   initLibrary();
 
-  println(); print((int*)"This is the gcc Selfie."); println();
-
-
+  println(); print((int*)"This is the gcc Selfie."); println(); 
+  print((int*)" |\\_/|"); println();
+  print((int*)" (. .)"); println();
+  print((int*)"  =w= (\\ "); println();
+  print((int*)" / ^ \\// "); println();
+  print((int*)"(|| ||)"); println();
+  
 
   test = 1;
   // ################################################################
@@ -7229,6 +7234,7 @@ int main(int argc, int* argv) {
     i = 1;
     j = 2;
     k = -13;
+    f = 1;
 
     i++;
 
@@ -7248,7 +7254,6 @@ int main(int argc, int* argv) {
     print(itoa(temp,integer_buffer,10,0,0));println();
     print((int*)"k (-12): ");
     print(itoa(k,integer_buffer,10,0,0));println();
-
 
     println(); println(); print((int*) "Test done."); println(); println();
   }
