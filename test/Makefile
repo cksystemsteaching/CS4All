@@ -14,6 +14,8 @@ test_pre_increment:
 	../selfie -c pre_increment/postinc2.c -d 1 | grep -E 'exit code 9'
 	../selfie -c pre_increment/postinc3.c
 	../selfie -c pre_increment/postinc3.c -d 1 | grep -E 'exit code 5'
+	../selfie -c pre_increment/postinc4.c
+	../selfie -c pre_increment/postinc4.c -d 1 | grep -E 'exit code 18'
 	../selfie -c pre_increment/predec1.c
 	../selfie -c pre_increment/predec1.c -d 1 | grep -E 'exit code 2'
 	../selfie -c pre_increment/postdec1.c
@@ -26,6 +28,12 @@ test_pre_increment:
 	../selfie -c pre_increment/postinc_statement_1.c -d 1 | grep -E 'exit code 5556'
 	../selfie -c pre_increment/postdec_statement_1.c
 	../selfie -c pre_increment/postdec_statement_1.c -d 1 | grep -E 'exit code 5554'
+	../selfie -c pre_increment/preinc_deref_assignment_1.c
+	../selfie -c pre_increment/preinc_deref_assignment_1.c -d 1 | grep -E 'exit code 7655'
+	../selfie -c pre_increment/postinc_deref_assignment_1.c
+	../selfie -c pre_increment/postinc_deref_assignment_1.c -d 1 | grep -E 'exit code 21'
+	../selfie -c pre_increment/postdec_deref_assignment_1.c
+	../selfie -c pre_increment/postdec_deref_assignment_1.c -d 1 | grep -E 'exit code 19'
 	../selfie -c pre_increment/preinc_deref_statement_1.c
 	../selfie -c pre_increment/preinc_deref_statement_1.c -d 1 | grep -E 'exit code 7655'
 	../selfie -c pre_increment/postinc_deref_statement_1.c
