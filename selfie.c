@@ -1026,7 +1026,7 @@ int debug_exception = 0;
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
-int TIMESLICE = 10000000;
+int TIMESLICE = 10;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1134,6 +1134,7 @@ void switchContext(int* from, int* to);
 
 void freeContext(int* context);
 int* deleteContext(int* context, int* from);
+int roundRobinScheduler(int currentID);
 
 void mapPage(int* table, int page, int frame);
 
@@ -6746,9 +6747,19 @@ int runUntilExitWithoutExceptionHandling(int toID) {
 
       exceptionNumber = decodeExceptionNumber(savedStatus);
 
-      if (exceptionNumber == EXCEPTION_EXIT)
-        // TODO: only return if all contexts have exited
-        return decodeExceptionParameter(savedStatus);
+      if (exceptionNumber == EXCEPTION_EXIT) {
+        print((int *) "Terminate context/process with ID: ");
+        printInteger(fromID);
+
+        // Delete the actual finished context
+        usedContexts = deleteContext(fromContext, usedContexts);
+
+        // If no contexts left, terminate process
+        if (usedContexts == (int *) 0) {
+            print((int *) "No contexts left");
+            return decodeExceptionParameter(savedStatus);
+        }
+      }
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
@@ -6798,9 +6809,21 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT)
-        // TODO: only return if all contexts have exited
-        return exceptionParameter;
+      } else if (exceptionNumber == EXCEPTION_EXIT) {
+        print((int *) "Terminate context/process with ID: ");
+        printInteger(fromID);
+
+        // Delete the actual finished context
+        usedContexts = deleteContext(fromContext, usedContexts);
+
+        // If no contexts left, terminate process
+        if (usedContexts == (int *) 0) {
+            print((int *) "No contexts left");
+            return exceptionParameter;
+        }
+
+        fromID = getID(usedContexts);
+      }
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
@@ -6816,6 +6839,21 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       toID = fromID;
     }
   }
+}
+
+int roundRobinScheduler(int currentID) {
+    int *nextContext;
+
+    // Get the next context of the context with id = fromID
+    nextContext = getNextContext(findContext(currentID, usedContexts));
+
+    // If there is a next context
+    if (nextContext != (int *) 0) {
+        // Return the id of the next context
+        return getID(nextContext);
+    }
+    // If the actual context is the only context -> return the actual context
+    return getID(usedContexts);
 }
 
 int bootminmob(int argc, int* argv, int machine) {
@@ -6876,6 +6914,7 @@ int boot(int argc, int* argv) {
   // works with mipsters and hypsters
   int initID;
   int exitCode;
+  int contextCnt;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6908,6 +6947,21 @@ int boot(int argc, int* argv) {
 
   // propagate page table of initial context to microkernel boot level
   down_mapPageTable(usedContexts);
+    
+  contextCnt = 0;
+
+  // Load another 10 binaries
+  while (contextCnt < 10) {
+    selfie_create();
+
+    up_loadBinary(getPT(usedContexts));
+
+    up_loadArguments(getPT(usedContexts), argc, argv);
+
+    // propagate page table of initial context to microkernel boot level
+    down_mapPageTable(usedContexts);
+    contextCnt = contextCnt + 1;
+  }
 
   // mipsters and hypsters handle page faults
   exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
