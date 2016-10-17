@@ -2652,30 +2652,10 @@ int load_variable_with_pre_inc(int* variable) {
 
   emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
 
-  // preinc here? ADDIU - SW, no additional LW needed
-  // in future we'll also need pre_dec, post_inc and post_dec
-  // does not work for deref yet!
-
   emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
   emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
   return getType(entry);
-  // pre decrement
-  // emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
-  // emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-
-  // post increment
-  // talloc();
-  // emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 1);
-  // emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-  // tfree(1);
-
-  // post decrement
-  // talloc();
-  // emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), -1);
-  // emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-  // tfree(1);
-
-
 }
 
 int load_variable_with_post_inc(int* variable) {
@@ -2688,7 +2668,8 @@ int load_variable_with_post_inc(int* variable) {
   talloc();
   emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 1);
   emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-  // tfree(1);
+  tfree(1);
+
   return getType(entry);
 }
 
@@ -2699,8 +2680,9 @@ int load_variable_with_pre_dec(int* variable) {
   talloc();
   emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
 
-  emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 1);
+  emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
   emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
   return getType(entry);
 
 }
@@ -2714,12 +2696,11 @@ int load_variable_with_post_dec(int* variable) {
   talloc();
   emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), -1);
   emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-  // tfree(1);
+  tfree(1);
+
   return getType(entry);
 
 }
-
-
 
 void load_integer(int value) {
   // assert: value >= 0 or value == INT_MIN
@@ -3744,16 +3725,15 @@ void gr_statement() {
   } else if(symbol == SYM_MINUSMINUS) {
       gr_expression();
 
-    } else
-      syntaxErrorUnexpected();
+  } else
+    syntaxErrorUnexpected();
 
-      if (symbol == SYM_SEMICOLON)
-        getSymbol();
-      else
-        syntaxErrorSymbol(SYM_SEMICOLON);
-  }
+    if (symbol == SYM_SEMICOLON)
+      getSymbol();
+    else
+      syntaxErrorSymbol(SYM_SEMICOLON);
   // while statement?
-  else if (symbol == SYM_WHILE) {
+  } else if (symbol == SYM_WHILE) {
     gr_while();
   }
   // if statement?
