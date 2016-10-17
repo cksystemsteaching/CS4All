@@ -3004,7 +3004,7 @@ int gr_factor() {
       emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
       emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
       emitIFormat(OP_ADDIU, currentTemporary(), previousTemporary(), 0);
-      // tfree(1);
+      tfree(1);
       do_pre_inc = 0;
 
     } else if (do_pre_dec) {
@@ -3013,67 +3013,63 @@ int gr_factor() {
       emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
       emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
       emitIFormat(OP_ADDIU, currentTemporary(), previousTemporary(), 0);
-      // tfree(1);
+      tfree(1);
       do_pre_dec = 0;
 
     } else if (symbol == SYM_PLUSPLUS) {
       getSymbol();
 
-      // Not working yet
-      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
-      //talloc();
-      //emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
-      //emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 1);
-      //emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+      // talloc and copy address
+      talloc();
+      emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
 
-      //tfree(1);
+      // deref previousTemporary
+      emitIFormat(OP_LW, previousTemporary(), previousTemporary(), 0);
+
+      // talloc and copy address
+      talloc();
+      emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
+
+      // deref previousTemporary
+      emitIFormat(OP_LW, previousTemporary(), previousTemporary(), 0);
+
+      // increment previousTemporary
+      emitIFormat(OP_ADDIU, previousTemporary(), previousTemporary(), 1);
+
+      // store to memory
+      emitIFormat(OP_SW, currentTemporary(), previousTemporary(), 0);
+      tfree(2);
 
     } else if (symbol == SYM_MINUSMINUS) {
       getSymbol();
 
-      // Not working yet
-      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+      // talloc and copy address
+      talloc();
+      emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
 
-      //talloc();
-      //emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), -1);
-      //emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-      //tfree(1);
+      // deref previousTemporary
+      emitIFormat(OP_LW, previousTemporary(), previousTemporary(), 0);
+
+      // talloc and copy address
+      talloc();
+      emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
+
+      // deref previousTemporary
+      emitIFormat(OP_LW, previousTemporary(), previousTemporary(), 0);
+
+      // decrement previousTemporary
+      emitIFormat(OP_ADDIU, previousTemporary(), previousTemporary(), -1);
+
+      // store to memory
+      emitIFormat(OP_SW, currentTemporary(), previousTemporary(), 0);
+      tfree(2);
+
     } else {
       // dereference
       emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
     }
 
     type = INT_T;
-
-  // ++ incrementing
-  //} else if (symbol == SYM_PLUSPLUS) {
-  //    getSymbol();
-
-  // ++ prefix
-  //  if (symbol == SYM_IDENTIFIER){
-  //    getSymbol();
-  //    type = load_variable_with_pre_inc(identifier);
-
-  // postfix ++
-  //  } else
-  //    type = load_variable_with_post_inc(identifier);
-
-
-
-  // -- decrementing
-  //} else if (symbol == SYM_MINUSMINUS){
-  //    getSymbol();
-
-  // -- prefix
-  //  if (symbol == SYM_IDENTIFIER){
-  //    getSymbol();
-  //    type = load_variable_with_pre_dec(identifier);
-
-
-    // postfix --
-  //  } else
-  //    type = load_variable_with_post_dec(identifier);
-
 
   // identifier?
   } else if (symbol == SYM_IDENTIFIER) {
@@ -3098,23 +3094,11 @@ int gr_factor() {
 
       type = load_variable_with_post_inc(variableOrProcedureName);
 
-      //entry = getVariable(variableOrProcedureName);
-      //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
-      //emitIFormat(OP_SW, getScope(entry),currentTemporary(),getAddress(entry) );
-      //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
-
       // variable access: identifier decrement
     } else if(symbol == SYM_MINUSMINUS) {
       getSymbol();
 
       type = load_variable_with_post_dec(variableOrProcedureName);
-      //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
-
-      //entry = getVariable(variableOrProcedureName);
-
-      //emitIFormat(OP_SW, getScope(entry),currentTemporary(),getAddress(entry) );
-      //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
-
 
       // reset return register to initial return value
       // for missing return expressions
@@ -3722,11 +3706,13 @@ void gr_statement() {
     } else if(symbol == SYM_PLUSPLUS) {
       load_variable_with_post_inc(variableOrProcedureName);
       tfree(1);
+      getSymbol();
 
     // identifier "--"
     } else if(symbol == SYM_MINUSMINUS) {
       load_variable_with_post_dec(variableOrProcedureName);
       tfree(1);
+      getSymbol();
 
     } else
     syntaxErrorUnexpected();
