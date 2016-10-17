@@ -2909,6 +2909,7 @@ int gr_factor() {
         tfree(1);
         getSymbol();
       } else if (symbol == SYM_LPARENTHESIS) {
+        getSymbol();
         gr_expression();
         talloc();
         emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
@@ -2916,9 +2917,10 @@ int gr_factor() {
         emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
         emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), previousTemporary(), FCT_ADDU);
         tfree(1);
-        getSymbol();
-        if(symbol != SYM_RPARENTHESIS)
-          syntaxErrorUnexpected();
+        if (symbol == SYM_RPARENTHESIS)
+          getSymbol();
+        else
+          syntaxErrorSymbol(SYM_RPARENTHESIS);
       }
     }
   }
@@ -7117,10 +7119,6 @@ int selfie() {
 }
 
 int main(int argc, int* argv) {
-  int exitCode;
-  int i;
-  int j;
-  int *x;
 
   initSelfie(argc, (int*) argv);
 
@@ -7128,11 +7126,6 @@ int main(int argc, int* argv) {
 
   print((int *)"This is the Starc Mipsdustries Selfie");
   println();
-
-  x = malloc(4);
-  *(x+1) = 9999;
-  j = ++*(x +1);
-  printInteger(j);
 
 
   exitCode = selfie();
