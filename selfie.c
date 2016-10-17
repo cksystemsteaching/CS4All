@@ -6842,10 +6842,10 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         println();
         return -1;
       }
-
+			else
+				toID=schedule(fromContext);
       // TODO: scheduler should go here
       //toID = fromID;
-			toID=schedule(fromContext);
     }
   }
 }
