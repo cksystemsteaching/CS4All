@@ -2857,6 +2857,7 @@ int gr_factor() {
   int type;
   int hasPrefixOperator;
   int operator;
+  int isExpression;
   int* entry;
 
   int* variableOrProcedureName;
@@ -2907,6 +2908,7 @@ int gr_factor() {
   }
 
   hasPrefixOperator = 0;
+  isExpression = 0;
 
   // increment/decrement?
   if (isIncrementOrDecrement()) {
@@ -2932,6 +2934,8 @@ int gr_factor() {
     // * "(" expression ")"
     } else if (symbol == SYM_LPARENTHESIS) {
       getSymbol();
+
+      isExpression = 1;
 
       type = gr_expression();
 
@@ -2959,6 +2963,26 @@ int gr_factor() {
     }
     else
       emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
+    if (isIncrementOrDecrement()) {
+      if (isExpression) {
+        syntaxErrorMessage((int*) "expression is not assignable");
+
+        getSymbol();
+      } else {
+        load_variable(identifier);
+        if (symbol == SYM_PLUSPLUS)
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), WORDSIZE);
+        else
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -WORDSIZE);
+        entry = getVariable(identifier);
+
+        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+        tfree(1);
+
+        getSymbol();
+      }
+    }
 
     type = INT_T;
 
@@ -7199,6 +7223,25 @@ int main(int argc, int* argv) {
   println();
   print((int*) "a = ");
   printInteger(a);
+  println();
+  print((int*) "------");
+  println();
+
+  // pointer tests
+  pointer = malloc(2 * SIZEOFINT);
+  *pointer = 3;
+  *(pointer + 1) = 5;
+  print((int*) "*pointer = ");
+  printInteger(*pointer);
+  println();print((int*) "*(pointer + 1) = ");
+  printInteger(*(pointer + 1));
+  println();
+  a = *pointer++;
+  print((int*) "a = *pointer++ = ");
+  printInteger(a);
+  println();
+  print((int*) "*pointer = ");
+  printInteger(*pointer);
   println();
 
   exitCode = selfie();
