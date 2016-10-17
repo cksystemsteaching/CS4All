@@ -1262,6 +1262,10 @@ void setArgument(int* argv);
 
 int USAGE = 1;
 
+// ***PATRICK***
+int N = 3;
+int M = 5;
+
 // ------------------------ GLOBAL VARIABLES -----------------------
 
 int selfie_argc = 0;
@@ -6773,9 +6777,72 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int exceptionParameter;
   int frame;
 
+  ////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////
+  // START **PATRICK*** IDEE für Round Robin
+  // if any process is done, it will terminate automatically (handled in selfie_switch() -> mipster_switch() 
+  // -> runUntilExecute() -> terminate())
   while (1) {
     // ***PATRICK*** selfie_switch() is part of Hypster Syscalls which is part of Interface;
-    // ***PATRICK*** switches to MIPSTER or HYPSTER depending on toID param ???
+    // ***PATRICK*** switches to MIPSTER or HYPSTER depending on toID param AND eventually calls execute()
+    fromID = selfie_switch(toID);
+
+    // ***PATRICK*** findContext() is part of Contexts which is part of emul;
+    fromContext = findContext(fromID, usedContexts);
+
+    // assert: fromContext must be in usedContexts (created here)
+
+    // ***PATRICK*** getParent() is part of Contexts/Emulator; 
+    // ***PATRICK*** selfie_ID() is part of Hypster Syscalls which is part of Interface; retuns mipster or hypster id
+    if (getParent(fromContext) != selfie_ID())
+      // switch to parent which is in charge of handling exceptions
+      toID = getParent(fromContext);
+    else {
+      // we are the parent in charge of handling exceptions
+      // ***PATRICK*** selfie_status() is part of Hypster Syscalls/Interface; returns status (?) of hypster or mipster
+      savedStatus = selfie_status();
+
+      exceptionNumber    = decodeExceptionNumber(savedStatus);
+      exceptionParameter = decodeExceptionParameter(savedStatus);
+
+      if (exceptionNumber == EXCEPTION_PAGEFAULT) {
+        frame = (int) palloc();
+
+        // TODO: use this table to unmap and reuse frames
+        mapPage(getPT(fromContext), exceptionParameter, frame);
+
+        // page table on microkernel boot level
+        selfie_map(fromID, exceptionParameter, frame);
+      } else if (exceptionNumber == EXCEPTION_EXIT)
+        // TODO: only return if all contexts have exited
+        return exceptionParameter;
+      else if (exceptionNumber != EXCEPTION_TIMER) {
+        print(binaryName);
+        print((int*) ": context ");
+        printInteger(getID(fromContext));
+        print((int*) " throws uncaught ");
+        printStatus(savedStatus);
+        println();
+
+        return -1;
+      }
+
+      // TODO: scheduler should go here
+
+      // ***PATRICK*** switch to next process after M instructions
+      if(fromContext.getPC() % M == 0){
+        toID = fromID;
+      }
+      
+    }
+  // END ***PATRICK***
+  ////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////
+
+
+  while (1) {
+    // ***PATRICK*** selfie_switch() is part of Hypster Syscalls which is part of Interface;
+    // ***PATRICK*** switches to MIPSTER or HYPSTER depending on toID param AND eventually calls execute()
     fromID = selfie_switch(toID);
 
     // ***PATRICK*** findContext() is part of Contexts which is part of emul;
@@ -6906,6 +6973,21 @@ int boot(int argc, int* argv) {
   resetMicrokernel();
 
 	//abstract prototype of context creation for concurrent program execution
+
+  // ***PATRICK*** IDEE zum Erzeugen von N Prozessen
+  // int programIndex = 0;
+  // id = selfie_create();
+  // while(programIndex < N){
+  //    
+  //    usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
+  //    up_loadBinary(getPT(usedContexts));
+  //    up_loadArguments(getPT(usedContexts), argc, argv);
+  //    down_mapPageTable(usedContexts);
+  //
+  //    id = selfieCreate();    
+  //    programIndex = programIndex + 1;
+  // }
+
 	while *program-index* < *number_programs* {
 	 	// create initial context on microkernel boot level
   	initID = selfie_create();
