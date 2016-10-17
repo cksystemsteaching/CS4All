@@ -7215,7 +7215,9 @@ int main(int argc, int* argv) {
 
   initLibrary();
 
-  println(); print((int*)"This is the gcc Selfie."); println(); println();
+  println(); print((int*)"This is the gcc Selfie."); println();
+
+
 
   test = 1;
   // ################################################################
