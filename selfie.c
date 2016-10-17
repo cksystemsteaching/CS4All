@@ -2999,6 +2999,23 @@ int gr_factor() {
 
         emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
       }
+
+      if (isIncrementOrDecrement()) {
+        talloc();
+        emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
+
+        if (symbol == SYM_PLUSPLUS)
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        else
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+
+        entry = getVariable(variableOrProcedureName);
+
+        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+        tfree(1);
+
+        getSymbol();
+      }
     }
 
   // integer?
@@ -7141,13 +7158,47 @@ int selfie() {
 }
 
 int main(int argc, int* argv) {
-  int exitCode;
+  int  exitCode;
+  int  a;
+  int  b;
+  int  c;
+  int* pointer;
 
   initSelfie(argc, (int*) argv);
 
   initLibrary();
 
   print((int*) "This is RSQ Selfie");
+  println();
+
+  a = 1;
+  print((int*) "a = ");
+  printInteger(a);
+  println();
+  b = a++;   // b = 1, a = 2
+  print((int*) "b = a++ = ");
+  printInteger(b);
+  println();
+  print((int*) "a = ");
+  printInteger(a);
+  println();
+  c = ++a;   // c = 3, a = 3
+  print((int*) "c = a++ = ");
+  printInteger(c);
+  println();
+  print((int*) "a = ");
+  printInteger(a);
+  println();
+
+  c = --b + a--;
+  print((int*) "c = --b + a-- = ");
+  printInteger(c);
+  println();
+  print((int*) "b = ");
+  printInteger(b);
+  println();
+  print((int*) "a = ");
+  printInteger(a);
   println();
 
   exitCode = selfie();
