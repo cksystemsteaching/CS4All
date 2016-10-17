@@ -6976,15 +6976,18 @@ int boot(int argc, int* argv) {
 
   // ***PATRICK*** IDEE zum Erzeugen von N Prozessen
   // int programIndex = 0;
-  // id = selfie_create();
+  // previousId = selfieCreate();
+  // usedContexts = createContext(previousID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
   // while(programIndex < N){
-  //    
-  //    usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
+  //
   //    up_loadBinary(getPT(usedContexts));
   //    up_loadArguments(getPT(usedContexts), argc, argv);
   //    down_mapPageTable(usedContexts);
   //
-  //    id = selfieCreate();    
+  //
+  //    nextId = selfieCreate();
+  //    usedContexts = createContext(nextId, selfie_ID(), previousId);  // 3rd arg = id of previous context)
+  //    previousId = nextId;
   //    programIndex = programIndex + 1;
   // }
 
