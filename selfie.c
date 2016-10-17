@@ -3122,36 +3122,12 @@ int gr_factor() {
             emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
         }
 
-
-
+        // * lvalue?
     } else if (symbol == SYM_ASTERISK) {
-        getSymbol();
+        gr_lvalue();
 
-        // ["*"] identifier
-        if (symbol == SYM_IDENTIFIER) {
-            type = load_variable(identifier);
-
-            getSymbol();
-
-            // * "(" expression ")"
-        } else if (symbol == SYM_LPARENTHESIS) {
-            getSymbol();
-
-            type = gr_expression();
-
-            if (symbol == SYM_RPARENTHESIS)
-                getSymbol();
-            else
-                syntaxErrorSymbol(SYM_RPARENTHESIS);
-        } else
-            syntaxErrorUnexpected();
-
-        if (type != INTSTAR_T)
-            typeWarning(INTSTAR_T, type);
-
-        // dereference
+        //dereference
         emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
-
         type = INT_T;
 
         // identifier?

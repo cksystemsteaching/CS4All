@@ -24,24 +24,12 @@ void dumbITOA(int number) {
 
 int main(int argc, int *argv) {
     int *a;
-    int *b;
-    int *ptr;
-    int i;
-    a = malloc(3 * 4);
-    ptr = a;
-    i = 0;
-    *a = 1;
-    *(a+1) = 2;
-    *(a+2) = 3;
-
-    b = ++a + 1;
-    *b = 99;
-    while (i < 3) {
-        dumbITOA(*(ptr+i));
-        ++i;
-    }
-
-
+    int b;
+    a = malloc(4);
+    *a = 10;
+    b = --*a;
+    dumbITOA(b);
+    dumbITOA(*a);
 }
 
 void funcA() {
@@ -131,7 +119,9 @@ void funcF() {
 
     ++*a;
     ++*a;
+    dumbITOA(*a);
     *a = *a + 3;
+    dumbITOA(*a);
     ++*a;
 
     dumbITOA(*a);
