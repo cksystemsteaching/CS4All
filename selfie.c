@@ -2456,9 +2456,10 @@ int lookForStatement() {
     return 0;
   else if (symbol == SYM_IDENTIFIER)
     return 0;
-  else if (symbol == SYM_PLUSPLUS)
+  else if (symbol == SYM_PLUSPLUS) {
+    getSymbol();
     return 0;
-  else if (symbol == SYM_WHILE)
+  } else if (symbol == SYM_WHILE)
     return 0;
   else if (symbol == SYM_IF)
     return 0;
@@ -2859,32 +2860,8 @@ int gr_factor() {
       getSymbol();
   }
 
-  if (symbol == SYM_PLUSPLUS) {
-    plusPlusFound = 1;
-    getSymbol();
-    if (symbol == SYM_IDENTIFIER) {
-      load_variable(identifier);
-      //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
-    } else if (symbol == SYM_ASTERISK) {
-      getSymbol();
-      if (symbol == SYM_IDENTIFIER) {
-        load_variable(identifier);
-        talloc();
-        getSymbol();
-        //emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
-        //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
-        //emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
-        tfree(1);
-      } else if (symbol == SYM_LPARENTHESIS) {
-        gr_expression();
-        emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
-        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
-      }
-    }
-  }
-
   // optional cast: [ cast ]
-  else if (symbol == SYM_LPARENTHESIS) {
+  if (symbol == SYM_LPARENTHESIS) {
     getSymbol();
 
     // cast: "(" "int" [ "*" ] ")"
@@ -2913,14 +2890,46 @@ int gr_factor() {
     }
   }
 
+  if (symbol == SYM_PLUSPLUS) {
+    plusPlusFound = 1;
+    getSymbol();
+    if (symbol == SYM_IDENTIFIER) {
+      load_variable(identifier);
+      //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+    } else if (symbol == SYM_ASTERISK) {
+      plusPlusFound = 0;
+      getSymbol();
+      if (symbol == SYM_IDENTIFIER) {
+        load_variable(identifier);
+        talloc();
+        emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+        emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), previousTemporary(), FCT_ADDU);
+        tfree(1);
+        getSymbol();
+      } else if (symbol == SYM_LPARENTHESIS) {
+        gr_expression();
+        talloc();
+        emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+        emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), previousTemporary(), FCT_ADDU);
+        tfree(1);
+        getSymbol();
+        if(symbol != SYM_RPARENTHESIS)
+          syntaxErrorUnexpected();
+      }
+    }
+  }
+
   // dereference?
-  if (symbol == SYM_ASTERISK) {
+  else if (symbol == SYM_ASTERISK) {
     getSymbol();
 
     // ["*"] identifier
     if (symbol == SYM_IDENTIFIER) {
       type = load_variable(identifier);
-
       getSymbol();
 
     // * "(" expression ")"
@@ -7120,9 +7129,9 @@ int main(int argc, int* argv) {
   print((int *)"This is the Starc Mipsdustries Selfie");
   println();
 
-  i = 9999;
-  j = ++i + i;
-
+  x = malloc(4);
+  *(x+1) = 9999;
+  j = ++*(x +1);
   printInteger(j);
 
 
