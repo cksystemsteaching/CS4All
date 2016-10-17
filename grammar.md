@@ -50,7 +50,7 @@ procedure        = "(" [ variable { "," variable } ] ")"
 variable         = type identifier .
 
 statement        = call ";" | while | if | return ";" |
-                   ( [ "++" ] [ "*" ] identifier | [ "++" ] "*" "(" expression ")" )
+                   ( [ "++" ] [ "*" ] identifier ) | ( [ "++" ] "*" "(" expression ")" )
                      "=" expression ";" .
 
 call             = identifier "(" [ expression { "," expression } ] ")" .
