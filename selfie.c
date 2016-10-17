@@ -3718,14 +3718,17 @@ void gr_statement() {
 
       numberOfAssignments = numberOfAssignments + 1;
 
-    // incrementing identifier
-  } else if(symbol == SYM_PLUSPLUS) {
-      gr_expression();
-    // decrementing identifier
-  } else if(symbol == SYM_MINUSMINUS) {
-      gr_expression();
+    // identifier "++"
+    } else if(symbol == SYM_PLUSPLUS) {
+      load_variable_with_post_inc(variableOrProcedureName);
+      tfree(1);
 
-  } else
+    // identifier "--"
+    } else if(symbol == SYM_MINUSMINUS) {
+      load_variable_with_post_dec(variableOrProcedureName);
+      tfree(1);
+
+    } else
     syntaxErrorUnexpected();
 
     if (symbol == SYM_SEMICOLON)
@@ -3741,16 +3744,16 @@ void gr_statement() {
     gr_if();
 
   // incrementing statement?
-} else if(symbol == SYM_PLUSPLUS) {
-	gr_expression();
+  } else if(symbol == SYM_PLUSPLUS) {
+    gr_expression();
 
-	if (symbol == SYM_SEMICOLON)
+    if (symbol == SYM_SEMICOLON)
       getSymbol();
     else
       syntaxErrorSymbol(SYM_SEMICOLON);
 
   // decrement statement?
-} else if(symbol == SYM_MINUSMINUS) {
+  } else if(symbol == SYM_MINUSMINUS) {
     gr_expression();
 
     if (symbol == SYM_SEMICOLON)
