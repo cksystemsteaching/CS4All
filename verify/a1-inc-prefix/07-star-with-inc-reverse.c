@@ -6,6 +6,6 @@
 int main(int argc, int* argv) {
   int *l;
   l = malloc(8); // 2x int
-  *++l = 42; // msg
+  *(++l) = 42; // msg
   return *l; // msg
 }
