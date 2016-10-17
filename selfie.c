@@ -2979,10 +2979,6 @@ int gr_factor() {
 			  typeWarning(INT_T, type);
 		  emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
       emitIFormat(OP_SW, getScope(getVariable(identifier)), currentTemporary(), getAddress(getVariable(identifier)));
-      if (symbol != SYM_SEMICOLON){
-        syntaxErrorSymbol(SYM_SEMICOLON);
-      }
-      getSymbol();
 	  } else {
 		  syntaxErrorSymbol(SYM_IDENTIFIER);
 	  }
