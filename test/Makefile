@@ -26,6 +26,14 @@ test_pre_increment:
 	../selfie -c pre_increment/postinc_statement_1.c -d 1 | grep -E 'exit code 5556'
 	../selfie -c pre_increment/postdec_statement_1.c
 	../selfie -c pre_increment/postdec_statement_1.c -d 1 | grep -E 'exit code 5554'
+	../selfie -c pre_increment/preinc_deref_statement_1.c
+	../selfie -c pre_increment/preinc_deref_statement_1.c -d 1 | grep -E 'exit code 7655'
+	../selfie -c pre_increment/postinc_deref_statement_1.c
+	../selfie -c pre_increment/postinc_deref_statement_1.c -d 1 | grep -E 'exit code 2346'
+	../selfie -c pre_increment/preinc_pointer_1.c
+	../selfie -c pre_increment/preinc_pointer_1.c -d 1 | grep -E 'exit code 2345'
+	../selfie -c pre_increment/postinc_pointer_1.c
+	../selfie -c pre_increment/postinc_pointer_1.c -d 1 | grep -E 'exit code 2345'
 
 clean:
 	rm -rf *.s
