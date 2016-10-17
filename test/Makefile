@@ -18,6 +18,14 @@ test_pre_increment:
 	../selfie -c pre_increment/predec1.c -d 1 | grep -E 'exit code 2'
 	../selfie -c pre_increment/postdec1.c
 	../selfie -c pre_increment/postdec1.c -d 1 | grep -E 'exit code 3'
+	../selfie -c pre_increment/preinc_statement_1.c
+	../selfie -c pre_increment/preinc_statement_1.c -d 1 | grep -E 'exit code 5556'
+	../selfie -c pre_increment/predec_statement_1.c
+	../selfie -c pre_increment/predec_statement_1.c -d 1 | grep -E 'exit code 5554'
+	../selfie -c pre_increment/postinc_statement_1.c
+	../selfie -c pre_increment/postinc_statement_1.c -d 1 | grep -E 'exit code 5556'
+	../selfie -c pre_increment/postdec_statement_1.c
+	../selfie -c pre_increment/postdec_statement_1.c -d 1 | grep -E 'exit code 5554'
 
 clean:
 	rm -rf *.s
