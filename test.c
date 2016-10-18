@@ -4,7 +4,7 @@ int main(int argc, int* argv) {
     i = 0;
 
     while (i < 20) {
-        write(1, "Testoutput...", 50);
+        write(1, "Testoutput", 50);
         i = i + 1;
     }
 
