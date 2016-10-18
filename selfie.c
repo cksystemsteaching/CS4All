@@ -1026,7 +1026,8 @@ int debug_exception = 0;
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
-int TIMESLICE = 10;
+int TIMESLICE = 1000000;
+int BINARY_COUNT = 1;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1258,6 +1259,8 @@ int* remainingArguments();
 int* peekArgument();
 int* getArgument();
 void setArgument(int* argv);
+void setBinaryCount();
+void setInstructionsPerCycle();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -6798,7 +6801,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       // we are the parent in charge of handling exceptions
       savedStatus = selfie_status();
 
-      exceptionNumber    = decodeExceptionNumber(savedStatus);
+      exceptionNumber  = decodeExceptionNumber(savedStatus);
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
@@ -6812,14 +6815,16 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       } else if (exceptionNumber == EXCEPTION_EXIT) {
         print((int *) "Terminate context/process with ID: ");
         printInteger(fromID);
+        println();
 
         // Delete the actual finished context
         usedContexts = deleteContext(fromContext, usedContexts);
 
         // If no contexts left, terminate process
         if (usedContexts == (int *) 0) {
-            print((int *) "No contexts left");
-            return exceptionParameter;
+          print((int *) "No contexts left");
+          println();
+          return exceptionParameter;
         }
 
         fromID = getID(usedContexts);
@@ -6837,13 +6842,25 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
       // Get the next context id with the round robin scheduler
       toID = roundRobinScheduler(fromID);
-        }
+
+      if (toID != fromID) {
+        print((int *) "Switch context: ");
+        printInteger(fromID);
+        print((int *) "->");
+        printInteger(toID);
+        println();
+      }
     }
+  }
 }
 
 int roundRobinScheduler(int currentID) {
     int *nextContext;
 
+    if (BINARY_COUNT == 1) {
+      nextContext = getNextContext(findContext(currentID, usedContexts));
+      return currentID;
+    }
     // Get the next context of the context with id = fromID
     nextContext = getNextContext(findContext(currentID, usedContexts));
 
@@ -6947,12 +6964,17 @@ int boot(int argc, int* argv) {
 
   // propagate page table of initial context to microkernel boot level
   down_mapPageTable(usedContexts);
-    
-  contextCnt = 0;
 
-  // Load another 10 binaries
-  while (contextCnt < 10) {
-    selfie_create();
+  contextCnt = 1;
+
+  // Load the context BINARY_COUNT times
+  while (contextCnt <= BINARY_COUNT) {
+    // create initial context on microkernel boot level
+    initID = selfie_create();
+
+    if (usedContexts == (int*) 0)
+      // create duplicate of the initial context on our boot level
+      usedContexts = createContext(initID, selfie_ID(), (int*) 0);
 
     up_loadBinary(getPT(usedContexts));
 
@@ -7072,6 +7094,15 @@ void setArgument(int* argv) {
   *selfie_argv = (int) argv;
 }
 
+void setBinaryCount() {
+  // Set the count of excecuting binaries
+  BINARY_COUNT = atoi(getArgument());
+}
+void setInstructionsPerCycle() {
+  // Set the instructions per cycle
+  TIMESLICE = atoi(getArgument());
+}
+
 int selfie() {
   int* option;
 
@@ -7097,6 +7128,10 @@ int selfie() {
         selfie_disassemble();
       else if (stringCompare(option, (int*) "-l"))
         selfie_load();
+      else if (stringCompare(option, (int*) "-n"))
+        setBinaryCount();
+      else if (stringCompare(option, (int*) "-i"))
+        setInstructionsPerCycle();
       else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
@@ -7122,14 +7157,14 @@ int main(int argc, int* argv) {
 
   initLibrary();
     
-  print("This is MT Selfie");
+  print((int*)"This is MT Selfie");
   println();
 
   exitCode = selfie();
 
   if (exitCode == USAGE) {
     print(selfieName);
-    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary } [ (-m | -d | -y | -min | -mob ) size ... ] ");
+    print((int*) ": usage: selfie { -c { source } | -o bin | -s assembly | -l bin [ -n bc | -i ipc ] } [ (-m | -d | -y | -min | -mob ) size ] ");
     println();
 
     return 0;
