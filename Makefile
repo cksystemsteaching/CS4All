@@ -6,7 +6,7 @@ selfie: selfie.c
 	$(CC) $(CFLAGS) $< -o $@
 
 # Consider these targets as targets, not files
-.PHONY : test clean
+.PHONY : test assignment1 clean
 
 # Test self-compilation, self-execution, and self-hosting
 test: selfie
@@ -25,6 +25,14 @@ test: selfie
 	diff -q selfie3.m selfie5.m
 	diff -q selfie3.s selfie5.s
 	./selfie -c -mob 1
+
+
+assignment1:
+	./selfie -c testfiles/printexample.c selfie.c -conc 3 -inst 1 -m 1
+	./selfie -c testfiles/printexample.c selfie.c -conc 3 -inst 100000 -m 1
+
+	
+
 
 # Clean up
 clean:
