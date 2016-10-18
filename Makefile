@@ -9,7 +9,6 @@ selfie: selfie.c
 .PHONY : test clean
 
 # Test self-compilation, self-execution, and self-hosting
-# Test the assignment01 -> compile the test.c file and execute it 5 times with 100 instructions per cycle
 test: selfie
 	./selfie -c selfie.c -o selfie1.m -s selfie1.s -m 2 -c selfie.c -o selfie2.m -s selfie2.s
 	diff -q selfie1.m selfie2.m
@@ -26,7 +25,13 @@ test: selfie
 	diff -q selfie3.m selfie5.m
 	diff -q selfie3.s selfie5.s
 	./selfie -c -mob 1
-	./selfie -c test.c -o test.m
+
+# Testfile with linking selfie librarys
+test-file:
+	./selfie -c test.c selfie.c -o test.m
+
+# Test the assignment01 -> compile the test.c file and execute it 5 times with 100 instructions per cycle
+test-assignment01:
 	./selfie -l test.m -n 5 -i 100 -m 4
 
 # Clean up
