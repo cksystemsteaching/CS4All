@@ -6978,8 +6978,11 @@ int boot(int argc, int* argv) {
    	programIndex = 0;
    	previousId = selfie_create();
    	usedContexts = createContext(previousId, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
+  	print((int*) "Now starting while!");
+  	println();
   	while(programIndex < N){
-  
+  		printInteger(programIndex);
+  		println();
       up_loadBinary(getPT(usedContexts));
       up_loadArguments(getPT(usedContexts), argc, argv);
       down_mapPageTable(usedContexts);

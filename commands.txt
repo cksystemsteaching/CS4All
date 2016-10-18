@@ -27,7 +27,7 @@ Semantically equivalent:
 
 testfile mit selfie compilieren:
 
-./selfie -c test_program.c -o test_program.m
+./selfie -c test_program.c selfie.c -o test_program.m
 
 ------
 
