@@ -6950,31 +6950,13 @@ int boot(int argc, int* argv) {
 
   resetMicrokernel();
 
-  // create initial context on microkernel boot level
-  initID = selfie_create();
-
-  if (usedContexts == (int*) 0)
-    // create duplicate of the initial context on our boot level
-    usedContexts = createContext(initID, selfie_ID(), (int*) 0);
-
-  up_loadBinary(getPT(usedContexts));
-
-  up_loadArguments(getPT(usedContexts), argc, argv);
-
-  // propagate page table of initial context to microkernel boot level
-  down_mapPageTable(usedContexts);
-
   contextCnt = 1;
 
   // Load the context BINARY_COUNT times
   while (contextCnt <= BINARY_COUNT) {
     // create initial context on microkernel boot level
     initID = selfie_create();
-
-    if (usedContexts == (int*) 0)
-      // create duplicate of the initial context on our boot level
-      usedContexts = createContext(initID, selfie_ID(), (int*) 0);
-
+    
     up_loadBinary(getPT(usedContexts));
 
     up_loadArguments(getPT(usedContexts), argc, argv);
