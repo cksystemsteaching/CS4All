@@ -1263,8 +1263,8 @@ void setArgument(int* argv);
 int USAGE = 1;
 
 // ***PATRICK***
-int N = 3;
-int M = 5;
+int N = 3; 	//How many binarys shall be executed?
+int M = 5;	//Number of instructions to be executed before jumping to the next context
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -6805,17 +6805,18 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       exceptionNumber    = decodeExceptionNumber(savedStatus);
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
-      if (exceptionNumber == EXCEPTION_PAGEFAULT) {
-        frame = (int) palloc();
+	    if (exceptionNumber == EXCEPTION_PAGEFAULT) {
+	        frame = (int) palloc();
 
-        // TODO: use this table to unmap and reuse frames
-        mapPage(getPT(fromContext), exceptionParameter, frame);
+	        // TODO: use this table to unmap and reuse frames
+	        mapPage(getPT(fromContext), exceptionParameter, frame);
 
-        // page table on microkernel boot level
-        selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT)
-        // TODO: only return if all contexts have exited
-        return exceptionParameter;
+	        // page table on microkernel boot level
+	        selfie_map(fromID, exceptionParameter, frame);
+	    } 
+    	else if (exceptionNumber == EXCEPTION_EXIT)
+        	// TODO: only return if all contexts have exited
+        	return exceptionParameter;
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
@@ -6830,7 +6831,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       // TODO: scheduler should go here
 
       // ***PATRICK*** switch to next process after M instructions
-      if(fromContext.getPC() % M == 0){
+      if(getPC(fromContext) % M == 0){
         toID = fromID;
       }
       
@@ -6840,54 +6841,48 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   ////////////////////////////////////////////////////////////////////////////////////
 
 
-  while (1) {
-    // ***PATRICK*** selfie_switch() is part of Hypster Syscalls which is part of Interface;
-    // ***PATRICK*** switches to MIPSTER or HYPSTER depending on toID param AND eventually calls execute()
-    fromID = selfie_switch(toID);
+  //while (1) {
+    //fromID = selfie_switch(toID);
 
-    // ***PATRICK*** findContext() is part of Contexts which is part of emul;
-    fromContext = findContext(fromID, usedContexts);
+    //fromContext = findContext(fromID, usedContexts);
 
     // assert: fromContext must be in usedContexts (created here)
 
-    // ***PATRICK*** getParent() is part of Contexts/Emulator; 
-    // ***PATRICK*** selfie_ID() is part of Hypster Syscalls which is part of Interface; retuns mipster or hypster id
-    if (getParent(fromContext) != selfie_ID())
+    //if (getParent(fromContext) != selfie_ID())
       // switch to parent which is in charge of handling exceptions
-      toID = getParent(fromContext);
-    else {
+      //toID = getParent(fromContext);
+    //else {
       // we are the parent in charge of handling exceptions
-      // ***PATRICK*** selfie_status() is part of Hypster Syscalls/Interface; returns status (?) of hypster or mipster
-      savedStatus = selfie_status();
+      //savedStatus = selfie_status();
 
-      exceptionNumber    = decodeExceptionNumber(savedStatus);
-      exceptionParameter = decodeExceptionParameter(savedStatus);
+      //exceptionNumber    = decodeExceptionNumber(savedStatus);
+      //exceptionParameter = decodeExceptionParameter(savedStatus);
 
-      if (exceptionNumber == EXCEPTION_PAGEFAULT) {
-        frame = (int) palloc();
+      //if (exceptionNumber == EXCEPTION_PAGEFAULT) {
+        //frame = (int) palloc();
 
         // TODO: use this table to unmap and reuse frames
-        mapPage(getPT(fromContext), exceptionParameter, frame);
+        //mapPage(getPT(fromContext), exceptionParameter, frame);
 
         // page table on microkernel boot level
-        selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT)
+        //selfie_map(fromID, exceptionParameter, frame);
+      //} else if (exceptionNumber == EXCEPTION_EXIT)
         // TODO: only return if all contexts have exited
-        return exceptionParameter;
-      else if (exceptionNumber != EXCEPTION_TIMER) {
-        print(binaryName);
-        print((int*) ": context ");
-        printInteger(getID(fromContext));
-        print((int*) " throws uncaught ");
-        printStatus(savedStatus);
-        println();
+        //return exceptionParameter;
+     // else if (exceptionNumber != EXCEPTION_TIMER) {
+       // print(binaryName);
+       // print((int*) ": context ");
+       // printInteger(getID(fromContext));
+        //print((int*) " throws uncaught ");
+       // printStatus(savedStatus);
+        //println();
 
-        return -1;
-      }
+        //return -1;
+      //}
 
       // TODO: scheduler should go here
-      toID = fromID;
-    }
+      //toID = fromID;
+   // }
   }
 }
 
@@ -6950,6 +6945,10 @@ int boot(int argc, int* argv) {
   int initID;
   int exitCode;
 
+  //***PATRICK***
+  int previousId;
+  int nextId;
+
   print(selfieName);
   print((int*) ": this is selfie's ");
   if (mipster)
@@ -6975,41 +6974,42 @@ int boot(int argc, int* argv) {
 	//abstract prototype of context creation for concurrent program execution
 
   // ***PATRICK*** IDEE zum Erzeugen von N Prozessen
-  // int programIndex = 0;
-  // previousId = selfieCreate();
-  // usedContexts = createContext(previousID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
-  // while(programIndex < N){
-  //
-  //    up_loadBinary(getPT(usedContexts));
-  //    up_loadArguments(getPT(usedContexts), argc, argv);
-  //    down_mapPageTable(usedContexts);
-  //
-  //
-  //    nextId = selfieCreate();
-  //    usedContexts = createContext(nextId, selfie_ID(), previousId);  // 3rd arg = id of previous context)
-  //    previousId = nextId;
-  //    programIndex = programIndex + 1;
-  // }
+   	int programIndex = 0;
+   	previousId = selfieCreate();
+   	usedContexts = createContext(previousId, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
+  	while(programIndex < N){
+  
+      up_loadBinary(getPT(usedContexts));
+      up_loadArguments(getPT(usedContexts), argc, argv);
+      down_mapPageTable(usedContexts);
+  
+  
+      nextId = selfieCreate();
+      usedContexts = createContext(nextId, selfie_ID(), previousId);  // 3rd arg = id of previous context)
+      previousId = nextId;
+      programIndex = programIndex + 1;
+   	}
 
-	while *program-index* < *number_programs* {
+////correct part, DO NOT DELETE
+	//while *program-index* < *number_programs* {
 	 	// create initial context on microkernel boot level
-  	initID = selfie_create();
+  	//initID = selfie_create();
 
-	  if (usedContexts == (int*) 0)
+	  //if (usedContexts == (int*) 0)
 	    // create duplicate of the initial context on our boot level
-	    usedContexts = createContext(initID, selfie_ID(), (int*) 0);	// 3rd arg = id of previous context)
+	    //usedContexts = createContext(initID, selfie_ID(), (int*) 0);	// 3rd arg = id of previous context)
 
     // ***PATRICK*** up_loadBinary() is part of Kernel which is part of emulator; mapAndStoreVirtualMemory() in param table
     // ***PATRICK*** getPT() is part of Context which is part of emulator
-	  up_loadBinary(getPT(usedContexts));
+	  //up_loadBinary(getPT(usedContexts));
 
     // ***PATRICK*** up_loadArguments() is part of kernel which is part of emul; pushes arguments on stack
-	  up_loadArguments(getPT(usedContexts), argc, argv);
+	  //up_loadArguments(getPT(usedContexts), argc, argv);
 
 	  // propagate page table of initial context to microkernel boot level
     // ***PATRICK*** down_mapPageTable() is part of kernel which is part of emulator;
-	  down_mapPageTable(usedContexts);
-	}
+	  //down_mapPageTable(usedContexts);
+	//}
 
 	// mipsters and hypsters handle page faults
   // ***PATRICK*** runOrHostUntilExitWithPageFaultHandling() is part of kernel which is part of emul;
