@@ -6473,7 +6473,8 @@ int* allocateContext(int ID, int parentID) {
 
 int* createContext(int ID, int parentID, int* in) {
   int* context;
-
+  print("Creating context...");
+  println();
   context = allocateContext(ID, parentID);
 
   setNextContext(context, in);
@@ -6829,7 +6830,6 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       }
 
       // TODO: scheduler should go here
-
       // ***PATRICK*** switch to next process after M instructions
       if(getPC(fromContext) % M == 0){
         toID = fromID;
