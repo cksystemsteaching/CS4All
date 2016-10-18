@@ -6742,6 +6742,7 @@ int runUntilExitWithoutExceptionHandling(int toID) {
   int savedStatus;
   int exceptionNumber;
 
+
   while (1) {
     fromID = mipster_switch(toID);
 
@@ -6789,17 +6790,27 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int exceptionParameter;
   int frame;
 
+
+
+	//fromID = toID;
   while (1) {
+
     fromID = selfie_switch(toID);
-		
+			
     fromContext = findContext(fromID, usedContexts);
-		
+//		println();
+//		print((int*)"USED CONTEXT");
+//		printInteger(fromID);
+//		println();
     // assert: fromContext must be in usedContexts (created here)
 
-    if (getParent(fromContext) != selfie_ID())
+    if (getParent(fromContext) != selfie_ID()){
       // switch to parent which is in charge of handling exceptions
+			
       toID = getParent(fromContext);
-    else {
+	
+    }else {
+			
       // we are the parent in charge of handling exceptions
       savedStatus = selfie_status();
 
@@ -6831,7 +6842,13 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
 					doDelete(fromID);
 					fromContext=prev;
+					
 				}
+				println();
+				toID = getID(fromContext);
+				print((int*)"AFTER DELETE ID");
+				printInteger(toID);
+				println();
 			}
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
@@ -6844,6 +6861,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       }
 			else
 				toID=schedule(fromContext);
+			
       // TODO: scheduler should go here
       //toID = fromID;
     }
@@ -6866,6 +6884,10 @@ int schedule(int* fromContext){
 		}
 		nextContextID=getID(cContext);		
 	}
+
+//	print((int*) "Current CONTEXT ");
+//	printInteger(nextContextID);
+//	println();
 	return nextContextID;
 
 }
@@ -6968,6 +6990,7 @@ int boot(int argc, int* argv) {
 
 		count = count + 1;
 	}
+	
 
   // mipsters and hypsters handle page faults
   exitCode = runOrHostUntilExitWithPageFaultHandling(firstID);
