@@ -1,40 +1,26 @@
-Befehle:
+----------------------------------------------------------------
+MAKE(cc), COMPILE (selfie), LOAD AND RUN (mipster-mipster,32M)
 
-
-
-Selfie-Executable erstellen:
+make && ./selfie -c test_program.c selfie.c -o test_program.m && ./selfie -l test_program.m -m 32 
+----------------------------------------------------------------
+Other commands:
+------
+Create Selfie executable:
 
 make
-
------
-
-Selfie.c mit der Selfie-Executable compilieren (selfie ist in dem Fall also compiler);
-Kompilierung für mipster und hypster:
+------
+Compile selfie, using selfie (self-compilation)
 
 ./selfie -c selfie.c -o selfie.m
-
 ------
+Run a program, using mipster (32M memory)
 
-Selfie.m von mipster ausführen lassen:
-
-./selfie -l selfie.m -m 1
-
-Semantically equivalent:
-
-./selfie
-
+./selfie -l selfie.m -m 32
+./selfie -l test_program.m -m 32
 ------
-
-testfile mit selfie compilieren:
+Compile and link test_program and selfie
 
 ./selfie -c test_program.c selfie.c -o test_program.m
-
 ------
-
-testfile mit selfie's mipser ausführen:
-
-./selfie -l test_program.m -m 1
-
-compile test_program.c and link with selfie.c (as library for print etc) and execute with mipster (1MB memory)
-$ ./selfie -c test_program.c selfie.c -m 1
-
+Compile and link test_program and selfie and run on mipster
+./selfie -c test_program.c selfie.c -m 32
