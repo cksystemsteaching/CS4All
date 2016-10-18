@@ -6831,9 +6831,9 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         selfie_map(fromID, exceptionParameter, frame);
       } else if (exceptionNumber == EXCEPTION_EXIT){
         // TODO: only return if all contexts have exited
-				print((int*)"EXIT of: ");
-				printInteger(fromID);
-				println();
+				//print((int*)"EXIT of: ");
+				//printInteger(fromID);
+				//println();
 
 				next=getNextContext(fromContext);
 				if(next!=(int*)0){
@@ -6980,8 +6980,6 @@ int boot(int argc, int* argv) {
 		initID = selfie_create();
 		if(count==0)
 			firstID=initID;
-
-		println();
 		if (usedContexts == (int*) 0)
 		  // create duplicate of the initial context on our boot level
 		  usedContexts = createContext(initID, selfie_ID(), (int*) 0);
@@ -7135,7 +7133,7 @@ int selfie() {
         	selfie_load();	
       else if (stringCompare(option, (int*) "-conc"))
         setConcurrentCount();
-      else if (stringCompare(option, (int*) "-inst"))
+      else if (stringCompare(option, (int*) "-freq"))
         setInstructionTimer();
       else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
@@ -7157,16 +7155,14 @@ int selfie() {
 
 
 void setConcurrentCount(){
-  print((int*) "Concurrent Instructions set to:");
-  println();
+  print((int*) "Number of concurrent processes:");
   processCallNumber = atoi(getArgument());
   printInteger(processCallNumber);
   println();
 }
 
 void setInstructionTimer(){
-  print((int*) "Instruction Timer set to:");
-  println();
+  print((int*) "Timer interrupt frequency:");
   TIMESLICE = atoi(getArgument());
   printInteger(TIMESLICE);
   println();
