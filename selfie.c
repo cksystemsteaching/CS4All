@@ -6848,11 +6848,12 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 					fromContext=prev;
 					
 				}
-				println();
+				
 				toID = getID(fromContext);
-				print((int*)"AFTER DELETE ID");
-				printInteger(toID);
-				println();
+				//println();
+				//print((int*)"AFTER DELETE ID");
+				//printInteger(toID);
+				//println();
 			}
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
