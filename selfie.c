@@ -6858,7 +6858,6 @@ int roundRobinScheduler(int currentID) {
     int *nextContext;
 
     if (BINARY_COUNT == 1) {
-      nextContext = getNextContext(findContext(currentID, usedContexts));
       return currentID;
     }
     // Get the next context of the context with id = fromID
