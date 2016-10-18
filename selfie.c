@@ -6779,7 +6779,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
   ////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////////
-  // START **PATRICK*** IDEE für Round Robin
+  // START **PATRICK*** IDEE fuer Round Robin
   // if any process is done, it will terminate automatically (handled in selfie_switch() -> mipster_switch() 
   // -> runUntilExecute() -> terminate())
   while (1) {
@@ -6948,6 +6948,7 @@ int boot(int argc, int* argv) {
   //***PATRICK***
   int previousId;
   int nextId;
+  int programIndex;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6974,8 +6975,8 @@ int boot(int argc, int* argv) {
 	//abstract prototype of context creation for concurrent program execution
 
   // ***PATRICK*** IDEE zum Erzeugen von N Prozessen
-   	int programIndex = 0;
-   	previousId = selfieCreate();
+   	programIndex = 0;
+   	previousId = selfie_create();
    	usedContexts = createContext(previousId, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
   	while(programIndex < N){
   
@@ -6984,7 +6985,7 @@ int boot(int argc, int* argv) {
       down_mapPageTable(usedContexts);
   
   
-      nextId = selfieCreate();
+      nextId = selfie_create();
       usedContexts = createContext(nextId, selfie_ID(), previousId);  // 3rd arg = id of previous context)
       previousId = nextId;
       programIndex = programIndex + 1;
