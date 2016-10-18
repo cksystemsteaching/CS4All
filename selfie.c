@@ -1204,6 +1204,8 @@ int* currentContext = (int*) 0; // context currently running
 int* usedContexts = (int*) 0; // doubly-linked list of used contexts
 int* freeContexts = (int*) 0; // singly-linked list of free contexts
 
+
+
 // ------------------------- INITIALIZATION ------------------------
 
 void resetMicrokernel() {
@@ -6777,6 +6779,8 @@ int runUntilExitWithoutExceptionHandling(int toID) {
   }
 }
 
+
+
 int runOrHostUntilExitWithPageFaultHandling(int toID) {
   // works with mipsters and hypsters
   int fromID;
@@ -6794,7 +6798,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
 	//fromID = toID;
   while (1) {
-
+    
     fromID = selfie_switch(toID);
 			
     fromContext = findContext(fromID, usedContexts);
@@ -6888,6 +6892,7 @@ int schedule(int* fromContext){
 //	print((int*) "Current CONTEXT ");
 //	printInteger(nextContextID);
 //	println();
+
 	return nextContextID;
 
 }
@@ -6975,7 +6980,6 @@ int boot(int argc, int* argv) {
 		if(count==0)
 			firstID=initID;
 
-		printInteger(initID);
 		println();
 		if (usedContexts == (int*) 0)
 		  // create duplicate of the initial context on our boot level
@@ -7016,7 +7020,7 @@ int boot(int argc, int* argv) {
 int selfie_run(int engine, int machine, int debugger) {
   int exitCode;
 	
-
+  
   if (binaryLength == 0) {
     print(selfieName);
     print((int*) ": nothing to run, debug, or host");
@@ -7024,7 +7028,6 @@ int selfie_run(int engine, int machine, int debugger) {
 
     exit(-1);
   }
-
   initMemory(atoi(peekArgument()));
 	
   // pass binary name as first argument by replacing memory size
