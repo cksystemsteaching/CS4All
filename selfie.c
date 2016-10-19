@@ -894,10 +894,10 @@ void setHypsterID();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int debug_create = 0;
+int debug_create = 1;
 int debug_switch = 0;
 int debug_status = 0;
-int debug_delete = 0;
+int debug_delete = 1;
 int debug_map    = 0;
 
 int SYSCALL_ID     = 4901;
@@ -5274,12 +5274,29 @@ void emitDelete() {
 
 void doDelete(int ID) {
   int* context;
-
+	int* nextContext;
+	int* previousContext;
   context = findContext(ID, usedContexts);
-
+	
   if (context != (int*) 0) {
+		print((int*)"Next Contexts:");
+		nextContext=getNextContext(context);
+		while(nextContext!=(int*)0){
+			printInteger(getID(nextContext));
+			print((int*)",");
+			nextContext=getNextContext(nextContext);
+		}
+		println();
+		print((int*)"Previous Contexts:");
+		previousContext=getPrevContext(context);
+		while(previousContext!=(int*)0){
+			printInteger(getID(previousContext));
+			print((int*)",");
+			previousContext=getPrevContext(previousContext);
+		}
+		println();
     usedContexts = deleteContext(context, usedContexts);
-
+		
     if (debug_delete) {
       print(binaryName);
       print((int*) ": selfie_delete context ");
@@ -6798,8 +6815,9 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int exceptionNumber;
   int exceptionParameter;
   int frame;
-
-
+	int* parentContext;
+	print((int*) "runOrHostCALL");
+	println();
 
 	//fromID = toID;
   while (1) {
@@ -6815,10 +6833,12 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
     if (getParent(fromContext) != selfie_ID()){
       // switch to parent which is in charge of handling exceptions
-			  toID = getParent(fromContext);
-			//nextContext=findContext(toID, usedContexts);
-			//if(nextContext==(int*)0)
-			//	return 0;
+			 toID = getParent(fromContext);
+			
+			
+			parentContext=findContext(toID, usedContexts);
+			if(parentContext==(int*)0)
+				return 0;
       
 	
     }else {
@@ -6839,9 +6859,12 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         selfie_map(fromID, exceptionParameter, frame);
       } else if (exceptionNumber == EXCEPTION_EXIT){
         // TODO: only return if all contexts have exited
-				//print((int*)"EXIT of: ");
-				//printInteger(fromID);
-				//println();
+				print((int*)"EXIT of: ");
+				printInteger(fromID);
+				print((int*)"by: ");
+				printInteger(hypsterIDValue);
+			
+				println();
 
 				next=getNextContext(fromContext);
 				if(next!=(int*)0){
@@ -6853,7 +6876,11 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 			
 					if(prev==(int*)0)
 		     		return exceptionParameter;
-
+					print((int*)"Previous found with id:");
+					printInteger(getID(prev));
+					if(prev!=(int*)0)	
+						print((int*)"is here yes");
+					println();
 					fromContext=prev;
 					
 				}
@@ -7006,7 +7033,7 @@ int boot(int argc, int* argv) {
 
   // mipsters and hypsters handle page faults
   exitCode = runOrHostUntilExitWithPageFaultHandling(firstID);
-
+	
   print(selfieName);
   print((int*) ": this is selfie's ");
   if (mipster)
