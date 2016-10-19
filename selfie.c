@@ -1150,6 +1150,7 @@ void mapPage(int* table, int page, int frame);
 // | 8 | brk    | break between code, data, and heap
 // | 9 | parent | ID of context that created this context
 // +---+--------+
+int runScheduler(int fromID);
 
 int* getNextContext(int* context) { return (int*) *context; }
 int* getPrevContext(int* context) { return (int*) *(context + 1); }
@@ -1263,9 +1264,9 @@ void setArgument(int* argv);
 int USAGE = 1;
 
 // ***PATRICK***
-int N = 3; 	//How many binarys shall be executed?
-int M = 5;	//Number of instructions to be executed before jumping to the next context
-
+int N = 5; 	//How many binarys shall be executed?
+int M = 1000;	//Number of instructions to be executed before jumping to the next context
+int M_count = 0;
 // ------------------------ GLOBAL VARIABLES -----------------------
 
 int selfie_argc = 0;
@@ -5137,6 +5138,9 @@ int doSwitch(int toID) {
 
   fromID = getID(currentContext);
 
+  print((int*)"Do switch, toID: ");
+  printInteger(toID);
+  println();
   toContext = findContext(toID, usedContexts);
 
   if (toContext != (int*) 0) {
@@ -6788,6 +6792,10 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     // ***PATRICK*** switches to MIPSTER or HYPSTER depending on toID param AND eventually calls execute()
     fromID = selfie_switch(toID);
 
+    print((int*) "toID: ");
+    printInteger(toID);
+    println();
+
     // ***PATRICK*** findContext() is part of Contexts which is part of emul;
     fromContext = findContext(fromID, usedContexts);
 
@@ -6815,9 +6823,13 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 	        // page table on microkernel boot level
 	        selfie_map(fromID, exceptionParameter, frame);
 	    } 
-    	else if (exceptionNumber == EXCEPTION_EXIT)
+    	else if (exceptionNumber == EXCEPTION_EXIT) {
         	// TODO: only return if all contexts have exited
-        	return exceptionParameter;
+        print((int*)"All processes finished! TODO");
+      	println();
+				return exceptionParameter;
+			}
+
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
@@ -6831,10 +6843,11 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
       // TODO: scheduler should go here
       // ***PATRICK*** switch to next process after M instructions
-      if(getPC(fromContext) % M == 0){
-        toID = fromID;
-      }
-      
+			toID = runScheduler(fromID);
+			//toID = fromID;
+      print((int*) "after runScheduler, toID: ");
+      printInteger(toID);
+      println();
     }
   // END ***PATRICK***
   ////////////////////////////////////////////////////////////////////////////////////
@@ -7098,6 +7111,40 @@ int selfie_run(int engine, int machine, int debugger) {
 
   return exitCode;
 }
+
+int runScheduler(int thisID) {
+  int *thisContext;
+  int *nextContext;
+  int nextID;
+  int thisPC;
+  int resultModulo;
+
+  thisContext = findContext(thisID, usedContexts);
+  nextContext = getNextContext(thisContext);
+
+	resultModulo = M_count % M;
+	print((int*) "resultModulo: ");
+	printInteger(resultModulo);
+	println();
+
+  if (M_count != (int*) 0)
+  	if (M_count % M == (int*) 0) {
+  		print((int*) "yes, switch!");
+    	nextID = getID(nextContext);
+  	}
+  else
+    nextID = getID(usedContexts);
+
+	print((int*) "thisID(fromID): ");
+	printInteger(thisID);
+	print((int*) ",nextID: ");
+	printInteger(nextID);
+	println();
+
+  M_count = M_count + 1;
+  return nextID;
+}
+
 
 // -----------------------------------------------------------------
 // ----------------------------- MAIN ------------------------------
