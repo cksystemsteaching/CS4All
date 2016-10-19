@@ -1,7 +1,7 @@
 ----------------------------------------------------------------
-MAKE(cc), COMPILE (selfie), LOAD AND RUN (mipster-mipster,32M)
+CLEAR, MAKE(cc), COMPILE (selfie), LOAD AND RUN (mipster-mipster,32M)
 
-make && ./selfie -c test_program.c selfie.c -o test_program.m && ./selfie -l test_program.m -m 32 
+clear && make && ./selfie -c test_program.c selfie.c -o test_program.m && ./selfie -l test_program.m -m 32 
 ----------------------------------------------------------------
 Other commands:
 ------
