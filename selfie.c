@@ -6840,14 +6840,14 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
 				next=getNextContext(fromContext);
 				if(next!=(int*)0){
-							doDelete(fromID);		
+							doDelete(fromID);
 							fromContext=next;
 				}else{
 					prev=getPrevContext(fromContext);
+					doDelete(fromID);			
 					if(prev==(int*)0)
 		     		return exceptionParameter;
 
-					doDelete(fromID);
 					fromContext=prev;
 					
 				}
