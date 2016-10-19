@@ -6830,10 +6830,11 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 //		printInteger(fromID);
 //		println();
     // assert: fromContext must be in usedContexts (created here)
-
+		//print((int*)"PRINT SELFIE ID");
+		//printInteger(selfie_ID());
     if (getParent(fromContext) != selfie_ID()){
       // switch to parent which is in charge of handling exceptions
-			 toID = getParent(fromContext);
+			toID = getParent(fromContext);
 			
 			
 			parentContext=findContext(toID, usedContexts);
