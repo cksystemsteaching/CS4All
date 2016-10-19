@@ -6946,7 +6946,6 @@ int boot(int argc, int* argv) {
   int exitCode;
 
   //***PATRICK***
-  int previousId;
   int nextId;
   int programIndex;
 
@@ -6976,23 +6975,34 @@ int boot(int argc, int* argv) {
 
   // ***PATRICK*** IDEE zum Erzeugen von N Prozessen
    	programIndex = 0;
-   	previousId = selfie_create();
-   	usedContexts = createContext(previousId, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
-  	print((int*) "Now starting while!");
+   	// create initial context on microkernel boot level
+		initID = selfie_create();
+   	// create duplicate of the initial context on our boot level
+   	if (usedContexts == (int*) 0)
+			usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
+
+		up_loadBinary(getPT(usedContexts));
+    up_loadArguments(getPT(usedContexts), argc, argv);
+    down_mapPageTable(usedContexts);
+
+  	print((int*) "Before while loop for creating program contexts.");
   	println();
   	while(programIndex < N){
+  		print((int*) "programIndex: ");
   		printInteger(programIndex);
   		println();
+
+  		nextId = selfie_create(); // nextId is printed as debug message, see @debug_create
+
       up_loadBinary(getPT(usedContexts));
       up_loadArguments(getPT(usedContexts), argc, argv);
       down_mapPageTable(usedContexts);
-  
-  
-      nextId = selfie_create();
-      usedContexts = createContext(nextId, selfie_ID(), previousId);  // 3rd arg = id of previous context)
-      previousId = nextId;
+      
       programIndex = programIndex + 1;
    	}
+    print((int*) "--- Context creation finished. ---");
+    println();
+    println();
 
 ////correct part, DO NOT DELETE
 	//while *program-index* < *number_programs* {
