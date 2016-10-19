@@ -890,7 +890,7 @@ void selfie_map(int ID, int page, int frame);
 int schedule(int* fromContext);
 void setConcurrentCount();
 void setInstructionTimer();
-
+void setHypsterID();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -1079,6 +1079,7 @@ int* storesPerAddress = (int*) 0; // number of executed stores per store operati
 
 
 int processCallNumber = 1;
+int hypsterIDValue = 0;
 
 // ------------------------- INITIALIZATION ------------------------
 
@@ -5097,6 +5098,8 @@ int doCreate(int parentID) {
       print(binaryName);
       print((int*) ": selfie_create context ");
       printInteger(bumpID);
+			print((int*) " by hypster with ID: ");
+			printInteger(hypsterIDValue);
       println();
     }
 
@@ -5281,6 +5284,8 @@ void doDelete(int ID) {
       print(binaryName);
       print((int*) ": selfie_delete context ");
       printInteger(ID);
+			print((int*) " by hypster with ID: ");
+			printInteger(hypsterIDValue);
       println();
     }
   } else if (debug_delete) {
@@ -7139,6 +7144,8 @@ int selfie() {
         setConcurrentCount();
       else if (stringCompare(option, (int*) "-freq"))
         setInstructionTimer();
+      else if (stringCompare(option, (int*) "-hyd"))
+        setHypsterID();
       else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
@@ -7162,6 +7169,13 @@ void setConcurrentCount(){
   print((int*) "Number of concurrent processes:");
   processCallNumber = atoi(getArgument());
   printInteger(processCallNumber);
+  println();
+}
+
+void setHypsterID(){
+  print((int*) "Set hypster ID:");
+  hypsterIDValue = atoi(getArgument());
+  printInteger(hypsterIDValue);
   println();
 }
 
