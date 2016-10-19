@@ -35,7 +35,7 @@ __Deadline__: October 10, 8pm (hard, no extensions)
 
 Suppose your team name is *TheRunnables*. Change selfie such that it prints "This is TheRunnables Selfie" in a separate line on the console before doing anything else. All other functionality should be unaffected.
 
-
+-----------
 [Lecture 1](https://myfiles.sbg.ac.at/index.php/s/NtyOPFF2xnaP5DL)
 -----------
 
@@ -56,3 +56,7 @@ Implement basic concurrent execution of _n_ processes in mipster. _n >= 2_
 * implement [round-robin scheduling](https://en.wikipedia.org/wiki/Round-robin_scheduling)
 * add some output in _yourbinary_ to demonstrate context switching
 * __Deadline__: October 24, 8pm (hard, no extensions)
+
+-----------
+[Lecture 2](https://myfiles.sbg.ac.at/index.php/s/DOuC6keTPyEAHcw)
+-----------
