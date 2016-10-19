@@ -3021,7 +3021,7 @@ int gr_factor() {
       type = load_variable(variableOrProcedureName);
       emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
       emitIFormat(OP_SW, getScope(getVariable(variableOrProcedureName)), currentTemporary(), getAddress(getVariable(variableOrProcedureName)));
-      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+      //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
 
       //--
     } else if (symbol == SYM_MINUSMINUS) {
@@ -3030,7 +3030,7 @@ int gr_factor() {
       type = load_variable(variableOrProcedureName);
       emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
       emitIFormat(OP_SW, getScope(getVariable(variableOrProcedureName)), currentTemporary(), getAddress(getVariable(variableOrProcedureName)));
-      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
 
       // variable access: identifier
     } else
