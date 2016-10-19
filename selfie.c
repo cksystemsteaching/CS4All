@@ -6811,9 +6811,9 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     if (getParent(fromContext) != selfie_ID()){
       // switch to parent which is in charge of handling exceptions
 			  toID = getParent(fromContext);
-			nextContext=findContext(toID, usedContexts);
-			if(nextContext==(int*)0)
-				return 0;
+			//nextContext=findContext(toID, usedContexts);
+			//if(nextContext==(int*)0)
+			//	return 0;
       
 	
     }else {
@@ -6844,7 +6844,8 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 							fromContext=next;
 				}else{
 					prev=getPrevContext(fromContext);
-					doDelete(fromID);			
+					doDelete(fromID);
+			
 					if(prev==(int*)0)
 		     		return exceptionParameter;
 
