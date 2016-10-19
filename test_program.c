@@ -6,8 +6,8 @@ int main(){
 
 	i = 0;
 	while(i < 15){
-    printInteger(i);
-		println();
+    //printInteger(i);
+		//println();
 		i = i + 1;
 	}
 	return 1;
