@@ -6810,8 +6810,11 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
     if (getParent(fromContext) != selfie_ID()){
       // switch to parent which is in charge of handling exceptions
-			
-      toID = getParent(fromContext);
+			  toID = getParent(fromContext);
+			nextContext=findContext(toID, usedContexts);
+			if(nextContext==(int*)0)
+				return 0;
+      
 	
     }else {
 			
