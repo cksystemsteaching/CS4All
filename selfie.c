@@ -6792,8 +6792,12 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     // ***PATRICK*** switches to MIPSTER or HYPSTER depending on toID param AND eventually calls execute()
     fromID = selfie_switch(toID);
 
-    print((int*) "toID: ");
+    print((int*) "DEBUG: toID: ");
     printInteger(toID);
+    println();
+
+    print((int*) "DEBUG: fromID: ");
+    printInteger(fromID);
     println();
 
     // ***PATRICK*** findContext() is part of Contexts which is part of emul;
@@ -6802,7 +6806,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     // assert: fromContext must be in usedContexts (created here)
 
     // ***PATRICK*** getParent() is part of Contexts/Emulator; 
-    // ***PATRICK*** selfie_ID() is part of Hypster Syscalls which is part of Interface; retuns mipster or hypster id
+    // ***PATRICK*** selfie_ID() is part of Hypster Syscalls which is part of Interface; returns mipster or hypster id
     if (getParent(fromContext) != selfie_ID())
       // switch to parent which is in charge of handling exceptions
       toID = getParent(fromContext);
@@ -6824,7 +6828,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 	        selfie_map(fromID, exceptionParameter, frame);
 	    } 
     	else if (exceptionNumber == EXCEPTION_EXIT) {
-        	// TODO: only return if all contexts have exited
+         // TODO: only return if all contexts have exited
         print((int*)"All processes finished! TODO");
       	println();
 				return exceptionParameter;
@@ -6845,7 +6849,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       // ***PATRICK*** switch to next process after M instructions
 			toID = runScheduler(fromID);
 			//toID = fromID;
-      print((int*) "after runScheduler, toID: ");
+      print((int*) "DEBUG: after runScheduler, toID: ");
       printInteger(toID);
       println();
     }
@@ -6984,40 +6988,50 @@ int boot(int argc, int* argv) {
   // ***PATRICK*** resetMicrokernel() is part of Microkernel which is part of emulator; deletes currently used context
   resetMicrokernel();
 
-	//abstract prototype of context creation for concurrent program execution
+	// ***ALEX*** abstract prototype of context creation for concurrent program execution
 
   // ***PATRICK*** IDEE zum Erzeugen von N Prozessen
-   	programIndex = 0;
-   	// create initial context on microkernel boot level
-		initID = selfie_create();
-   	// create duplicate of the initial context on our boot level
-   	if (usedContexts == (int*) 0)
-			usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
+  programIndex = 0;
+  // create initial context on microkernel boot level
+	initID = selfie_create();
+  // create duplicate of the initial context on our boot level
+  if (usedContexts == (int*) 0){
+    // ***PATRICK*** this is never the case
+    print((int*) "DEBUG: usedContexts == 0");
+    println();
+		usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
+  }
+  else{
+    print((int*) "DEBUG: usedContexts != 0");
+    println();
+    // nicht sicher:
+    usedContexts = createContext(initID, selfie_ID(), initID);  // 3rd arg = id of previous context)
+  }
 
-		up_loadBinary(getPT(usedContexts));
+	up_loadBinary(getPT(usedContexts));
+  up_loadArguments(getPT(usedContexts), argc, argv);
+  down_mapPageTable(usedContexts);
+
+  print((int*) "DEBUG: Before while loop for creating program contexts.");
+  println();
+  while(programIndex < N){
+  	print((int*) "DEBUG: programIndex: ");
+  	printInteger(programIndex);
+  	println();
+
+  	nextId = selfie_create(); // nextId is printed as debug message, see @debug_create
+
+    up_loadBinary(getPT(usedContexts));
     up_loadArguments(getPT(usedContexts), argc, argv);
     down_mapPageTable(usedContexts);
-
-  	print((int*) "Before while loop for creating program contexts.");
-  	println();
-  	while(programIndex < N){
-  		print((int*) "programIndex: ");
-  		printInteger(programIndex);
-  		println();
-
-  		nextId = selfie_create(); // nextId is printed as debug message, see @debug_create
-
-      up_loadBinary(getPT(usedContexts));
-      up_loadArguments(getPT(usedContexts), argc, argv);
-      down_mapPageTable(usedContexts);
       
-      programIndex = programIndex + 1;
-   	}
-    print((int*) "--- Context creation finished. ---");
-    println();
-    println();
+    programIndex = programIndex + 1;
+  }
+  print((int*) "DEBUG: --- Context creation finished. ---");
+  println();
+  println();
 
-////correct part, DO NOT DELETE
+  ////correct part, DO NOT DELETE
 	//while *program-index* < *number_programs* {
 	 	// create initial context on microkernel boot level
   	//initID = selfie_create();
@@ -7127,13 +7141,18 @@ int runScheduler(int thisID) {
 	printInteger(resultModulo);
 	println();
 
-  if (M_count != (int*) 0)
+  if (M_count != (int*) 0){
   	if (M_count % M == (int*) 0) {
-  		print((int*) "yes, switch!");
+  		print((int*) "DEBUG: yes, switch!");
+      println();
     	nextID = getID(nextContext);
   	}
-  else
+  }
+  else{
+    print((int*) "DEBUG: no, don't switch!");
+    println();
     nextID = getID(usedContexts);
+  }
 
 	print((int*) "thisID(fromID): ");
 	printInteger(thisID);
