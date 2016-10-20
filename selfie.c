@@ -7005,7 +7005,7 @@ int boot(int argc, int* argv) {
     print((int*) "DEBUG: usedContexts != 0");
     println();
     // nicht sicher:
-    usedContexts = createContext(initID, selfie_ID(), initID);  // 3rd arg = id of previous context)
+    //usedContexts = createContext(initID, selfie_ID(), initID);  // 3rd arg = id of previous context)
   }
 
 	up_loadBinary(getPT(usedContexts));
@@ -7019,7 +7019,14 @@ int boot(int argc, int* argv) {
   	printInteger(programIndex);
   	println();
 
-  	nextId = selfie_create(); // nextId is printed as debug message, see @debug_create
+  	initID = selfie_create(); // debug message for context creation is automatically printed, see @debug_create
+
+    if (usedContexts == (int*) 0){
+      // ***PATRICK*** this is never the case
+      print((int*) "DEBUG in while: usedContexts == 0");
+      println();
+      usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
+    }
 
     up_loadBinary(getPT(usedContexts));
     up_loadArguments(getPT(usedContexts), argc, argv);
@@ -7141,26 +7148,33 @@ int runScheduler(int thisID) {
 	printInteger(resultModulo);
 	println();
 
-  if (M_count != (int*) 0){
-  	if (M_count % M == (int*) 0) {
-  		print((int*) "DEBUG: yes, switch!");
-      println();
-    	nextID = getID(nextContext);
-  	}
-  }
-  else{
-    print((int*) "DEBUG: no, don't switch!");
-    println();
+  // if (M_count != (int*) 0){
+ //  	if (M_count % M == (int*) 0) {
+ //  		print((int*) "DEBUG: yes, switch!");
+ //      println();
+ //    	nextID = getID(nextContext);
+ //  	}
+ //  }
+ //  else{
+ //    print((int*) "DEBUG: no, don't switch!");
+ //    println();
+ //    nextID = getID(usedContexts);
+ //  }
+
+	// print((int*) "thisID(fromID): ");
+	// printInteger(thisID);
+	// print((int*) ",nextID: ");
+	// printInteger(nextID);
+	// println();
+
+  //M_count = M_count + 1;
+
+  if (nextContext != (int *) 0) {
+    nextID = getID(nextContext);
+  } else {
     nextID = getID(usedContexts);
   }
 
-	print((int*) "thisID(fromID): ");
-	printInteger(thisID);
-	print((int*) ",nextID: ");
-	printInteger(nextID);
-	println();
-
-  M_count = M_count + 1;
   return nextID;
 }
 
