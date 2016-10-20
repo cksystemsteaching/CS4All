@@ -791,6 +791,8 @@ int* touch(int* memory, int length);
 
 void selfie_load();
 
+
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int maxBinaryLength = 131072; // 128KB
@@ -883,6 +885,12 @@ void doMap(int ID, int page, int frame);
 void implementMap();
 
 void selfie_map(int ID, int page, int frame);
+
+// new 
+int schedule(int* fromContext);
+void setConcurrentCount();
+void setInstructionTimer();
+void setHypsterID();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -1068,6 +1076,11 @@ int* loadsPerAddress = (int*) 0; // number of executed loads per load operation
 int  stores           = 0;        // total number of executed memory stores
 int* storesPerAddress = (int*) 0; // number of executed stores per store operation
 
+
+
+int processCallNumber = 1;
+int hypsterIDValue = 0;
+
 // ------------------------- INITIALIZATION ------------------------
 
 void initInterpreter() {
@@ -1191,6 +1204,8 @@ int* currentContext = (int*) 0; // context currently running
 
 int* usedContexts = (int*) 0; // doubly-linked list of used contexts
 int* freeContexts = (int*) 0; // singly-linked list of free contexts
+
+
 
 // ------------------------- INITIALIZATION ------------------------
 
@@ -5083,6 +5098,8 @@ int doCreate(int parentID) {
       print(binaryName);
       print((int*) ": selfie_create context ");
       printInteger(bumpID);
+			print((int*) " by hypster with ID: ");
+			printInteger(hypsterIDValue);
       println();
     }
 
@@ -5257,16 +5274,35 @@ void emitDelete() {
 
 void doDelete(int ID) {
   int* context;
-
+	int* nextContext;
+	int* previousContext;
   context = findContext(ID, usedContexts);
-
+	
   if (context != (int*) 0) {
+		//print((int*)"Next Contexts:");
+		//nextContext=getNextContext(context);
+		//while(nextContext!=(int*)0){
+		//	printInteger(getID(nextContext));
+		//	print((int*)",");
+		//	nextContext=getNextContext(nextContext);
+		//}
+		//println();
+		//print((int*)"Previous Contexts:");
+		//previousContext=getPrevContext(context);
+		//while(previousContext!=(int*)0){
+		//	printInteger(getID(previousContext));
+		//	print((int*)",");
+		//	previousContext=getPrevContext(previousContext);
+		//}
+		//println();
     usedContexts = deleteContext(context, usedContexts);
-
+		
     if (debug_delete) {
       print(binaryName);
       print((int*) ": selfie_delete context ");
       printInteger(ID);
+			print((int*) " by hypster with ID: ");
+			printInteger(hypsterIDValue);
       println();
     }
   } else if (debug_delete) {
@@ -6730,6 +6766,7 @@ int runUntilExitWithoutExceptionHandling(int toID) {
   int savedStatus;
   int exceptionNumber;
 
+
   while (1) {
     fromID = mipster_switch(toID);
 
@@ -6764,26 +6801,47 @@ int runUntilExitWithoutExceptionHandling(int toID) {
   }
 }
 
+
+
 int runOrHostUntilExitWithPageFaultHandling(int toID) {
   // works with mipsters and hypsters
   int fromID;
   int* fromContext;
+	//new
+	int* nextContext;	
+	int* next;
+	int* prev;
   int savedStatus;
   int exceptionNumber;
   int exceptionParameter;
   int frame;
+	int* parentContext;
 
+	//fromID = toID;
   while (1) {
+    
     fromID = selfie_switch(toID);
-
+			
     fromContext = findContext(fromID, usedContexts);
-
+//		println();
+//		print((int*)"USED CONTEXT");
+//		printInteger(fromID);
+//		println();
     // assert: fromContext must be in usedContexts (created here)
-
-    if (getParent(fromContext) != selfie_ID())
+		//print((int*)"PRINT SELFIE ID");
+		//printInteger(selfie_ID());
+    if (getParent(fromContext) != selfie_ID()){
       // switch to parent which is in charge of handling exceptions
-      toID = getParent(fromContext);
-    else {
+			toID = getParent(fromContext);
+			
+			
+			parentContext=findContext(toID, usedContexts);
+			if(parentContext==(int*)0)
+				return 0;
+      
+	
+    }else {
+			
       // we are the parent in charge of handling exceptions
       savedStatus = selfie_status();
 
@@ -6798,9 +6856,35 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT)
+      } else if (exceptionNumber == EXCEPTION_EXIT){
         // TODO: only return if all contexts have exited
-        return exceptionParameter;
+				print((int*)"EXIT of: ");
+				printInteger(fromID);
+				//print((int*)"by: ");
+				//printInteger(hypsterIDValue);
+			
+				println();
+
+				next=getNextContext(fromContext);
+				if(next!=(int*)0){
+							doDelete(fromID);
+							fromContext=next;
+				}else{
+					prev=getPrevContext(fromContext);
+					doDelete(fromID);
+			
+					if(prev==(int*)0)
+		     		return exceptionParameter;
+		
+					fromContext=prev;			
+				}
+				
+				toID = getID(fromContext);
+				//println();
+				//print((int*)"AFTER DELETE ID");
+				//printInteger(toID);
+				//println();
+			}
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
@@ -6808,14 +6892,40 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         print((int*) " throws uncaught ");
         printStatus(savedStatus);
         println();
-
         return -1;
       }
-
+			else
+				toID=schedule(fromContext);
+			
       // TODO: scheduler should go here
-      toID = fromID;
+      //toID = fromID;
     }
   }
+}
+//triggered by timer exception at the moment 
+int schedule(int* fromContext){
+	int* nextContext;
+	int nextContextID;
+	int* cContext;
+
+	nextContext = getPrevContext(fromContext);
+	if((nextContext)!=(int*)0)
+			nextContextID=getID(nextContext);
+	else{
+		nextContext=fromContext;
+		while(nextContext!=(int*)0){
+			cContext=nextContext;
+			nextContext = getNextContext(nextContext);
+		}
+		nextContextID=getID(cContext);		
+	}
+
+//	print((int*) "Current CONTEXT ");
+//	printInteger(nextContextID);
+//	println();
+
+	return nextContextID;
+
 }
 
 int bootminmob(int argc, int* argv, int machine) {
@@ -6871,12 +6981,13 @@ int bootminmob(int argc, int* argv, int machine) {
 
   return exitCode;
 }
-
 int boot(int argc, int* argv) {
   // works with mipsters and hypsters
   int initID;
   int exitCode;
-
+	int count;
+	int firstID;
+	count=0;
   print(selfieName);
   print((int*) ": this is selfie's ");
   if (mipster)
@@ -6889,29 +7000,34 @@ int boot(int argc, int* argv) {
   printInteger(pageFrameMemory / MEGABYTE);
   print((int*) "MB of physical memory");
   println();
-
-  // resetting interpreter is only necessary for mipsters
+	// resetting interpreter is only necessary for mipsters
   resetInterpreter();
 
   resetMicrokernel();
+		
+	while(count < processCallNumber){
+		// create initial context on microkernel boot level
+		initID = selfie_create();
+		if(count==0)
+			firstID=initID;
+		if (usedContexts == (int*) 0)
+		  // create duplicate of the initial context on our boot level
+		  usedContexts = createContext(initID, selfie_ID(), (int*) 0);
 
-  // create initial context on microkernel boot level
-  initID = selfie_create();
+		up_loadBinary(getPT(usedContexts));
+	
+		up_loadArguments(getPT(usedContexts), argc, argv);
 
-  if (usedContexts == (int*) 0)
-    // create duplicate of the initial context on our boot level
-    usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+		// propagate page table of initial context to microkernel boot level
+		down_mapPageTable(usedContexts);
 
-  up_loadBinary(getPT(usedContexts));
-
-  up_loadArguments(getPT(usedContexts), argc, argv);
-
-  // propagate page table of initial context to microkernel boot level
-  down_mapPageTable(usedContexts);
+		count = count + 1;
+	}
+	
 
   // mipsters and hypsters handle page faults
-  exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
-
+  exitCode = runOrHostUntilExitWithPageFaultHandling(firstID);
+	
   print(selfieName);
   print((int*) ": this is selfie's ");
   if (mipster)
@@ -6932,7 +7048,8 @@ int boot(int argc, int* argv) {
 
 int selfie_run(int engine, int machine, int debugger) {
   int exitCode;
-
+	
+  
   if (binaryLength == 0) {
     print(selfieName);
     print((int*) ": nothing to run, debug, or host");
@@ -6940,9 +7057,8 @@ int selfie_run(int engine, int machine, int debugger) {
 
     exit(-1);
   }
-
   initMemory(atoi(peekArgument()));
-
+	
   // pass binary name as first argument by replacing memory size
   setArgument(binaryName);
 
@@ -6955,11 +7071,12 @@ int selfie_run(int engine, int machine, int debugger) {
     if (debugger)
       debug = 1;
 
-    if (machine == MIPSTER)
-      exitCode = boot(numberOfRemainingArguments(), remainingArguments());
-    else
+    if (machine == MIPSTER){		
+      	exitCode = boot(numberOfRemainingArguments(), remainingArguments());		
+		}
+    else{
       exitCode = bootminmob(numberOfRemainingArguments(), remainingArguments(), machine);
-
+		}
     debug   = 0;
     mipster = 0;
 
@@ -7020,7 +7137,8 @@ void setArgument(int* argv) {
 
 int selfie() {
   int* option;
-
+	int c;
+	c=0;
   if (numberOfRemainingArguments() == 0)
     return USAGE;
   else {
@@ -7041,8 +7159,14 @@ int selfie() {
         selfie_output();
       else if (stringCompare(option, (int*) "-s"))
         selfie_disassemble();
-      else if (stringCompare(option, (int*) "-l"))
-        selfie_load();
+      else if (stringCompare(option, (int*) "-l"))		
+        	selfie_load();	
+      else if (stringCompare(option, (int*) "-conc"))
+        setConcurrentCount();
+      else if (stringCompare(option, (int*) "-freq"))
+        setInstructionTimer();
+      else if (stringCompare(option, (int*) "-hyd"))
+        setHypsterID();
       else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
@@ -7061,18 +7185,43 @@ int selfie() {
   return 0;
 }
 
+
+void setConcurrentCount(){
+  print((int*) "Number of concurrent processes:");
+  processCallNumber = atoi(getArgument());
+  printInteger(processCallNumber);
+  println();
+}
+
+void setHypsterID(){
+  print((int*) "Set hypster ID:");
+  hypsterIDValue = atoi(getArgument());
+  printInteger(hypsterIDValue);
+  println();
+}
+
+void setInstructionTimer(){
+  print((int*) "Timer interrupt frequency:");
+  TIMESLICE = atoi(getArgument());
+  printInteger(TIMESLICE);
+  println();
+}
+
+
 int main(int argc, int* argv) {
   int exitCode;
 
   initSelfie(argc, (int*) argv);
 
   initLibrary();
+  print((int*) "This is the Morties Selfie");
+  println();
 
   exitCode = selfie();
-
+ 
   if (exitCode == USAGE) {
     print(selfieName);
-    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary } [ (-m | -d | -y | -min | -mob ) size ... ] ");
+    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary } [-m | -d | -y | -min | -mob ) size ... ] ");
     println();
 
     return 0;
