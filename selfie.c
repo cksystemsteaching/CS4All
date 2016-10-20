@@ -6790,14 +6790,14 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   while (1) {
     // ***PATRICK*** selfie_switch() is part of Hypster Syscalls which is part of Interface;
     // ***PATRICK*** switches to MIPSTER or HYPSTER depending on toID param AND eventually calls execute()
+    print((int*) "DEBUG: fromID: ");
+    printInteger(fromID);
+    println();
+
     fromID = selfie_switch(toID);
 
     print((int*) "DEBUG: toID: ");
     printInteger(toID);
-    println();
-
-    print((int*) "DEBUG: fromID: ");
-    printInteger(fromID);
     println();
 
     // ***PATRICK*** findContext() is part of Contexts which is part of emul;
@@ -6828,10 +6828,20 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 	        selfie_map(fromID, exceptionParameter, frame);
 	    } 
     	else if (exceptionNumber == EXCEPTION_EXIT) {
-         // TODO: only return if all contexts have exited
-        print((int*)"All processes finished! TODO");
-      	println();
-				return exceptionParameter;
+        // TODO: only return if all contexts have exited
+
+        // if current process (e.g. process with bumpID 5) is finished, delete its context
+        usedContexts = deleteContext(fromContext, usedContexts);
+
+        // if all (user) processes (binaries passed as arguments) are done, exit
+        if (usedContexts == (int*) 0) {
+          return exceptionParameter;
+        }
+        else {
+          // else (not all processes are done), go to next remaining process/context
+          fromID = getID(usedContexts);
+        }
+
 			}
 
       else if (exceptionNumber != EXCEPTION_TIMER) {
@@ -7140,13 +7150,16 @@ int runScheduler(int thisID) {
   int thisPC;
   int resultModulo;
 
+  print((int*) "DEBUG: runScheduler() called");
+  println();
+
   thisContext = findContext(thisID, usedContexts);
   nextContext = getNextContext(thisContext);
 
 	resultModulo = M_count % M;
-	print((int*) "resultModulo: ");
-	printInteger(resultModulo);
-	println();
+	//print((int*) "DEBUG: resultModulo: ");
+	//printInteger(resultModulo);
+	//println();
 
   // if (M_count != (int*) 0){
  //  	if (M_count % M == (int*) 0) {
