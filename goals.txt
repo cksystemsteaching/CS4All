@@ -1,0 +1,16 @@
++ goals
+- grammar (SF)
+- SCANNER (SF)
+- PARSER  (BEIDE)
+- MIPS    (SST)
+- tests   (SST)*
+
+int main() {
+  int x;
+  int* p;
+  x = 42;
+
+  p = &x;
+
+  return p; // address of variable x
+}

@@ -1,0 +1,21 @@
+make selfie_gdb
+
+gdb --args ./selfie_gdb -c FILE.c
+
+# gdb startet
+
+# Breakpoints setzen
+br 2572
+
+run
+
+# Wenn breakpoint erreicht, backtrace anzeigen lassen
+bt
+
+# Vergange Frames aufrufen
+fr NUMMER
+
+# Locals oder Globals ausgeben
+print
+e.g. print symbol
+e.g. print rtype
