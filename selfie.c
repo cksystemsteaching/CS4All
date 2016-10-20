@@ -1026,7 +1026,7 @@ int debug_exception = 0;
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
-int TIMESLICE = 1000000;
+int TIMESLICE = 10000000;
 int BINARY_COUNT = 1;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
@@ -6955,8 +6955,15 @@ int boot(int argc, int* argv) {
   // Load the context BINARY_COUNT times
   while (contextCnt <= BINARY_COUNT) {
     // create initial context on microkernel boot level
-    initID = selfie_create();
-    
+    if (contextCnt == 1)
+      initID = selfie_create();
+    else
+      selfie_create();
+
+    if (usedContexts == (int *) 0)
+      // create duplicate of the initial context on our boot level
+      usedContexts = createContext(initID, selfie_ID(), (int *) 0);
+
     up_loadBinary(getPT(usedContexts));
 
     up_loadArguments(getPT(usedContexts), argc, argv);
