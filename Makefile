@@ -28,8 +28,7 @@ test: selfie
 
 
 assignment1:
-	./selfie -c testfiles/printexample.c selfie.c -conc 3 -inst 1 -m 1
-	./selfie -c testfiles/printexample.c selfie.c -conc 3 -inst 100000 -m 1
+	./selfie -c testfiles/printexample.c selfie.c -conc 3 -freq 1 -m 1
 
 	
 
