@@ -886,9 +886,9 @@ void selfie_map(int ID, int page, int frame);
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int debug_create = 1;
-int debug_switch = 1;
-int debug_status = 1;
+int debug_create = 0;
+int debug_switch = 0;
+int debug_status = 0;
 int debug_delete = 0;
 int debug_map    = 0;
 
@@ -1027,9 +1027,9 @@ int debug_exception = 0;
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
 
-// ***EIFLES*** reduced timeslice to switch between contexts 
-// (run 777 assembly instructions per context) and then switch
-int TIMESLICE = 777; //10000000;
+// ***EIFLES*** reduced timeslice to switch between contexts and demonstrate scheduling
+// (run 7777 assembly instructions per context) and then switch
+int TIMESLICE = 7777; //10000000;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -6786,15 +6786,8 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   while (1) {
     // ***EIFLES*** selfie_switch() is part of Hypster Syscalls which is part of Interface;
     // ***EIFLES*** switches to MIPSTER or HYPSTER depending on toID param AND eventually calls execute()
-    print((int*) "DEBUG: fromID: ");
-    printInteger(fromID);
-    println();
 
     fromID = selfie_switch(toID);
-
-    print((int*) "DEBUG: toID: ");
-    printInteger(toID);
-    println();
 
     // ***EIFLES*** findContext() is part of Contexts which is part of emul;
     fromContext = findContext(fromID, usedContexts);
@@ -6951,8 +6944,6 @@ int boot(int argc, int* argv) {
   // create duplicate of the initial context on our boot level
   if (usedContexts == (int*) 0){
     // ***EIFLES*** this is never the case
-    print((int*) "DEBUG: usedContexts == 0");
-    println();
 		usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
   }
 
@@ -6960,10 +6951,7 @@ int boot(int argc, int* argv) {
   up_loadArguments(getPT(usedContexts), argc, argv);
   down_mapPageTable(usedContexts);
 
-  print((int*) "DEBUG: Before while loop for creating program contexts.");
-  println();
   while(programIndex < N){
-  	print((int*) "DEBUG: programIndex: ");
   	printInteger(programIndex);
   	println();
 
@@ -6971,8 +6959,6 @@ int boot(int argc, int* argv) {
 
     if (usedContexts == (int*) 0){
       // ***EIFLES*** this is never the case
-      print((int*) "DEBUG in while: usedContexts == 0");
-      println();
       usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
     }
 
