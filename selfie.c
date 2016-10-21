@@ -6475,8 +6475,8 @@ int* allocateContext(int ID, int parentID) {
 
 int* createContext(int ID, int parentID, int* in) {
   int* context;
-  print("Creating context...");
-  println();
+  // print("Creating context...");
+  // println();
   context = allocateContext(ID, parentID);
 
   setNextContext(context, in);
@@ -6525,9 +6525,9 @@ void freeContext(int* context) {
 }
 
 int* deleteContext(int* context, int* from) {
-  print((int*) "deleteContext: ");
-  printInteger(getID(context));
-  println();
+  // print((int*) "deleteContext: ");
+  // printInteger(getID(context));
+  // println();
   if (getNextContext(context) != (int*) 0)
     setPrevContext(getNextContext(context), getPrevContext(context));
 
@@ -6968,7 +6968,7 @@ int boot(int argc, int* argv) {
       
     programIndex = programIndex + 1;
   }
-  print((int*) "DEBUG: --- Context creation finished. ---");
+  // print((int*) "DEBUG: --- Context creation finished. ---");
   println();
   println();
 
