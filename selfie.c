@@ -1026,7 +1026,10 @@ int debug_exception = 0;
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
-int TIMESLICE = 10000000;
+
+// ***EIFLES*** reduced timeslice to switch between contexts 
+// (run 777 assembly instructions per context) and then switch
+int TIMESLICE = 777; //10000000;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1263,7 +1266,7 @@ void setArgument(int* argv);
 
 int USAGE = 1;
 
-// ***PATRICK***
+// ***EIFLES***
 int N = 5; 	//How many binarys shall be executed?
 int M = 1000;	//Number of instructions to be executed before jumping to the next context
 int M_count = 0;
@@ -6527,6 +6530,8 @@ void freeContext(int* context) {
 }
 
 int* deleteContext(int* context, int* from) {
+  printInteger(getID(context));
+  println();
   if (getNextContext(context) != (int*) 0)
     setPrevContext(getNextContext(context), getPrevContext(context));
 
@@ -6784,12 +6789,12 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
   ////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////////
-  // START **PATRICK*** IDEE fuer Round Robin
+  // START **EIFLES*** IDEE fuer Round Robin
   // if any process is done, it will terminate automatically (handled in selfie_switch() -> mipster_switch() 
   // -> runUntilExecute() -> terminate())
   while (1) {
-    // ***PATRICK*** selfie_switch() is part of Hypster Syscalls which is part of Interface;
-    // ***PATRICK*** switches to MIPSTER or HYPSTER depending on toID param AND eventually calls execute()
+    // ***EIFLES*** selfie_switch() is part of Hypster Syscalls which is part of Interface;
+    // ***EIFLES*** switches to MIPSTER or HYPSTER depending on toID param AND eventually calls execute()
     print((int*) "DEBUG: fromID: ");
     printInteger(fromID);
     println();
@@ -6800,19 +6805,19 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     printInteger(toID);
     println();
 
-    // ***PATRICK*** findContext() is part of Contexts which is part of emul;
+    // ***EIFLES*** findContext() is part of Contexts which is part of emul;
     fromContext = findContext(fromID, usedContexts);
 
     // assert: fromContext must be in usedContexts (created here)
 
-    // ***PATRICK*** getParent() is part of Contexts/Emulator; 
-    // ***PATRICK*** selfie_ID() is part of Hypster Syscalls which is part of Interface; returns mipster or hypster id
+    // ***EIFLES*** getParent() is part of Contexts/Emulator; 
+    // ***EIFLES*** selfie_ID() is part of Hypster Syscalls which is part of Interface; returns mipster or hypster id
     if (getParent(fromContext) != selfie_ID())
       // switch to parent which is in charge of handling exceptions
       toID = getParent(fromContext);
     else {
       // we are the parent in charge of handling exceptions
-      // ***PATRICK*** selfie_status() is part of Hypster Syscalls/Interface; returns status (?) of hypster or mipster
+      // ***EIFLES*** selfie_status() is part of Hypster Syscalls/Interface; returns status (?) of hypster or mipster
       savedStatus = selfie_status();
 
       exceptionNumber    = decodeExceptionNumber(savedStatus);
@@ -6830,10 +6835,10 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     	else if (exceptionNumber == EXCEPTION_EXIT) {
         // TODO: only return if all contexts have exited
 
-        // if current process (e.g. process with bumpID 5) is finished, delete its context
+        // ***EIFLES*** if current process (e.g. process with bumpID 5) is finished, delete its context
         usedContexts = deleteContext(fromContext, usedContexts);
 
-        // if all (user) processes (binaries passed as arguments) are done, exit
+        // ***EIFLES*** if all (user) processes (binaries passed as arguments) are done, exit
         if (usedContexts == (int*) 0) {
           return exceptionParameter;
         }
@@ -6856,60 +6861,9 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       }
 
       // TODO: scheduler should go here
-      // ***PATRICK*** switch to next process after M instructions
-			toID = runScheduler(fromID);
-			//toID = fromID;
-      print((int*) "DEBUG: after runScheduler, toID: ");
-      printInteger(toID);
-      println();
-    }
-  // END ***PATRICK***
-  ////////////////////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////////////////
-
-
-  //while (1) {
-    //fromID = selfie_switch(toID);
-
-    //fromContext = findContext(fromID, usedContexts);
-
-    // assert: fromContext must be in usedContexts (created here)
-
-    //if (getParent(fromContext) != selfie_ID())
-      // switch to parent which is in charge of handling exceptions
-      //toID = getParent(fromContext);
-    //else {
-      // we are the parent in charge of handling exceptions
-      //savedStatus = selfie_status();
-
-      //exceptionNumber    = decodeExceptionNumber(savedStatus);
-      //exceptionParameter = decodeExceptionParameter(savedStatus);
-
-      //if (exceptionNumber == EXCEPTION_PAGEFAULT) {
-        //frame = (int) palloc();
-
-        // TODO: use this table to unmap and reuse frames
-        //mapPage(getPT(fromContext), exceptionParameter, frame);
-
-        // page table on microkernel boot level
-        //selfie_map(fromID, exceptionParameter, frame);
-      //} else if (exceptionNumber == EXCEPTION_EXIT)
-        // TODO: only return if all contexts have exited
-        //return exceptionParameter;
-     // else if (exceptionNumber != EXCEPTION_TIMER) {
-       // print(binaryName);
-       // print((int*) ": context ");
-       // printInteger(getID(fromContext));
-        //print((int*) " throws uncaught ");
-       // printStatus(savedStatus);
-        //println();
-
-        //return -1;
-      //}
-
-      // TODO: scheduler should go here
+      toID = runScheduler(fromID);
       //toID = fromID;
-   // }
+    }
   }
 }
 
@@ -6972,7 +6926,7 @@ int boot(int argc, int* argv) {
   int initID;
   int exitCode;
 
-  //***PATRICK***
+  //***EIFLES***
   int nextId;
   int programIndex;
 
@@ -6985,37 +6939,31 @@ int boot(int argc, int* argv) {
   print((int*) " executing ");
   print(binaryName);
   print((int*) " with ");
-  // ***PATRICK*** pageFrameMemory is a global var in the emulator; value set during init via command line param
+  // ***EIFLES*** pageFrameMemory is a global var in the emulator; value set during init via command line param
   printInteger(pageFrameMemory / MEGABYTE);
   print((int*) "MB of physical memory");
   println();
 
   // resetting interpreter is only necessary for mipsters
-  // ***PATRICK*** resetInterpreter() is part of interpreter which is part of emulator; resets interpreters globals
-  // ***PATRICK*** vars such as PC, IR, ...
+  // ***EIFLES*** resetInterpreter() is part of interpreter which is part of emulator; resets interpreters globals
+  // ***EIFLES*** vars such as PC, IR, ...
   resetInterpreter();
 
-  // ***PATRICK*** resetMicrokernel() is part of Microkernel which is part of emulator; deletes currently used context
+  // ***EIFLES*** resetMicrokernel() is part of Microkernel which is part of emulator; deletes currently used context
   resetMicrokernel();
 
 	// ***ALEX*** abstract prototype of context creation for concurrent program execution
 
-  // ***PATRICK*** IDEE zum Erzeugen von N Prozessen
+  // ***EIFLES*** IDEE zum Erzeugen von N Prozessen
   programIndex = 0;
   // create initial context on microkernel boot level
 	initID = selfie_create();
   // create duplicate of the initial context on our boot level
   if (usedContexts == (int*) 0){
-    // ***PATRICK*** this is never the case
+    // ***EIFLES*** this is never the case
     print((int*) "DEBUG: usedContexts == 0");
     println();
 		usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
-  }
-  else{
-    print((int*) "DEBUG: usedContexts != 0");
-    println();
-    // nicht sicher:
-    //usedContexts = createContext(initID, selfie_ID(), initID);  // 3rd arg = id of previous context)
   }
 
 	up_loadBinary(getPT(usedContexts));
@@ -7032,7 +6980,7 @@ int boot(int argc, int* argv) {
   	initID = selfie_create(); // debug message for context creation is automatically printed, see @debug_create
 
     if (usedContexts == (int*) 0){
-      // ***PATRICK*** this is never the case
+      // ***EIFLES*** this is never the case
       print((int*) "DEBUG in while: usedContexts == 0");
       println();
       usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
@@ -7057,20 +7005,20 @@ int boot(int argc, int* argv) {
 	    // create duplicate of the initial context on our boot level
 	    //usedContexts = createContext(initID, selfie_ID(), (int*) 0);	// 3rd arg = id of previous context)
 
-    // ***PATRICK*** up_loadBinary() is part of Kernel which is part of emulator; mapAndStoreVirtualMemory() in param table
-    // ***PATRICK*** getPT() is part of Context which is part of emulator
+    // ***EIFLES*** up_loadBinary() is part of Kernel which is part of emulator; mapAndStoreVirtualMemory() in param table
+    // ***EIFLES*** getPT() is part of Context which is part of emulator
 	  //up_loadBinary(getPT(usedContexts));
 
-    // ***PATRICK*** up_loadArguments() is part of kernel which is part of emul; pushes arguments on stack
+    // ***EIFLES*** up_loadArguments() is part of kernel which is part of emul; pushes arguments on stack
 	  //up_loadArguments(getPT(usedContexts), argc, argv);
 
 	  // propagate page table of initial context to microkernel boot level
-    // ***PATRICK*** down_mapPageTable() is part of kernel which is part of emulator;
+    // ***EIFLES*** down_mapPageTable() is part of kernel which is part of emulator;
 	  //down_mapPageTable(usedContexts);
 	//}
 
 	// mipsters and hypsters handle page faults
-  // ***PATRICK*** runOrHostUntilExitWithPageFaultHandling() is part of kernel which is part of emul;
+  // ***EIFLES*** runOrHostUntilExitWithPageFaultHandling() is part of kernel which is part of emul;
 	exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
 
   print(selfieName);
@@ -7150,8 +7098,8 @@ int runScheduler(int thisID) {
   int thisPC;
   int resultModulo;
 
-  print((int*) "DEBUG: runScheduler() called");
-  println();
+  //print((int*) "DEBUG: runScheduler() called");
+  //println();
 
   thisContext = findContext(thisID, usedContexts);
   nextContext = getNextContext(thisContext);
