@@ -1056,6 +1056,8 @@ int interpret = 0; // flag for executing or disassembling code
 
 int debug = 0; // flag for logging code execution
 
+int debugLocally = 0; // flag for debugging locally
+
 int  calls           = 0;        // total number of executed procedure calls
 int* callsPerAddress = (int*) 0; // number of executed calls of each procedure
 
@@ -5197,9 +5199,14 @@ int hypster_switch(int toID) {
 }
 
 int selfie_switch(int toID) {
-
-	//print((int*) "Coming from Context "); printInteger(getID(currentContext)); println();
-	//print((int*) "Now Running context "); printInteger(toID); println();
+  if (debugLocally) {
+    print((int*) "Coming from Context ");
+    printInteger(getID(currentContext));
+    println();
+    print((int*) "Now Running context ");
+    printInteger(toID);
+    println();
+  }
 
   if (mipster)
     return mipster_switch(toID);
@@ -6284,7 +6291,10 @@ void interrupt() {
         // only throw exception if no other is pending
         // TODO: handle multiple pending exceptions
 
-    	//print((int*) "TIMER!!");
+        if (debugLocally) {
+          print((int*) "TIMER!!");
+          println();
+        }
 
         throwException(EXCEPTION_TIMER, 0);
     }
@@ -6293,9 +6303,10 @@ void interrupt() {
 void runUntilException() {
 //  trap = 0;
 
-	if(trap != 0) {
-		print((int*) "TRAP"); println();
-	}
+  if (trap != 0) {
+    print((int*) "TRAP");
+    println();
+  }
 
   while (trap == 0) {
     fetch();
@@ -6410,7 +6421,7 @@ void selfie_disassemble() {
 
   debug = 1;
 
-  while(pc < codeLength) {
+  while (pc < codeLength) {
     ir = loadBinary(pc);
 
     decode();
@@ -6531,16 +6542,14 @@ void freeContext(int* context) {
 }
 
 void traverseContexts(int* head) {
-
-	if(head != 0) {
-		printInteger(getID(head));
-		print((int*) " -> ");
-		return traverseContexts(getNextContext(head));
-	}
-	else {
-		println();
-		return;
-	}
+  if (head != 0) {
+    printInteger(getID(head));
+    print((int*) " -> ");
+    return traverseContexts(getNextContext(head));
+  } else {
+    println();
+    return;
+  }
 }
 
 int* deleteContext(int* context, int* from) {
@@ -6802,7 +6811,11 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   while (1) {
     fromID = selfie_switch(toID);
 
-    //print((int*) "from ctx"); printInteger(fromID); println();
+    if (debugLocally) {
+      print((int*) "from ctx ");
+      printInteger(fromID);
+      println();
+    }
 
     fromContext = findContext(fromID, usedContexts);
 
@@ -6814,8 +6827,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
       // switch to parent which is in charge of handling exceptions
       toID = getParent(fromContext);
-    }
-    else {
+    } else {
       // we are the parent in charge of handling exceptions
       savedStatus = selfie_status();
 
@@ -6833,8 +6845,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       } else if (exceptionNumber == EXCEPTION_EXIT) {
         // TODO: only return if all contexts have exited
         return exceptionParameter;
-      }
-      else if (exceptionNumber != EXCEPTION_TIMER) {
+      } else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
         printInteger(getID(fromContext));
@@ -6843,13 +6854,11 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         println();
 
         return -1;
-      }
-      else if(exceptionNumber == EXCEPTION_TIMER) {
-    	  //print((int*) "asdfasdf"); printInteger(getID(fromContext));
-    	  toID = getID(getNextContext(fromContext));
-      }
-      else {
-    	  toID = fromID;
+      } else if (exceptionNumber == EXCEPTION_TIMER) {
+        //print((int*) "asdfasdf"); printInteger(getID(fromContext));
+        toID = getID(getNextContext(fromContext));
+      } else {
+        toID = fromID;
       }
     }
   }
@@ -6916,14 +6925,17 @@ int boot(int argc, int* argv) {
   int repeats;
   int* tempCtx;
 
-  print((int*) "DEBUG "); printInteger(argc); println();
-
-  if(argc > 2) {
-	  repeats = atoi(argv[2]) -1;
-	  printInteger(repeats);
+  if (debugLocally) {
+    print((int*) "DEBUG ");
+    printInteger(argc);
+    println();
   }
-  else {
-	  repeats = 0;
+
+  if (argc > 2) {
+    repeats = atoi(argv[2]) - 1;
+    if (debugLocally) printInteger(repeats);
+  } else {
+    repeats = 0;
   }
 
   print(selfieName);
@@ -6950,33 +6962,31 @@ int boot(int argc, int* argv) {
   if (usedContexts == (int*) 0) {
     // create duplicate of the initial context on our boot level
     usedContexts = createContext(initID, selfie_ID(), (int*) 0);
-  }
-  else {
-	  //DEBUG
-	up_loadBinary(getPT(usedContexts));
+  } else {
+    up_loadBinary(getPT(usedContexts));
+    up_loadArguments(getPT(usedContexts), argc, argv);
 
-	up_loadArguments(getPT(usedContexts), argc, argv);
-
-	// propagate page table of initial context to microkernel boot level
-	down_mapPageTable(usedContexts);
+    // propagate page table of initial context to microkernel boot level
+    down_mapPageTable(usedContexts);
   }
 
-  while(repeats > 0) {
-
+  while (repeats > 0) {
     bumpID = createID(bumpID);
-  	tempCtx = createContext(bumpID, selfie_ID(), usedContexts);
+    tempCtx = createContext(bumpID, selfie_ID(), usedContexts);
 
-  	usedContexts = tempCtx;
+    usedContexts = tempCtx;
 
-  	up_loadBinary(getPT(tempCtx));
-  	up_loadArguments(getPT(tempCtx), argc, argv);
+    up_loadBinary(getPT(tempCtx));
+    up_loadArguments(getPT(tempCtx), argc, argv);
 
-  	repeats = repeats - 1;
+    repeats = repeats - 1;
   }
 
   setNextContext(findContext(initID, usedContexts), usedContexts);
 
-  //traverseContexts(usedContexts);
+  if (debugLocally) {
+    traverseContexts(usedContexts);
+  }
 
   // mipsters and hypsters handle page faults
   exitCode = runOrHostUntilExitWithPageFaultHandling(getID(usedContexts));
@@ -7123,10 +7133,10 @@ int selfie() {
       else if (stringCompare(option, (int*) "-mob"))
         return selfie_run(MIPSTER, MOBSTER, 0);
       else if (stringCompare(option, (int*) "-r")) {
-    	return selfie_run(MIPSTER, MOBSTER, 0);
-      }
-      else
+        return selfie_run(MIPSTER, MOBSTER, 0);
+      } else {
         return USAGE;
+      }
     }
   }
 
@@ -7150,6 +7160,7 @@ int main(int argc, int* argv) {
     println();
 
     return 0;
-  } else
+  } else {
     return exitCode;
+  }
 }
