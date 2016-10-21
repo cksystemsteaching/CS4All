@@ -1,8 +1,8 @@
 ----------------------------------------------------------------
 CLEAR, MAKE(cc), COMPILE (selfie), LOAD AND RUN (mipster-mipster,32M)
 
-clear && rm test_program.m selfie.exe && make && ./selfie -c test_program.c selfie.c -o test_program.m && ./selfie -l test_program.m -m 32 
-cls && rm test_program.m selfie.exe && make && selfie.exe -c test_program.c selfie.c -o test_program.m && selfie.exe -l test_program.m -m 32
+clear && rm -f test_program.m selfie.exe && make && ./selfie -c test_program.c selfie.c -o test_program.m && ./selfie -l test_program.m -m 32 
+cls && rm -f test_program.m selfie.exe && make && selfie.exe -c test_program.c selfie.c -o test_program.m && selfie.exe -l test_program.m -m 32
 ----------------------------------------------------------------
 Other commands:
 ------
