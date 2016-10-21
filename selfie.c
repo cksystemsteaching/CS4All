@@ -5141,9 +5141,6 @@ int doSwitch(int toID) {
 
   fromID = getID(currentContext);
 
-  print((int*)"Do switch, toID: ");
-  printInteger(toID);
-  println();
   toContext = findContext(toID, usedContexts);
 
   if (toContext != (int*) 0) {
