@@ -1268,8 +1268,6 @@ int USAGE = 1;
 
 // ***EIFLES***
 int N = 5; 	//How many binarys shall be executed?
-int M = 1000;	//Number of instructions to be executed before jumping to the next context
-int M_count = 0;
 // ------------------------ GLOBAL VARIABLES -----------------------
 
 int selfie_argc = 0;
