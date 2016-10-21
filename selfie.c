@@ -6527,6 +6527,7 @@ void freeContext(int* context) {
 }
 
 int* deleteContext(int* context, int* from) {
+  print((int*) "deleteContext: ");
   printInteger(getID(context));
   println();
   if (getNextContext(context) != (int*) 0)
