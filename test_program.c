@@ -1,12 +1,12 @@
 int main(){
 
-  	int i;
+  int i;
 
 	initLibrary();
 
 	i = 0;
-	while(i < 15){
-      	printInteger(i);
+	while(i < 10){
+    printInteger(i);
 		println();
 		i = i + 1;
 	}

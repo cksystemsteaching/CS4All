@@ -1026,7 +1026,10 @@ int debug_exception = 0;
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
-int TIMESLICE = 10000000;
+
+// ***EIFLES*** reduced timeslice to switch between contexts and demonstrate scheduling
+// (run 7777 assembly instructions per context) and then switch
+int TIMESLICE = 7777; //10000000;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1150,6 +1153,7 @@ void mapPage(int* table, int page, int frame);
 // | 8 | brk    | break between code, data, and heap
 // | 9 | parent | ID of context that created this context
 // +---+--------+
+int runScheduler(int fromID);
 
 int* getNextContext(int* context) { return (int*) *context; }
 int* getPrevContext(int* context) { return (int*) *(context + 1); }
@@ -1262,6 +1266,8 @@ void setArgument(int* argv);
 
 int USAGE = 1;
 
+// ***EIFLES***
+int N = 5; 	//How many binarys shall be executed?
 // ------------------------ GLOBAL VARIABLES -----------------------
 
 int selfie_argc = 0;
@@ -6469,7 +6475,8 @@ int* allocateContext(int ID, int parentID) {
 
 int* createContext(int ID, int parentID, int* in) {
   int* context;
-
+  print("Creating context...");
+  println();
   context = allocateContext(ID, parentID);
 
   setNextContext(context, in);
@@ -6518,6 +6525,9 @@ void freeContext(int* context) {
 }
 
 int* deleteContext(int* context, int* from) {
+  print((int*) "deleteContext: ");
+  printInteger(getID(context));
+  println();
   if (getNextContext(context) != (int*) 0)
     setPrevContext(getNextContext(context), getPrevContext(context));
 
@@ -6774,33 +6784,55 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int frame;
 
   while (1) {
+    // ***EIFLES*** selfie_switch() is part of Hypster Syscalls which is part of Interface;
+    // ***EIFLES*** switches to MIPSTER or HYPSTER depending on toID param AND eventually calls execute()
+
     fromID = selfie_switch(toID);
 
+    // ***EIFLES*** findContext() is part of Contexts which is part of emul;
     fromContext = findContext(fromID, usedContexts);
 
     // assert: fromContext must be in usedContexts (created here)
 
+    // ***EIFLES*** getParent() is part of Contexts/Emulator; 
+    // ***EIFLES*** selfie_ID() is part of Hypster Syscalls which is part of Interface; returns mipster or hypster id
     if (getParent(fromContext) != selfie_ID())
       // switch to parent which is in charge of handling exceptions
       toID = getParent(fromContext);
     else {
       // we are the parent in charge of handling exceptions
+      // ***EIFLES*** selfie_status() is part of Hypster Syscalls/Interface; returns status (?) of hypster or mipster
       savedStatus = selfie_status();
 
       exceptionNumber    = decodeExceptionNumber(savedStatus);
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
-      if (exceptionNumber == EXCEPTION_PAGEFAULT) {
-        frame = (int) palloc();
+	    if (exceptionNumber == EXCEPTION_PAGEFAULT) {
+	        frame = (int) palloc();
 
-        // TODO: use this table to unmap and reuse frames
-        mapPage(getPT(fromContext), exceptionParameter, frame);
+	        // TODO: use this table to unmap and reuse frames
+	        mapPage(getPT(fromContext), exceptionParameter, frame);
 
-        // page table on microkernel boot level
-        selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT)
+	        // page table on microkernel boot level
+	        selfie_map(fromID, exceptionParameter, frame);
+	    } 
+    	else if (exceptionNumber == EXCEPTION_EXIT) {
         // TODO: only return if all contexts have exited
-        return exceptionParameter;
+
+        // ***EIFLES*** if current process (e.g. process with bumpID 5) is finished, delete its context
+        usedContexts = deleteContext(fromContext, usedContexts);
+
+        // ***EIFLES*** if all (user) processes (binaries passed as arguments) are done, exit
+        if (usedContexts == (int*) 0) {
+          return exceptionParameter;
+        }
+        else {
+          // else (not all processes are done), go to next remaining process/context
+          fromID = getID(usedContexts);
+        }
+
+			}
+
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
@@ -6813,7 +6845,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       }
 
       // TODO: scheduler should go here
-      toID = fromID;
+      toID = runScheduler(fromID);
     }
   }
 }
@@ -6877,6 +6909,10 @@ int boot(int argc, int* argv) {
   int initID;
   int exitCode;
 
+  //***EIFLES***
+  int nextId;
+  int programIndex;
+
   print(selfieName);
   print((int*) ": this is selfie's ");
   if (mipster)
@@ -6886,31 +6922,59 @@ int boot(int argc, int* argv) {
   print((int*) " executing ");
   print(binaryName);
   print((int*) " with ");
+  // ***EIFLES*** pageFrameMemory is a global var in the emulator; value set during init via command line param
   printInteger(pageFrameMemory / MEGABYTE);
   print((int*) "MB of physical memory");
   println();
 
   // resetting interpreter is only necessary for mipsters
+  // ***EIFLES*** resetInterpreter() is part of interpreter which is part of emulator; resets interpreters globals
+  // ***EIFLES*** vars such as PC, IR, ...
   resetInterpreter();
 
+  // ***EIFLES*** resetMicrokernel() is part of Microkernel which is part of emulator; deletes currently used context
   resetMicrokernel();
 
+	// ***EIFLES*** abstract prototype of context creation for concurrent program execution
+
+  // ***EIFLES*** IDEE zum Erzeugen von N Prozessen
+  programIndex = 0;
   // create initial context on microkernel boot level
-  initID = selfie_create();
+	initID = selfie_create();
+  // create duplicate of the initial context on our boot level
+  if (usedContexts == (int*) 0){
+    // ***EIFLES*** this is never the case
+		usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
+  }
 
-  if (usedContexts == (int*) 0)
-    // create duplicate of the initial context on our boot level
-    usedContexts = createContext(initID, selfie_ID(), (int*) 0);
-
-  up_loadBinary(getPT(usedContexts));
-
+	up_loadBinary(getPT(usedContexts));
   up_loadArguments(getPT(usedContexts), argc, argv);
-
-  // propagate page table of initial context to microkernel boot level
   down_mapPageTable(usedContexts);
 
-  // mipsters and hypsters handle page faults
-  exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
+  while(programIndex < N){
+  	printInteger(programIndex);
+  	println();
+
+  	initID = selfie_create(); // debug message for context creation is automatically printed, see @debug_create
+
+    if (usedContexts == (int*) 0){
+      // ***EIFLES*** this is never the case
+      usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
+    }
+
+    up_loadBinary(getPT(usedContexts));
+    up_loadArguments(getPT(usedContexts), argc, argv);
+    down_mapPageTable(usedContexts);
+      
+    programIndex = programIndex + 1;
+  }
+  print((int*) "DEBUG: --- Context creation finished. ---");
+  println();
+  println();
+
+	// mipsters and hypsters handle page faults
+  // ***EIFLES*** runOrHostUntilExitWithPageFaultHandling() is part of kernel which is part of emul;
+	exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6981,6 +7045,24 @@ int selfie_run(int engine, int machine, int debugger) {
 
   return exitCode;
 }
+
+int runScheduler(int thisID) {
+  int *thisContext;
+  int *nextContext;
+  int nextID;
+
+  thisContext = findContext(thisID, usedContexts);
+  nextContext = getNextContext(thisContext);
+
+  if (nextContext != (int *) 0) {
+    nextID = getID(nextContext);
+  } else {
+    nextID = getID(usedContexts);
+  }
+
+  return nextID;
+}
+
 
 // -----------------------------------------------------------------
 // ----------------------------- MAIN ------------------------------
