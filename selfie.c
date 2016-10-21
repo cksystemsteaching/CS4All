@@ -6787,11 +6787,6 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int exceptionParameter;
   int frame;
 
-  ////////////////////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////////////////
-  // START **EIFLES*** IDEE fuer Round Robin
-  // if any process is done, it will terminate automatically (handled in selfie_switch() -> mipster_switch() 
-  // -> runUntilExecute() -> terminate())
   while (1) {
     // ***EIFLES*** selfie_switch() is part of Hypster Syscalls which is part of Interface;
     // ***EIFLES*** switches to MIPSTER or HYPSTER depending on toID param AND eventually calls execute()
@@ -6862,7 +6857,6 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
       // TODO: scheduler should go here
       toID = runScheduler(fromID);
-      //toID = fromID;
     }
   }
 }
@@ -6952,7 +6946,7 @@ int boot(int argc, int* argv) {
   // ***EIFLES*** resetMicrokernel() is part of Microkernel which is part of emulator; deletes currently used context
   resetMicrokernel();
 
-	// ***ALEX*** abstract prototype of context creation for concurrent program execution
+	// ***EIFLES*** abstract prototype of context creation for concurrent program execution
 
   // ***EIFLES*** IDEE zum Erzeugen von N Prozessen
   programIndex = 0;
@@ -6995,27 +6989,6 @@ int boot(int argc, int* argv) {
   print((int*) "DEBUG: --- Context creation finished. ---");
   println();
   println();
-
-  ////correct part, DO NOT DELETE
-	//while *program-index* < *number_programs* {
-	 	// create initial context on microkernel boot level
-  	//initID = selfie_create();
-
-	  //if (usedContexts == (int*) 0)
-	    // create duplicate of the initial context on our boot level
-	    //usedContexts = createContext(initID, selfie_ID(), (int*) 0);	// 3rd arg = id of previous context)
-
-    // ***EIFLES*** up_loadBinary() is part of Kernel which is part of emulator; mapAndStoreVirtualMemory() in param table
-    // ***EIFLES*** getPT() is part of Context which is part of emulator
-	  //up_loadBinary(getPT(usedContexts));
-
-    // ***EIFLES*** up_loadArguments() is part of kernel which is part of emul; pushes arguments on stack
-	  //up_loadArguments(getPT(usedContexts), argc, argv);
-
-	  // propagate page table of initial context to microkernel boot level
-    // ***EIFLES*** down_mapPageTable() is part of kernel which is part of emulator;
-	  //down_mapPageTable(usedContexts);
-	//}
 
 	// mipsters and hypsters handle page faults
   // ***EIFLES*** runOrHostUntilExitWithPageFaultHandling() is part of kernel which is part of emul;
@@ -7095,40 +7068,12 @@ int runScheduler(int thisID) {
   int *thisContext;
   int *nextContext;
   int nextID;
-  int thisPC;
-  int resultModulo;
 
   //print((int*) "DEBUG: runScheduler() called");
   //println();
 
   thisContext = findContext(thisID, usedContexts);
   nextContext = getNextContext(thisContext);
-
-	resultModulo = M_count % M;
-	//print((int*) "DEBUG: resultModulo: ");
-	//printInteger(resultModulo);
-	//println();
-
-  // if (M_count != (int*) 0){
- //  	if (M_count % M == (int*) 0) {
- //  		print((int*) "DEBUG: yes, switch!");
- //      println();
- //    	nextID = getID(nextContext);
- //  	}
- //  }
- //  else{
- //    print((int*) "DEBUG: no, don't switch!");
- //    println();
- //    nextID = getID(usedContexts);
- //  }
-
-	// print((int*) "thisID(fromID): ");
-	// printInteger(thisID);
-	// print((int*) ",nextID: ");
-	// printInteger(nextID);
-	// println();
-
-  //M_count = M_count + 1;
 
   if (nextContext != (int *) 0) {
     nextID = getID(nextContext);
