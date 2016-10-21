@@ -7051,9 +7051,6 @@ int runScheduler(int thisID) {
   int *nextContext;
   int nextID;
 
-  //print((int*) "DEBUG: runScheduler() called");
-  //println();
-
   thisContext = findContext(thisID, usedContexts);
   nextContext = getNextContext(thisContext);
 
