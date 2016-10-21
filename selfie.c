@@ -1027,9 +1027,10 @@ int debug_exception = 0;
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
 
-// ***EIFLES*** reduced timeslice to switch between contexts and demonstrate scheduling
+int TIMESLICE = 10000000;
+// ***EIFLES***  reduced timeslice to switch between contexts and demonstrate scheduling
 // (run 7777 assembly instructions per context) and then switch
-int TIMESLICE = 7777; //10000000;
+// int TIMESLICE = 7777;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -6952,8 +6953,8 @@ int boot(int argc, int* argv) {
   down_mapPageTable(usedContexts);
 
   while(programIndex < N){
-  	printInteger(programIndex);
-  	println();
+  	// printInteger(programIndex);
+  	// println();
 
   	initID = selfie_create(); // debug message for context creation is automatically printed, see @debug_create
 
@@ -6969,8 +6970,8 @@ int boot(int argc, int* argv) {
     programIndex = programIndex + 1;
   }
   // print((int*) "DEBUG: --- Context creation finished. ---");
-  println();
-  println();
+  // println();
+  // println();
 
 	// mipsters and hypsters handle page faults
   // ***EIFLES*** runOrHostUntilExitWithPageFaultHandling() is part of kernel which is part of emul;
