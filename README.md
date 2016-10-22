@@ -25,7 +25,8 @@ All homework solutions:
 * must be ready for presentation on your machine in class.
 
 
-[Introduction slides](https://myfiles.sbg.ac.at/index.php/s/2cLKfyv30T3RwUj)
+[Introduction slides](https://myfiles.sbg.ac.at/index.php/s/gEGFSoIrMdee6rA)
+
 ---------------------
 
 Assignment 0: Your Team!
@@ -36,7 +37,7 @@ __Deadline__: October 10, 8pm (hard, no extensions)
 Suppose your team name is *TheRunnables*. Change selfie such that it prints "This is TheRunnables Selfie" in a separate line on the console before doing anything else. All other functionality should be unaffected.
 
 -----------
-[Lecture 1](https://myfiles.sbg.ac.at/index.php/s/NtyOPFF2xnaP5DL)
+[Lecture 1](https://myfiles.sbg.ac.at/index.php/s/oTwDS4UoSijdEEc)
 -----------
 
 
