@@ -1266,9 +1266,9 @@ void setArgument(int* argv);
 
 int USAGE = 1;
 
-// ***EIFLES***
-int numProcesses = 1; 	// number of concurrent processes to be executed
 // ------------------------ GLOBAL VARIABLES -----------------------
+// ***EIFLES***
+int numProcesses = 1;   // number of concurrent processes to be executed
 
 int selfie_argc = 0;
 int* selfie_argv = (int*) 0;
@@ -6474,6 +6474,10 @@ int* allocateContext(int ID, int parentID) {
 
 int* createContext(int ID, int parentID, int* in) {
   int* context;
+
+  print("DEBUG: start createContext() #################");
+  println();
+
   context = allocateContext(ID, parentID);
 
   setNextContext(context, in);
@@ -6481,6 +6485,8 @@ int* createContext(int ID, int parentID, int* in) {
   if (in != (int*) 0)
     setPrevContext(in, context);
 
+  print("DEBUG: end createContext() #################");
+  println();
   return context;
 }
 
@@ -6610,6 +6616,9 @@ void pfree(int* frame) {
 void up_loadBinary(int* table) {
   int vaddr;
 
+  print("DEBUG: start up_loadBinary() #################");
+  println();
+
   // binaries start at lowest virtual address
   vaddr = 0;
 
@@ -6618,6 +6627,9 @@ void up_loadBinary(int* table) {
 
     vaddr = vaddr + WORDSIZE;
   }
+
+  print("DEBUG: end up_loadBinary() #################");
+  println();
 }
 
 int up_loadString(int* table, int* s, int SP) {
@@ -6907,7 +6919,7 @@ int boot(int argc, int* argv) {
   int exitCode;
 
   //***EIFLES***
-  int nextId;
+  int nextID;
   int processIndex;
 
   print(selfieName);
@@ -6932,10 +6944,20 @@ int boot(int argc, int* argv) {
   // ***EIFLES*** resetMicrokernel() is part of Microkernel which is part of emulator; deletes currently used context
   resetMicrokernel();
 
+  // create initial context on microkernel boot level
+  //initID = selfie_create();
+
+  //if (usedContexts == (int*) 0){
+    // create duplicate of the initial context on our boot level
+  //  usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+  //}
+
   processIndex = 0;
   
   // ***EIFLES*** Create numProcesses contexts for numProcesses instances of our binary
   while(processIndex < numProcesses){
+    print("DEBUG: in while #################");
+    println();
   	// ***EIFLES***
     //printInteger(processIndex);
   	//println();
@@ -6943,13 +6965,15 @@ int boot(int argc, int* argv) {
     // ***EIFLES*** "CreateContext" will be executed here in order to get a Context for selfie
   	initID = selfie_create(); // debug message for context creation is automatically printed, see @debug_create
     if (usedContexts == (int*) 0){
-     usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
+      print("DEBUG: usedContexts == 0 #################");
+      println();
+      usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
     }
 
     up_loadBinary(getPT(usedContexts));
     up_loadArguments(getPT(usedContexts), argc, argv);
     down_mapPageTable(usedContexts);
-      
+
     processIndex = processIndex + 1;
   }
   // print((int*) "DEBUG: --- Context creation finished. ---");

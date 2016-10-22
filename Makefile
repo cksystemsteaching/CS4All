@@ -1,4 +1,4 @@
-# Compiler flags
+1# Compiler flags
 CFLAGS := -w -m32 -D'main(a,b)=main(a,char**argv)'
 
 # Compile selfie.c into selfie executable
@@ -31,3 +31,7 @@ clean:
 	rm -rf *.m
 	rm -rf *.s
 	rm -rf selfie
+
+# Assignment 1 
+assignment1:
+	./selfie -c test_program.c selfie.c -o test_program.m && ./selfie -timeslice 7777 -numprocesses 5 -l test_program.m -m 32
