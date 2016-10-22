@@ -154,6 +154,7 @@ int CHAR_EXCLAMATION  = '!';
 int CHAR_PERCENTAGE   = '%';
 int CHAR_SINGLEQUOTE  = 39; // ASCII code 39 = '
 int CHAR_DOUBLEQUOTE  = '"';
+int CHAR_AMPERSAND    = '&';
 
 int SIZEOFINT     = 4; // must be the same as WORDSIZE
 int SIZEOFINTSTAR = 4; // must be the same as WORDSIZE
@@ -317,7 +318,8 @@ int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
 int SYM_PLUSPLUS     = 28; // ++
-int SYM_MINUSMINUS   = 29;  // --
+int SYM_MINUSMINUS   = 29; // --
+int SYM_AMPERSAND    = 30; // &
 
 int* SYMBOLS; // strings representing symbols
 
@@ -354,7 +356,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner() {
-  SYMBOLS = malloc(30 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(31 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -386,6 +388,7 @@ void initScanner() {
   *(SYMBOLS + SYM_STRING)       = (int) "string";
   *(SYMBOLS + SYM_PLUSPLUS)     = (int) "++";
   *(SYMBOLS + SYM_MINUSMINUS)   = (int) "--";
+  *(SYMBOLS + SYM_AMPERSAND)    = (int) "&";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -3679,17 +3682,16 @@ void gr_statement() {
         getSymbol();
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
-        //++
-    } else if (symbol == SYM_PLUSPLUS){
+      //++
+    } else if (symbol == SYM_PLUSPLUS) {
       gr_expression();
       getSymbol();
       //--
-    }else if(symbol == SYM_MINUSMINUS){
+    } else if (symbol == SYM_MINUSMINUS) {
       gr_expression();
       getSymbol();
 
-    }
-    else
+    } else
       syntaxErrorUnexpected();
   }
   // while statement?
@@ -7251,10 +7253,60 @@ int selfie() {
   return 0;
 }
 
+void testPrePostfix() {
+  int i;
+  i = 0;
+
+  print((int*)"Startwert (0): ");
+  printInteger(i);
+  println();
+
+  print((int*)"nach prefix ++ (1): ");
+  printInteger(++i);
+  println();
+
+  print((int*)"nach prefix -- (0): ");
+  printInteger(--i);
+  println();
+
+  print((int*)"postfix ++ (0): ");
+  printInteger(i++);
+  println();
+
+  print((int*)"nach dem postix ++ (1): ");
+  printInteger(i);
+  println();
+
+  print((int*)"postfix -- (1): ");
+  printInteger(i--);
+  println();
+
+  print((int*)"nach dem postix -- (0): ");
+  printInteger(i);
+  println();
+
+  ++i;
+  print((int*)"prefix ++ nicht in statement (1): ");
+  printInteger(i);
+  println();
+  i++;
+  print((int*)"postfix ++ nicht in statement (2): ");
+  printInteger(i);
+  println();
+  --i;
+  print((int*)"prefix -- nicht in statement (1): ");
+  printInteger(i);
+  println();
+  i--;
+  print((int*)"prostfix -- nicht in statement (0): ");
+  printInteger(i);
+  println();
+
+}
+
 int main(int argc, int* argv) {
   int exitCode;
-  int testPLUSPLUS;
-  testPLUSPLUS = 0;
+
   initSelfie(argc, (int*) argv);
 
   initLibrary();
@@ -7264,56 +7316,7 @@ int main(int argc, int* argv) {
   print((int*)"This is knights Selfie");
   println();
 
-
-  //test Ass_1: PLUSPLUS
-  print((int*)"Startwert (0): ");
-  printInteger(testPLUSPLUS);
-  println();
-
-  //----------------------
-
-  // ++testPLUSPLUS;
-  // print((int*)"nach prefix ++ (1): ");
-  // printInteger(testPLUSPLUS);
-  // println();
-  //
-  // --testPLUSPLUS;
-  // print((int*)"nach prefix -- (0): ");
-  // printInteger(testPLUSPLUS);
-  // println();
-  //
-  // testPLUSPLUS++;
-  // print((int*)"testPLUSPLUS++ (1): ");
-  // printInteger(testPLUSPLUS);
-  // println();
-  //----------------------
-
-  print((int*)"nach prefix ++ (1): ");
-  printInteger(++testPLUSPLUS);
-  println();
-
-
-  print((int*)"nach prefix -- (0): ");
-  printInteger(--testPLUSPLUS);
-  println();
-
-  print((int*)"postfix ++ (0): ");
-  printInteger(testPLUSPLUS++);
-  println();
-
-  print((int*)"nach dem postix ++ (1): ");
-  printInteger(testPLUSPLUS);
-  println();
-
-  print((int*)"postfix -- (1): ");
-  printInteger(testPLUSPLUS--);
-  println();
-
-  print((int*)"nach dem postix -- (0): ");
-  printInteger(testPLUSPLUS);
-  println();
-
-
+  //testPrePostfix();
 
 
   if (exitCode == USAGE) {

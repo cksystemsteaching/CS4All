@@ -49,9 +49,9 @@ procedure        = "(" [ variable { "," variable } ] ")"
 
 variable         = type identifier .
 
+
 statement        = call ";" | while | if | return ";" |
-                 ( [ "*" ] identifier | "*" "(" expression ")" ) |
-                 ("++"|"--") identifier | identifier ("++"|"--")
+                ["*"] ["++"|"--"] identifier | ["*"] identifier ["++"|"--"]
                      "=" expression ";" .
 
 call             = identifier "(" [ expression { "," expression } ] ")" .
@@ -62,9 +62,12 @@ simpleExpression = [ "-" ] term { ( "+" | "-" ) term } .
 
 term             = factor { ( "*" | "/" | "%" ) factor } .
 
+
 factor           = [ cast ]
-                    ( [ "*" ] ( identifier | "(" expression ")" ) |
-                      | ("++"|"--") identifier | identifier ("++"|"--") | call |
+                      ["++"|"--"][ "*" ]  identifier | [ "*" ]  identifier  ["++"|"--"] |
+                      ["++"|"--"] [ "*" ] "(" expression ")" ) |
+                      ["*"] "&" ["++"|"--"] identifier | ["*"] "&" identifier ["++"|"--"] |
+                      call |
                       literal |
                       string ) .
 
