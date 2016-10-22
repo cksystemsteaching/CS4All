@@ -1267,7 +1267,7 @@ void setArgument(int* argv);
 int USAGE = 1;
 
 // ***EIFLES***
-int N = 5; 	//How many binarys shall be executed?
+int numProcesses = 1; 	// number of concurrent processes to be executed
 // ------------------------ GLOBAL VARIABLES -----------------------
 
 int selfie_argc = 0;
@@ -6279,9 +6279,6 @@ void interrupt() {
   if (timer > 0)
     if (cycles == timer) {
       cycles = 0;
-      println();
-      print("Now switching context");
-      println();
       if (status == 0)
         // only throw exception if no other is pending
         // TODO: handle multiple pending exceptions
@@ -6477,8 +6474,6 @@ int* allocateContext(int ID, int parentID) {
 
 int* createContext(int ID, int parentID, int* in) {
   int* context;
-  print("Creating context...");
-  println();
   context = allocateContext(ID, parentID);
 
   setNextContext(context, in);
@@ -6527,9 +6522,9 @@ void freeContext(int* context) {
 }
 
 int* deleteContext(int* context, int* from) {
-  print((int*) "deleteContext: ");
-  printInteger(getID(context));
-  println();
+  // print((int*) "deleteContext: ");
+  // printInteger(getID(context));
+  // println();
   if (getNextContext(context) != (int*) 0)
     setPrevContext(getNextContext(context), getPrevContext(context));
 
@@ -6913,7 +6908,7 @@ int boot(int argc, int* argv) {
 
   //***EIFLES***
   int nextId;
-  int programIndex;
+  int processIndex;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6937,42 +6932,28 @@ int boot(int argc, int* argv) {
   // ***EIFLES*** resetMicrokernel() is part of Microkernel which is part of emulator; deletes currently used context
   resetMicrokernel();
 
-	// ***EIFLES*** abstract prototype of context creation for concurrent program execution
-
-  // ***EIFLES*** IDEE zum Erzeugen von N Prozessen
-  programIndex = 0;
-  // create initial context on microkernel boot level
-	//initID = selfie_create();
-  // create duplicate of the initial context on our boot level
-  //if (usedContexts == (int*) 0){
-    // ***EIFLES*** This is never the case
-		//usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
-  //}
-
-  //up_loadBinary(getPT(usedContexts));
-  //up_loadArguments(getPT(usedContexts), argc, argv);
-  //down_mapPageTable(usedContexts);
-
-  // ***EIFLES*** Create instances of our binary
-  while(programIndex < N){
+  processIndex = 0;
+  
+  // ***EIFLES*** Create numProcesses contexts for numProcesses instances of our binary
+  while(processIndex < numProcesses){
   	// ***EIFLES***
-    //printInteger(programIndex);
+    //printInteger(processIndex);
   	//println();
 
     // ***EIFLES*** "CreateContext" will be executed here in order to get a Context for selfie
   	initID = selfie_create(); // debug message for context creation is automatically printed, see @debug_create
-    //if (usedContexts == (int*) 0){
-     // usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
-    //}
+    if (usedContexts == (int*) 0){
+     usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
+    }
 
     up_loadBinary(getPT(usedContexts));
     up_loadArguments(getPT(usedContexts), argc, argv);
     down_mapPageTable(usedContexts);
       
-    programIndex = programIndex + 1;
+    processIndex = processIndex + 1;
   }
-  print((int*) "DEBUG: --- Context creation finished. ---");
-  println();
+  // print((int*) "DEBUG: --- Context creation finished. ---");
+  // println();
 
 	// mipsters and hypsters handle page faults
   // ***EIFLES*** runOrHostUntilExitWithPageFaultHandling() is part of kernel which is part of emul;
@@ -7065,6 +7046,18 @@ int runScheduler(int thisID) {
   return nextID;
 }
 
+void setTimeslice() {
+  TIMESLICE = atoi(getArgument());
+  print((int*) "Set TIMESLICE: ");
+  printInteger(TIMESLICE);
+  println();
+}
+void setNumProcesses() {
+  numProcesses = atoi(getArgument());
+  print((int*) "Set numProcesses: ");
+  printInteger(numProcesses);
+  println();
+}
 
 // -----------------------------------------------------------------
 // ----------------------------- MAIN ------------------------------
@@ -7121,6 +7114,10 @@ int selfie() {
       else if (numberOfRemainingArguments() == 0)
         // remaining options have at least one argument
         return USAGE;
+      else if (stringCompare(option, (int*) "-timeslice"))
+        setTimeslice();
+      else if (stringCompare(option, (int*) "-numprocesses"))
+        setNumProcesses();
       else if (stringCompare(option, (int*) "-o"))
         selfie_output();
       else if (stringCompare(option, (int*) "-s"))
