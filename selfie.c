@@ -6991,7 +6991,6 @@ int boot(int argc, int* argv) {
   // Load the context BINARY_COUNT times
   while (contextCnt <= BINARY_COUNT) {
     // create initial context on microkernel boot level
-<<<<<<< HEAD
     newContextID = selfie_create();
     
     print((int*)"Created context with id: ");
@@ -7008,18 +7007,7 @@ int boot(int argc, int* argv) {
       // create duplicate of the initial context on our boot level
       usedContexts = createContext(newContextID, selfie_ID(), (int*) 0);
     }
-    
-=======
-    if (contextCnt == 1)
-      initID = selfie_create();
-    else
-      selfie_create();
-
-    if (usedContexts == (int *) 0)
-      // create duplicate of the initial context on our boot level
-      usedContexts = createContext(initID, selfie_ID(), (int *) 0);
-
->>>>>>> origin/selfie
+      
     up_loadBinary(getPT(usedContexts));
 
     up_loadArguments(getPT(usedContexts), argc, argv);
