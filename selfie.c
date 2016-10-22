@@ -6997,7 +6997,7 @@ int boot(int argc, int* argv) {
     printInteger(newContextID);
     println();
       
-    if (newContextID == 1) {
+    if (contextCnt == 1) {
       // Set the initID for function runOrHostUntilExitWithPageFaultHandling(initID);
       initID = newContextID;
     }
@@ -7007,7 +7007,7 @@ int boot(int argc, int* argv) {
       // create duplicate of the initial context on our boot level
       usedContexts = createContext(newContextID, selfie_ID(), (int*) 0);
     }
-      
+    
     up_loadBinary(getPT(usedContexts));
 
     up_loadArguments(getPT(usedContexts), argc, argv);
