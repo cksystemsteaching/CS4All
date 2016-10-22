@@ -5,7 +5,8 @@ int main(int argc, int* argv) {
   i = 0;
 
   while (i < 20) {
-    print((int*)"Testoutput");
+    print((int*)"Testoutput: ");
+    printInteger(i);
     println();
     i = i + 1;
   }
