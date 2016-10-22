@@ -6279,7 +6279,9 @@ void interrupt() {
   if (timer > 0)
     if (cycles == timer) {
       cycles = 0;
-
+      println();
+      print("Now switching context");
+      println();
       if (status == 0)
         // only throw exception if no other is pending
         // TODO: handle multiple pending exceptions
@@ -6940,27 +6942,28 @@ int boot(int argc, int* argv) {
   // ***EIFLES*** IDEE zum Erzeugen von N Prozessen
   programIndex = 0;
   // create initial context on microkernel boot level
-	initID = selfie_create();
+	//initID = selfie_create();
   // create duplicate of the initial context on our boot level
-  if (usedContexts == (int*) 0){
-    // ***EIFLES*** this is never the case
-		usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
-  }
+  //if (usedContexts == (int*) 0){
+    // ***EIFLES*** This is never the case
+		//usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
+  //}
 
-	up_loadBinary(getPT(usedContexts));
-  up_loadArguments(getPT(usedContexts), argc, argv);
-  down_mapPageTable(usedContexts);
+  //up_loadBinary(getPT(usedContexts));
+  //up_loadArguments(getPT(usedContexts), argc, argv);
+  //down_mapPageTable(usedContexts);
 
+  // ***EIFLES*** Create instances of our binary
   while(programIndex < N){
-  	printInteger(programIndex);
-  	println();
+  	// ***EIFLES***
+    //printInteger(programIndex);
+  	//println();
 
+    // ***EIFLES*** "CreateContext" will be executed here in order to get a Context for selfie
   	initID = selfie_create(); // debug message for context creation is automatically printed, see @debug_create
-
-    if (usedContexts == (int*) 0){
-      // ***EIFLES*** this is never the case
-      usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
-    }
+    //if (usedContexts == (int*) 0){
+     // usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
+    //}
 
     up_loadBinary(getPT(usedContexts));
     up_loadArguments(getPT(usedContexts), argc, argv);
@@ -6969,7 +6972,6 @@ int boot(int argc, int* argv) {
     programIndex = programIndex + 1;
   }
   print((int*) "DEBUG: --- Context creation finished. ---");
-  println();
   println();
 
 	// mipsters and hypsters handle page faults
