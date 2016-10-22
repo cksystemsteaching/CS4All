@@ -26,6 +26,14 @@ test: selfie
 	diff -q selfie3.s selfie5.s
 	./selfie -c -mob 1
 
+# Testfile with linking selfie librarys
+test-file:
+	./selfie -c test.c selfie.c -o test.m
+
+# Test the assignment01 -> compile the test.c file and execute it 5 times with 100 instructions per cycle
+test-assignment01:
+	./selfie -l test.m -n 5 -i 100 -m 4
+
 # Clean up
 clean:
 	rm -rf *.m
