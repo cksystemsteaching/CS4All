@@ -1027,9 +1027,9 @@ int debug_exception = 0;
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
 
-// ***EIFLES*** reduced timeslice to switch between contexts and demonstrate scheduling
-// (run 7777 assembly instructions per context) and then switch
-int TIMESLICE = 7777; //10000000;
+// ***EIFLES*** used for decision, when a switch to next context (process) is necessary
+// this is of course, based on ASSEMBLY instructions
+int TIMESLICE = 10000000;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
