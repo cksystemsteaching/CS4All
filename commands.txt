@@ -1,8 +1,16 @@
 ----------------------------------------------------------------
 CLEAR, MAKE(cc), COMPILE (selfie), LOAD AND RUN (mipster-mipster,32M)
 
-clear && rm -f test_program.m selfie.exe && make && ./selfie -c test_program.c selfie.c -o test_program.m && ./selfie -l test_program.m -m 32 
+clear && rm -f test_program.m ./selfie && make && ./selfie -c test_program.c selfie.c -o test_program.m && ./selfie -l test_program.m -m 32 
+
 cls && del -f test_program.m selfie.exe && make && selfie.exe -c test_program.c selfie.c -o test_program.m && selfie.exe -l test_program.m -m 32
+
+[A1]: CONCURRENCY/SCHEDULING (parameters -timeslice and -numprocesses)
+
+clear && rm -f test_program.m ./selfie && make && ./selfie -c test_program.c selfie.c -o test_program.m && ./selfie -timeslice 7777 -numprocesses 5 -l test_program.m -m 32
+
+cls && del -f test_program.m selfie.exe && make && selfie.exe -c test_program.c selfie.c -o test_program.m && selfie.exe -timeslice 7777 -numprocesses 5 -l test_program.m -m 32
+
 ----------------------------------------------------------------
 Other commands:
 ------
