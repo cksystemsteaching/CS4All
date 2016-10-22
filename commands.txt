@@ -12,6 +12,20 @@ clear && rm -f test_program.m ./selfie && make && ./selfie -c test_program.c sel
 cls && del -f test_program.m selfie.exe && make && selfie.exe -c test_program.c selfie.c -o test_program.m && selfie.exe -timeslice 7777 -numprocesses 5 -l test_program.m -m 32
 
 ----------------------------------------------------------------
+IMPORTANT: Please commit your changes to assignments-dev branch only. 
+If you're ready to merge:
+"assignments-dev" --> "selfie" = selfie gets all changes from assignments-dev
+
+git checkout assignments-dev
+git merge -s ours selfie
+git checkout selfie
+git merge assignments-dev
+
+git push	
+
+Infos here: http://stackoverflow.com/a/30170159/2472398
+----------------------------------------------------------------
+
 Other commands:
 ------
 Create Selfie executable:
