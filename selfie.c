@@ -1030,6 +1030,8 @@ int debug_exception = 0;
 // TODO: implement proper interrupt controller to turn interrupts on and off
 int TIMESLICE = 100000;
 
+int INSTANCE_COUNT = 1;
+
 // ------------------------ GLOBAL VARIABLES -----------------------
 
 int* registers = (int*) 0; // general purpose registers
@@ -1233,6 +1235,8 @@ int boot(int argc, int* argv);
 int selfie_run(int engine, int machine, int debugger);
 
 void setTimeslice();
+
+void setInstanceCount();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -6767,9 +6771,19 @@ int runUntilExitWithoutExceptionHandling(int toID) {
 
       exceptionNumber = decodeExceptionNumber(savedStatus);
 
-      if (exceptionNumber == EXCEPTION_EXIT)
+      if (exceptionNumber == EXCEPTION_EXIT) {
+          //delete current context
+          usedContexts = deleteContext(fromContext, usedContexts);
+
+          //if context list is empty -> terminate
+          if (usedContexts == (int *) 0)
+              return decodeExceptionParameter(savedStatus);
+              //otherwise: set fromID for scheduling in the next step (default: take first ID in list)
+          else
+              fromID = getID(usedContexts);
+      }
         // TODO: only return if all contexts have exited
-        return decodeExceptionParameter(savedStatus);
+        //return decodeExceptionParameter(savedStatus);
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
@@ -6912,7 +6926,8 @@ int boot(int argc, int* argv) {
   // works with mipsters and hypsters
   int initID;
   int exitCode;
-    int counter;
+  int counter;
+  int currentID;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6933,33 +6948,34 @@ int boot(int argc, int* argv) {
   resetMicrokernel();
 
   // create initial context on microkernel boot level
-  initID = selfie_create();
-
-  if (usedContexts == (int*) 0)
-    // create duplicate of the initial context on our boot level
-    usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+  //initID = selfie_create();
 
   //load PT of first context --> first element in usedContexts (kind of choose first context - process - as next executed process)
-  up_loadBinary(getPT(usedContexts));
+  //up_loadBinary(getPT(usedContexts));
 
-  up_loadArguments(getPT(usedContexts), argc, argv); //load
+  //up_loadArguments(getPT(usedContexts), argc, argv); //load
+    //down_mapPageTable(usedContexts);
 
-  // propagate page table of initial context to microkernel boot level
-  down_mapPageTable(usedContexts);
-
-  //TODO RUPI @Michi: wie lade ich den Speicher für einen Context mit den binary daten korrekt? so gehts ja anscheinend ned.
-  // bzw meine Vermutung ist ja, dass der counter vom binary file nicht am anfang ist und deswegen failed.
-    //Michi: Paar prozesse basteln
     counter = 0;
-    while (counter < 5) {
-        selfie_create();
-        up_loadBinary(getPT(usedContexts)); // <<--- TODO RUPI ERROR IS HERE RIGHT NOW
+    while (counter < INSTANCE_COUNT) {
+        currentID = selfie_create();
+        if (counter == 0) {
+            initID = currentID;
+        }
+
+        up_loadBinary(getPT(usedContexts));
         up_loadArguments(getPT(usedContexts), argc, argv);
+        // propagate page table of initial context to microkernel boot level
         down_mapPageTable(usedContexts);
         counter = counter + 1;
     }
 
+    if (usedContexts == (int*) 0)
+        // create duplicate of the initial context on our boot level
+        usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+
   // mipsters and hypsters handle page faults
+
   exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
 
   print(selfieName);
@@ -6981,7 +6997,21 @@ int boot(int argc, int* argv) {
 }
 
 void setTimeslice() {
-    TIMESLICE = atoi(getArgument());
+    int timeslice;
+    timeslice = atoi(getArgument());
+    if (timeslice < 1)
+        TIMESLICE = 1;
+    else
+        TIMESLICE = timeslice;
+}
+
+void setInstanceCount() {
+    int instanceCount;
+    instanceCount = atoi(getArgument());
+    if (instanceCount < 1)
+        INSTANCE_COUNT = 1;
+    else
+        INSTANCE_COUNT = instanceCount;
 }
 
 int selfie_run(int engine, int machine, int debugger) {
@@ -7099,6 +7129,8 @@ int selfie() {
         selfie_load();
       else if (stringCompare(option, (int*) "-t"))
         setTimeslice();
+      else if (stringCompare(option, (int*) "-n"))
+          setInstanceCount();
       else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
