@@ -2645,6 +2645,7 @@ int load_variable(int* variable) {
 
 int load_variable_with_pre_inc(int* variable) {
   int* entry;
+  int type;
 
   entry = getVariable(variable);
 
@@ -2652,54 +2653,88 @@ int load_variable_with_pre_inc(int* variable) {
 
   emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
 
-  emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+  type = getType(entry);
+
+  if (type == INTSTAR_T)
+    emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), WORDSIZE);
+  else
+    emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+
   emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
 
-  return getType(entry);
+  return type;
 }
 
 int load_variable_with_post_inc(int* variable) {
   int* entry;
+  int type;
 
   entry = getVariable(variable);
+
   talloc();
+
   emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
 
   talloc();
-  emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 1);
+
+  type = getType(entry);
+
+  if (type == INTSTAR_T)
+    emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), WORDSIZE);
+  else
+    emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 1);
+
   emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
   tfree(1);
 
-  return getType(entry);
+  return type;
 }
 
 int load_variable_with_pre_dec(int* variable) {
   int* entry;
+  int type;
 
   entry = getVariable(variable);
+
   talloc();
+
   emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
 
-  emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+  type = getType(entry);
+
+  if (type == INTSTAR_T)
+    emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -WORDSIZE);
+  else
+    emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+
   emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
 
-  return getType(entry);
-
+  return type;
 }
+
 int load_variable_with_post_dec(int* variable) {
   int* entry;
+  int type;
 
   entry = getVariable(variable);
+
   talloc();
   emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
 
   talloc();
-  emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), -1);
+
+  type = getType(entry);
+
+  if (type == INTSTAR_T)
+    emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), -WORDSIZE);
+  else
+    emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), -1);
+
   emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
   tfree(1);
 
-  return getType(entry);
-
+  return type;
 }
 
 void load_integer(int value) {
@@ -3567,9 +3602,6 @@ void gr_return() {
 
   numberOfReturn = numberOfReturn + 1;
 }
-
-
-
 
 void gr_statement() {
   int ltype;
