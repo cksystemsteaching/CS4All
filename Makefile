@@ -1,5 +1,7 @@
-# Compiler flags
+	# Compiler flags
 CFLAGS := -w -m32 -D'main(a,b)=main(a,char**argv)'
+
+CC := gcc
 
 # Compile selfie.c into selfie executable
 selfie: selfie.c
@@ -25,7 +27,15 @@ test: selfie
 	diff -q selfie3.m selfie5.m
 	diff -q selfie3.s selfie5.s
 	./selfie -c -mob 1
-
+	
+assign2: selfie
+	./selfie -c assign2test.c -o assign2test.m -m 32 -l assign2test.m -m 4
+	
+cleanWin:
+	del *.m
+	del *.s
+	del selfie.exe
+	
 # Clean up
 clean:
 	rm -rf *.m

@@ -407,10 +407,10 @@ void resetScanner() {
 
 void resetSymbolTables();
 
-void createSymbolTableEntry(int which, int* string, int line, int class, int type, int value, int address);
+void createSymbolTableEntry(int which, int* string, int line, int clazz, int type, int value, int address);
 
-int* searchSymbolTable(int* entry, int* string, int class);
-int* getScopedSymbolTableEntry(int* string, int class);
+int* searchSymbolTable(int* entry, int* string, int clazz);
+int* getScopedSymbolTableEntry(int* string, int clazz);
 
 int isUndefinedProcedure(int* entry);
 int reportUndefinedProcedures();
@@ -420,7 +420,7 @@ int reportUndefinedProcedures();
 // |  0 | next    | pointer to next entry
 // |  1 | string  | identifier string, string literal
 // |  2 | line#   | source line number
-// |  3 | class   | VARIABLE, PROCEDURE, STRING
+// |  3 | clazz   | VARIABLE, PROCEDURE, STRING
 // |  4 | type    | INT_T, INTSTAR_T, VOID_T
 // |  5 | value   | VARIABLE: initial value
 // |  6 | address | VARIABLE: offset, PROCEDURE: address, STRING: offset
@@ -439,7 +439,7 @@ int  getScope(int* entry)      { return        *(entry + 7); }
 void setNextEntry(int* entry, int* next)    { *entry       = (int) next; }
 void setString(int* entry, int* identifier) { *(entry + 1) = (int) identifier; }
 void setLineNumber(int* entry, int line)    { *(entry + 2) = line; }
-void setClass(int* entry, int class)        { *(entry + 3) = class; }
+void setClass(int* entry, int clazz)        { *(entry + 3) = clazz; }
 void setType(int* entry, int type)          { *(entry + 4) = type; }
 void setValue(int* entry, int value)        { *(entry + 5) = value; }
 void setAddress(int* entry, int address)    { *(entry + 6) = address; }
@@ -855,7 +855,7 @@ void implementID();
 int selfie_ID();
 
 void emitCreate();
-int  doCreate(int parentID);
+int  doCreateContext(int parentID);
 void implementCreate();
 
 int selfie_create();
@@ -866,6 +866,8 @@ void implementSwitch();
 int  mipster_switch(int toID);
 
 int selfie_switch(int toID);
+
+int scheduleRoundRobin(int fromID);
 
 void emitStatus();
 void implementStatus();
@@ -1026,7 +1028,7 @@ int debug_exception = 0;
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
-int TIMESLICE = 10000000;
+int TIMESLICE = 100000;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1229,6 +1231,8 @@ int bootminmob(int argc, int* argv, int machine);
 int boot(int argc, int* argv);
 
 int selfie_run(int engine, int machine, int debugger);
+
+void setTimeslice();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -2227,14 +2231,14 @@ void getSymbol() {
 // ------------------------- SYMBOL TABLE --------------------------
 // -----------------------------------------------------------------
 
-void createSymbolTableEntry(int whichTable, int* string, int line, int class, int type, int value, int address) {
+void createSymbolTableEntry(int whichTable, int* string, int line, int clazz, int type, int value, int address) {
   int* newEntry;
 
   newEntry = malloc(2 * SIZEOFINTSTAR + 6 * SIZEOFINT);
 
   setString(newEntry, string);
   setLineNumber(newEntry, line);
-  setClass(newEntry, class);
+  setClass(newEntry, clazz);
   setType(newEntry, type);
   setValue(newEntry, value);
   setAddress(newEntry, address);
@@ -2245,11 +2249,11 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
     setNextEntry(newEntry, global_symbol_table);
     global_symbol_table = newEntry;
 
-    if (class == VARIABLE)
+    if (clazz == VARIABLE)
       numberOfGlobalVariables = numberOfGlobalVariables + 1;
-    else if (class == PROCEDURE)
+    else if (clazz == PROCEDURE)
       numberOfProcedures = numberOfProcedures + 1;
-    else if (class == STRING)
+    else if (clazz == STRING)
       numberOfStrings = numberOfStrings + 1;
   } else if (whichTable == LOCAL_TABLE) {
     setScope(newEntry, REG_FP);
@@ -2263,10 +2267,10 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
   }
 }
 
-int* searchSymbolTable(int* entry, int* string, int class) {
+int* searchSymbolTable(int* entry, int* string, int clazz) {
   while (entry != (int*) 0) {
     if (stringCompare(string, getString(entry)))
-      if (class == getClass(entry))
+      if (clazz == getClass(entry))
         return entry;
 
     // keep looking
@@ -2276,20 +2280,20 @@ int* searchSymbolTable(int* entry, int* string, int class) {
   return (int*) 0;
 }
 
-int* getScopedSymbolTableEntry(int* string, int class) {
+int* getScopedSymbolTableEntry(int* string, int clazz) {
   int* entry;
 
-  if (class == VARIABLE)
+  if (clazz == VARIABLE)
     // local variables override global variables
     entry = searchSymbolTable(local_symbol_table, string, VARIABLE);
-  else if (class == PROCEDURE)
+  else if (clazz == PROCEDURE)
     // library procedures override declared or defined procedures
     entry = searchSymbolTable(library_symbol_table, string, PROCEDURE);
   else
     entry = (int*) 0;
 
   if (entry == (int*) 0)
-    return searchSymbolTable(global_symbol_table, string, class);
+    return searchSymbolTable(global_symbol_table, string, clazz);
   else
     return entry;
 }
@@ -5070,7 +5074,7 @@ void emitCreate() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
-int doCreate(int parentID) {
+int doCreateContext(int parentID) {
   if (bumpID < INT_MAX) {
     bumpID = createID(bumpID);
 
@@ -5097,17 +5101,17 @@ int doCreate(int parentID) {
 }
 
 void implementCreate() {
-  *(registers+REG_V0) = doCreate(getID(currentContext));
+  *(registers+REG_V0) = doCreateContext(getID(currentContext));
 }
 
 int hypster_create() {
   // this procedure is only executed at boot level zero
-  return doCreate(selfie_ID());
+  return doCreateContext(selfie_ID());
 }
 
 int selfie_create() {
   if (mipster)
-    return doCreate(selfie_ID());
+    return doCreateContext(selfie_ID());
   else
     return hypster_create();
 }
@@ -5199,6 +5203,24 @@ int selfie_switch(int toID) {
     return mipster_switch(toID);
   else
     return hypster_switch(toID);
+}
+
+int scheduleRoundRobin(int fromID) {
+  int nextID;
+  int *nextContext;
+  int *currContext;
+  //get current context
+  currContext = findContext(fromID, usedContexts);
+  // find next context
+  nextContext = getNextContext(currContext);
+
+  if (nextContext != (int *) 0) {
+    nextID = getID(nextContext);
+  } else {
+    nextID = getID(usedContexts);
+  }
+
+  return nextID;
 }
 
 void emitStatus() {
@@ -6269,7 +6291,6 @@ void execute() {
 
 void interrupt() {
   cycles = cycles + 1;
-
   if (timer > 0)
     if (cycles == timer) {
       cycles = 0;
@@ -6773,13 +6794,17 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int exceptionParameter;
   int frame;
 
-  while (1) {
-    fromID = selfie_switch(toID);
+  //print("reached this!!");
 
+  while (1) {
+    print("switching to ");
+    printInteger(toID);
+    println();
+
+    fromID = selfie_switch(toID);
     fromContext = findContext(fromID, usedContexts);
 
     // assert: fromContext must be in usedContexts (created here)
-
     if (getParent(fromContext) != selfie_ID())
       // switch to parent which is in charge of handling exceptions
       toID = getParent(fromContext);
@@ -6798,9 +6823,20 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT)
-        // TODO: only return if all contexts have exited
-        return exceptionParameter;
+      } else if (exceptionNumber == EXCEPTION_EXIT) {
+
+          //delete current context
+          usedContexts = deleteContext(fromContext, usedContexts);
+
+          //if context list is empty -> terminate
+          if (usedContexts == (int*) 0)
+              return exceptionParameter;
+              //otherwise: set fromID for scheduling in the next step (default: take first ID in list)
+          else
+              fromID = getID(usedContexts);
+
+      }
+      //EXCEPTION_TIMER isn't actually an exception -> only means we should change context (== change process)
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
@@ -6812,11 +6848,11 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         return -1;
       }
 
-      // TODO: scheduler should go here
-      toID = fromID;
+      toID = scheduleRoundRobin(fromID);
     }
   }
 }
+
 
 int bootminmob(int argc, int* argv, int machine) {
   // works only with mipsters
@@ -6840,7 +6876,7 @@ int bootminmob(int argc, int* argv, int machine) {
   resetMicrokernel();
 
   // create initial context on our boot level
-  initID = doCreate(MIPSTER_ID);
+  initID = doCreateContext(MIPSTER_ID);
 
   up_loadBinary(getPT(usedContexts));
 
@@ -6876,6 +6912,7 @@ int boot(int argc, int* argv) {
   // works with mipsters and hypsters
   int initID;
   int exitCode;
+    int counter;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6902,12 +6939,25 @@ int boot(int argc, int* argv) {
     // create duplicate of the initial context on our boot level
     usedContexts = createContext(initID, selfie_ID(), (int*) 0);
 
+  //load PT of first context --> first element in usedContexts (kind of choose first context - process - as next executed process)
   up_loadBinary(getPT(usedContexts));
 
-  up_loadArguments(getPT(usedContexts), argc, argv);
+  up_loadArguments(getPT(usedContexts), argc, argv); //load
 
   // propagate page table of initial context to microkernel boot level
   down_mapPageTable(usedContexts);
+
+  //TODO RUPI @Michi: wie lade ich den Speicher für einen Context mit den binary daten korrekt? so gehts ja anscheinend ned.
+  // bzw meine Vermutung ist ja, dass der counter vom binary file nicht am anfang ist und deswegen failed.
+    //Michi: Paar prozesse basteln
+    counter = 0;
+    while (counter < 5) {
+        selfie_create();
+        up_loadBinary(getPT(usedContexts)); // <<--- TODO RUPI ERROR IS HERE RIGHT NOW
+        up_loadArguments(getPT(usedContexts), argc, argv);
+        down_mapPageTable(usedContexts);
+        counter = counter + 1;
+    }
 
   // mipsters and hypsters handle page faults
   exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
@@ -6928,6 +6978,10 @@ int boot(int argc, int* argv) {
   println();
 
   return exitCode;
+}
+
+void setTimeslice() {
+    TIMESLICE = atoi(getArgument());
 }
 
 int selfie_run(int engine, int machine, int debugger) {
@@ -7043,6 +7097,8 @@ int selfie() {
         selfie_disassemble();
       else if (stringCompare(option, (int*) "-l"))
         selfie_load();
+      else if (stringCompare(option, (int*) "-t"))
+        setTimeslice();
       else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
@@ -7067,6 +7123,9 @@ int main(int argc, int* argv) {
   initSelfie(argc, (int*) argv);
 
   initLibrary();
+
+  print((int*) " This is WMER Selfie ");
+  println();
 
   exitCode = selfie();
 
