@@ -6852,9 +6852,12 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         return -1;
       }
+      else {
+        toID = runScheduler(fromID);
 
+      }
       // TODO: scheduler should go here
-      toID = runScheduler(fromID);
+      //toID = runScheduler(fromID);
     }
   }
 }
