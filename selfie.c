@@ -6474,10 +6474,6 @@ int* allocateContext(int ID, int parentID) {
 
 int* createContext(int ID, int parentID, int* in) {
   int* context;
-
-  print("DEBUG: start createContext() #################");
-  println();
-
   context = allocateContext(ID, parentID);
 
   setNextContext(context, in);
@@ -6485,8 +6481,6 @@ int* createContext(int ID, int parentID, int* in) {
   if (in != (int*) 0)
     setPrevContext(in, context);
 
-  print("DEBUG: end createContext() #################");
-  println();
   return context;
 }
 
@@ -6616,9 +6610,6 @@ void pfree(int* frame) {
 void up_loadBinary(int* table) {
   int vaddr;
 
-  print("DEBUG: start up_loadBinary() #################");
-  println();
-
   // binaries start at lowest virtual address
   vaddr = 0;
 
@@ -6627,9 +6618,6 @@ void up_loadBinary(int* table) {
 
     vaddr = vaddr + WORDSIZE;
   }
-
-  print("DEBUG: end up_loadBinary() #################");
-  println();
 }
 
 int up_loadString(int* table, int* s, int SP) {
@@ -6829,32 +6817,29 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         // TODO: only return if all contexts have exited
 
         // ***EIFLES*** if current process (e.g. process with bumpID 5) is finished, delete its context
-        //usedContexts = deleteContext(fromContext, usedContexts);
+        usedContexts = deleteContext(fromContext, usedContexts);
 
-        usedContexts = getNextContext(fromContext);
-
-        if (usedContexts == (int*) 0) {
-            usedContexts = getPrevContext(fromContext);
-
-            if (usedContexts == (int*) 0) {      
-                // No contexts left
-                print((int*) "No contexts left");
-                println();
-                doDelete(fromID);
-                return exceptionParameter;
-            }
-        }
-        // ***EIFLES*** if all (user) processes (binaries passed as arguments) are done, exit
+        //usedContexts = getNextContext(fromContext);
         //if (usedContexts == (int*) 0) {
-          //return exceptionParameter;
+        //    usedContexts = getPrevContext(fromContext);
+        //  if (usedContexts == (int*) 0) {      
+        //        // No contexts left
+        //        print((int*) "No contexts left");
+        //        println();
+        //        doDelete(fromID);
+        //        return exceptionParameter;
+        //    }
         //}
-        //else {
-          // else (not all processes are done), go to next remaining process/context
-          //fromID = getID(usedContexts);
-        //}
+
+        // ***EIFLES*** if all (user) processes (binaries passed as arguments) are done, exit
+        if (usedContexts == (int*) 0) {
+          print((int*) "DEBUG: all processes are done! #######");
+          println();
+          return exceptionParameter;
+        }
 
         // Delete the actual finished context
-        doDelete(fromID);
+        //doDelete(fromID);
 
         // Set the new id of the next context
         toID = getID(usedContexts);
@@ -6872,7 +6857,6 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       }
       else {
         toID = runScheduler(fromID);
-
       }
       // TODO: scheduler should go here
       //toID = runScheduler(fromID);
@@ -6977,8 +6961,6 @@ int boot(int argc, int* argv) {
   
   // ***EIFLES*** Create numProcesses contexts for numProcesses instances of our binary
   while(processIndex < numProcesses){
-    print("DEBUG: in while #################");
-    println();
   	// ***EIFLES***
     //printInteger(processIndex);
   	//println();
@@ -6986,8 +6968,6 @@ int boot(int argc, int* argv) {
     // ***EIFLES*** "CreateContext" will be executed here in order to get a Context for selfie
   	initID = selfie_create(); // debug message for context creation is automatically printed, see @debug_create
     if (usedContexts == (int*) 0){
-      print("DEBUG: usedContexts == 0 #################");
-      println();
       usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
     }
 
@@ -7074,21 +7054,25 @@ int selfie_run(int engine, int machine, int debugger) {
   return exitCode;
 }
 
+// round robin scheduler
 int runScheduler(int thisID) {
   int *thisContext;
   int *nextContext;
+  int *previousContext;
   int nextID;
+
+  print((int*) "DEBUG: runScheduler() called");
+  println();
 
   thisContext = findContext(thisID, usedContexts);
   nextContext = getNextContext(thisContext);
 
   if (nextContext != (int *) 0) {
-    nextID = getID(nextContext);
-  } else {
-    nextID = getID(usedContexts);
+    //nextID = getID(nextContext);
+    
+    return getID(nextContext);
   }
-
-  return nextID;
+  return thisID;
 }
 
 void setTimeslice() {

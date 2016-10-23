@@ -36,3 +36,7 @@ clean:
 assignment1:
 	./selfie -c test_program.c selfie.c -o test_program.m 
 	./selfie -timeslice 7777 -numprocesses 5 -l test_program.m -m 32
+
+# this is the command which currently breaks our test cases
+badCommand:
+	./selfie -c selfie.c -o selfie3.m -s selfie3.s -y 2 -l selfie3.m -y 2 -l selfie3.m -y 2 -c selfie.c -o selfie4.m -s selfie4.s
