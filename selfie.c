@@ -6829,17 +6829,35 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         // TODO: only return if all contexts have exited
 
         // ***EIFLES*** if current process (e.g. process with bumpID 5) is finished, delete its context
-        usedContexts = deleteContext(fromContext, usedContexts);
+        //usedContexts = deleteContext(fromContext, usedContexts);
 
-        // ***EIFLES*** if all (user) processes (binaries passed as arguments) are done, exit
+        usedContexts = getNextContext(fromContext);
+
         if (usedContexts == (int*) 0) {
-          return exceptionParameter;
-        }
-        else {
-          // else (not all processes are done), go to next remaining process/context
-          fromID = getID(usedContexts);
-        }
+            usedContexts = getPrevContext(fromContext);
 
+            if (usedContexts == (int*) 0) {      
+                // No contexts left
+                print((int*) "No contexts left");
+                println();
+                doDelete(fromID);
+                return exceptionParameter;
+            }
+        }
+        // ***EIFLES*** if all (user) processes (binaries passed as arguments) are done, exit
+        //if (usedContexts == (int*) 0) {
+          //return exceptionParameter;
+        //}
+        //else {
+          // else (not all processes are done), go to next remaining process/context
+          //fromID = getID(usedContexts);
+        //}
+
+        // Delete the actual finished context
+        doDelete(fromID);
+
+        // Set the new id of the next context
+        toID = getID(usedContexts);
 			}
 
       else if (exceptionNumber != EXCEPTION_TIMER) {
