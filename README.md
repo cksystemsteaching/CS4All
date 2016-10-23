@@ -43,3 +43,12 @@ Test your implementation on syntactically correct as well as syntactically incor
 
 In C/C++ the expression `++i + ++i` is undefined. Why???
 Can you find a program and compiler flags (for eg. `gcc` or `clang`), such that the compiled program behaves differently than the same program compiled with your implementation.
+
+Assignment 2: Addresses
+----------------------------------
+__Deadline__: November 8, 9am (hard, no extensions)
+
+Implement the address operator (`&`) and function pointers in selfie.
+You do *not* need to implement function pointer types (i.e. in this aspect compatibility with regular `C` is not required).
+
+What can you do with your new powers? Find interesting ways to show off the new functionality. Be wild! (But document the showcase code.)
