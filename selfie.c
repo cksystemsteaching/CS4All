@@ -1028,7 +1028,7 @@ int debug_exception = 0;
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
-int TIMESLICE = 100;
+int TIMESLICE = 100000;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1231,6 +1231,8 @@ int bootminmob(int argc, int* argv, int machine);
 int boot(int argc, int* argv);
 
 int selfie_run(int engine, int machine, int debugger);
+
+void setTimeslice();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -5218,21 +5220,6 @@ int scheduleRoundRobin(int fromID) {
     nextID = getID(usedContexts);
   }
 
-  //next context existing -> choose this context according to the round robin scheduling
-  /*if (nextContext != (int *) 0) {
-    nextID = getID(nextContext);
-  }
-    //next context not existing == end of the list -> choose first context in double linked list
-  else {
-    nextContext = getPrevContext(currContext);
-    while (nextContext != (int *) 0) {
-      currContext = nextContext;
-      nextContext = getPrevContext(currContext);
-    }
-    //id of first element in list
-    nextID = getID(currContext);
-  }*/
-
   return nextID;
 }
 
@@ -6815,10 +6802,6 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     println();
 
     fromID = selfie_switch(toID);
-
-    print("DEBUG RUPI: switching success!!");
-    println();
-
     fromContext = findContext(fromID, usedContexts);
 
     // assert: fromContext must be in usedContexts (created here)
@@ -6841,10 +6824,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
       } else if (exceptionNumber == EXCEPTION_EXIT) {
-          // TODO: only return if all contexts have exited
-          print((int*)"TERMINATE Process ");
-          printInteger(getID(currentContext));
-          print((int*) " ");
+
           //delete current context
           usedContexts = deleteContext(fromContext, usedContexts);
 
@@ -7000,6 +6980,10 @@ int boot(int argc, int* argv) {
   return exitCode;
 }
 
+void setTimeslice() {
+    TIMESLICE = atoi(getArgument());
+}
+
 int selfie_run(int engine, int machine, int debugger) {
   int exitCode;
 
@@ -7113,6 +7097,8 @@ int selfie() {
         selfie_disassemble();
       else if (stringCompare(option, (int*) "-l"))
         selfie_load();
+      else if (stringCompare(option, (int*) "-t"))
+        setTimeslice();
       else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
