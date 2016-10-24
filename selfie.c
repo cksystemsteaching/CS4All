@@ -1026,7 +1026,7 @@ int debug_exception = 0;
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
-int TIMESLICE = 10000000;
+int TIMESLICE = 50;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1055,6 +1055,8 @@ int mipster = 0; // flag for forcing to use mipster rather than hypster
 int interpret = 0; // flag for executing or disassembling code
 
 int debug = 0; // flag for logging code execution
+
+int debugLocally = 0; // flag for debugging locally
 
 int  calls           = 0;        // total number of executed procedure calls
 int* callsPerAddress = (int*) 0; // number of executed calls of each procedure
@@ -1134,6 +1136,8 @@ void switchContext(int* from, int* to);
 
 void freeContext(int* context);
 int* deleteContext(int* context, int* from);
+
+void traverseContexts(int* ctxHead);
 
 void mapPage(int* table, int page, int frame);
 
@@ -5195,6 +5199,15 @@ int hypster_switch(int toID) {
 }
 
 int selfie_switch(int toID) {
+  if (debugLocally) {
+    print((int*) "Coming from Context ");
+    printInteger(getID(currentContext));
+    println();
+    print((int*) "Now Running context ");
+    printInteger(toID);
+    println();
+  }
+
   if (mipster)
     return mipster_switch(toID);
   else
@@ -6277,12 +6290,23 @@ void interrupt() {
       if (status == 0)
         // only throw exception if no other is pending
         // TODO: handle multiple pending exceptions
+
+        if (debugLocally) {
+          print((int*) "TIMER!!");
+          println();
+        }
+
         throwException(EXCEPTION_TIMER, 0);
     }
 }
 
 void runUntilException() {
-  trap = 0;
+//  trap = 0;
+
+  if (trap != 0) {
+    print((int*) "TRAP");
+    println();
+  }
 
   while (trap == 0) {
     fetch();
@@ -6397,7 +6421,7 @@ void selfie_disassemble() {
 
   debug = 1;
 
-  while(pc < codeLength) {
+  while (pc < codeLength) {
     ir = loadBinary(pc);
 
     decode();
@@ -6515,6 +6539,17 @@ void freeContext(int* context) {
   setNextContext(context, freeContexts);
 
   freeContexts = context;
+}
+
+void traverseContexts(int* head) {
+  if (head != (int*) 0) {
+    printInteger(getID(head));
+    print((int*) " -> ");
+    return traverseContexts(getNextContext(head));
+  } else {
+    println();
+    return;
+  }
 }
 
 int* deleteContext(int* context, int* from) {
@@ -6776,14 +6811,23 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   while (1) {
     fromID = selfie_switch(toID);
 
+    if (debugLocally) {
+      print((int*) "from ctx ");
+      printInteger(fromID);
+      println();
+    }
+
     fromContext = findContext(fromID, usedContexts);
 
     // assert: fromContext must be in usedContexts (created here)
 
-    if (getParent(fromContext) != selfie_ID())
+    if (getParent(fromContext) != selfie_ID()) {
+
+      print((int*) "In exception parent"); printInteger(getID(getParent(fromContext)));
+
       // switch to parent which is in charge of handling exceptions
       toID = getParent(fromContext);
-    else {
+    } else {
       // we are the parent in charge of handling exceptions
       savedStatus = selfie_status();
 
@@ -6798,10 +6842,10 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT)
+      } else if (exceptionNumber == EXCEPTION_EXIT) {
         // TODO: only return if all contexts have exited
         return exceptionParameter;
-      else if (exceptionNumber != EXCEPTION_TIMER) {
+      } else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
         printInteger(getID(fromContext));
@@ -6810,10 +6854,12 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         println();
 
         return -1;
+      } else if (exceptionNumber == EXCEPTION_TIMER) {
+        //print((int*) "asdfasdf"); printInteger(getID(fromContext));
+        toID = getID(getNextContext(fromContext));
+      } else {
+        toID = fromID;
       }
-
-      // TODO: scheduler should go here
-      toID = fromID;
     }
   }
 }
@@ -6876,6 +6922,16 @@ int boot(int argc, int* argv) {
   // works with mipsters and hypsters
   int initID;
   int exitCode;
+  int repeats;
+  int* tempCtx;
+
+  if (debugLocally) {
+    print((int*) "DEBUG ");
+    printInteger(argc);
+    println();
+  }
+
+  repeats = 10;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6898,19 +6954,37 @@ int boot(int argc, int* argv) {
   // create initial context on microkernel boot level
   initID = selfie_create();
 
-  if (usedContexts == (int*) 0)
+  if (usedContexts == (int*) 0) {
     // create duplicate of the initial context on our boot level
     usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+  }
 
   up_loadBinary(getPT(usedContexts));
-
   up_loadArguments(getPT(usedContexts), argc, argv);
 
   // propagate page table of initial context to microkernel boot level
   down_mapPageTable(usedContexts);
 
+  while (repeats > 0) {
+    bumpID = createID(bumpID);
+    tempCtx = createContext(bumpID, selfie_ID(), usedContexts);
+
+    usedContexts = tempCtx;
+
+    up_loadBinary(getPT(tempCtx));
+    up_loadArguments(getPT(tempCtx), argc, argv);
+
+    repeats = repeats - 1;
+  }
+
+  setNextContext(findContext(initID, usedContexts), usedContexts);
+
+  if (debugLocally) {
+    traverseContexts(usedContexts);
+  }
+
   // mipsters and hypsters handle page faults
-  exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
+  exitCode = runOrHostUntilExitWithPageFaultHandling(getID(usedContexts));
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -7053,8 +7127,11 @@ int selfie() {
         return selfie_run(MIPSTER, MINSTER, 0);
       else if (stringCompare(option, (int*) "-mob"))
         return selfie_run(MIPSTER, MOBSTER, 0);
-      else
+      else if (stringCompare(option, (int*) "-r")) {
+        return selfie_run(MIPSTER, MOBSTER, 0);
+      } else {
         return USAGE;
+      }
     }
   }
 
@@ -7063,6 +7140,8 @@ int selfie() {
 
 int main(int argc, int* argv) {
   int exitCode;
+
+  write(1, (int*) "This is Selfiestick Selfie\n", 27);
 
   initSelfie(argc, (int*) argv);
 
@@ -7076,6 +7155,7 @@ int main(int argc, int* argv) {
     println();
 
     return 0;
-  } else
+  } else {
     return exitCode;
+  }
 }

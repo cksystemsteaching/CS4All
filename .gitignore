@@ -1,0 +1,16 @@
+# Prerequisites
+*.d
+
+# Object files
+*.o
+
+# Executables
+*.out
+
+*~
+selfie
+
+.metadata/
+
+mybinary*
+hello*
