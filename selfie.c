@@ -3626,15 +3626,16 @@ void gr_statement() {
 
     // "*" identifier
     if (symbol == SYM_IDENTIFIER) {
-      ltype = load_variable(identifier);
-
-      if (ltype != INTSTAR_T)
-        typeWarning(INTSTAR_T, ltype);
 
       getSymbol();
 
       // "*" identifier "="
       if (symbol == SYM_ASSIGN) {
+        ltype = load_variable(identifier);
+
+        if (ltype != INTSTAR_T)
+          typeWarning(INTSTAR_T, ltype);
+
         getSymbol();
 
         rtype = gr_expression();
@@ -3647,8 +3648,33 @@ void gr_statement() {
         tfree(2);
 
         numberOfAssignments = numberOfAssignments + 1;
+
+      // "*" identifier "++"
+      } else if(symbol == SYM_PLUSPLUS) {
+        load_variable(variableOrProcedureName);
+
+        talloc();
+        emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+
+        tfree(2);
+        getSymbol();
+
+      // "*" identifier "--"
+      } else if(symbol == SYM_MINUSMINUS) {
+        load_variable(variableOrProcedureName);
+
+        talloc();
+        emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+        emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+
+        tfree(2);
+        getSymbol();
+
       } else {
-        syntaxErrorSymbol(SYM_ASSIGN);
+        syntaxErrorUnexpected();
 
         tfree(1);
       }
