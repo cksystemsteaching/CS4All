@@ -6749,55 +6749,46 @@ void down_mapPageTable(int* context) {
 }
 
 int runUntilExitWithoutExceptionHandling(int toID) {
-  // works only with mipsters
-  int fromID;
-  int* fromContext;
-  int savedStatus;
-  int exceptionNumber;
+    // works only with mipsters
+    int fromID;
+    int* fromContext;
+    int savedStatus;
+    int exceptionNumber;
 
-  while (1) {
-    fromID = mipster_switch(toID);
+    while (1) {
+        fromID = mipster_switch(toID);
 
-    fromContext = findContext(fromID, usedContexts);
+        fromContext = findContext(fromID, usedContexts);
 
-    // assert: fromContext must be in usedContexts (created here)
+        // assert: fromContext must be in usedContexts (created here)
 
-    if (getParent(fromContext) != MIPSTER_ID)
-      // switch to parent which is in charge of handling exceptions
-      toID = getParent(fromContext);
-    else {
-      // we are the parent in charge of handling exit exceptions
-      savedStatus = doStatus();
+        if (getParent(fromContext) != MIPSTER_ID)
+            // switch to parent which is in charge of handling exceptions
+            toID = getParent(fromContext);
+        else {
+            // we are the parent in charge of handling exit exceptions
+            savedStatus = doStatus();
 
-      exceptionNumber = decodeExceptionNumber(savedStatus);
+            exceptionNumber = decodeExceptionNumber(savedStatus);
 
-      if (exceptionNumber == EXCEPTION_EXIT) {
-          //delete current context
-          usedContexts = deleteContext(fromContext, usedContexts);
+            if (exceptionNumber == EXCEPTION_EXIT)
+                // TODO: only return if all contexts have exited
+                return decodeExceptionParameter(savedStatus);
+            else if (exceptionNumber != EXCEPTION_TIMER) {
+                print(binaryName);
+                print((int*) ": context ");
+                printInteger(getID(fromContext));
+                print((int*) " throws uncaught ");
+                printStatus(savedStatus);
+                println();
 
-          //if context list is empty -> terminate
-          if (usedContexts == (int *) 0)
-              return decodeExceptionParameter(savedStatus);
-              //otherwise: set fromID for scheduling in the next step (default: take first ID in list)
-          else
-              toID = getID(usedContexts);
-      }
-        // TODO: only return if all contexts have exited
-        //return decodeExceptionParameter(savedStatus);
-      else if (exceptionNumber != EXCEPTION_TIMER) {
-        print(binaryName);
-        print((int*) ": context ");
-        printInteger(getID(fromContext));
-        print((int*) " throws uncaught ");
-        printStatus(savedStatus);
-        println();
-
-        return -1;
-      } else
-        toID = fromID;
+                return -1;
+            } else
+                toID = fromID;
+        }
     }
-  }
 }
+
 
 int runOrHostUntilExitWithPageFaultHandling(int toID) {
   // works with mipsters and hypsters
