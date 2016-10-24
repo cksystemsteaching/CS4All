@@ -6793,9 +6793,15 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
     // ***EIFLES*** getParent() is part of Contexts/Emulator; 
     // ***EIFLES*** selfie_ID() is part of Hypster Syscalls which is part of Interface; returns mipster or hypster id
-    if (getParent(fromContext) != selfie_ID())
+    if (getParent(fromContext) != selfie_ID()) {
       // switch to parent which is in charge of handling exceptions
-      toID = getParent(fromContext);
+      if (getParent(fromContext) == (int*) 0) {
+        // no parent?? should be selfie itself, so terminate...
+        return 1;
+      } else {
+        toID = getParent(fromContext);
+      }
+    }
     else {
       // we are the parent in charge of handling exceptions
       // ***EIFLES*** selfie_status() is part of Hypster Syscalls/Interface; returns status (?) of hypster or mipster
@@ -6946,15 +6952,20 @@ int boot(int argc, int* argv) {
   	//println();
 
     // ***EIFLES*** "CreateContext" will be executed here in order to get a Context for selfie
-  	initID = selfie_create(); // debug message for context creation is automatically printed, see @debug_create
+  	// I think we had the wrong start order
+    // we always started with the last context created, maybe this leads to the test failure
+    nextID = selfie_create(); // debug message for context creation is automatically printed, see @debug_create
     if (usedContexts == (int*) 0){
-      usedContexts = createContext(initID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
+      usedContexts = createContext(nextID, selfie_ID(), (int*) 0);  // 3rd arg = id of previous context)
     }
 
     up_loadBinary(getPT(usedContexts));
     up_loadArguments(getPT(usedContexts), argc, argv);
     down_mapPageTable(usedContexts);
 
+    if (processIndex == 0) {
+      initID = nextID;
+    }
     processIndex = processIndex + 1;
   }
   // print((int*) "DEBUG: --- Context creation finished. ---");
