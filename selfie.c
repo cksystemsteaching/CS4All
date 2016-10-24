@@ -6819,6 +6819,8 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     if (getParent(fromContext) != selfie_ID())
       // switch to parent which is in charge of handling exceptions
       toID = getParent(fromContext);
+      if (findContext(toID, usedContexts) == (int*) 0)
+          return 0;
     else {
       // we are the parent in charge of handling exceptions
       savedStatus = selfie_status();
@@ -6837,7 +6839,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       } else if (exceptionNumber == EXCEPTION_EXIT) {
 
           //delete current context
-          usedContexts = deleteContext(fromContext, usedContexts);
+          doDelete(fromID);
 
           //if context list is empty -> terminate
           if (usedContexts == (int*) 0)
