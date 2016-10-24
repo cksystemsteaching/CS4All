@@ -6932,7 +6932,8 @@ int boot(int argc, int* argv) {
   }
 
   if (argc > 2) {
-    repeats = atoi(argv[2]) - 1;
+    //repeats = atoi(argv[2]) - 1;
+    repeats = atoi(*(argv + 2)) - 1;
     if (debugLocally) printInteger(repeats);
   } else {
     repeats = 0;
