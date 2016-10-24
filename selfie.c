@@ -6811,9 +6811,6 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   //print("reached this!!");
 
   while (1) {
-    print("switching to ");
-    printInteger(toID);
-    println();
 
     fromID = selfie_switch(toID);
     fromContext = findContext(fromID, usedContexts);
@@ -6847,22 +6844,23 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
               return exceptionParameter;
               //otherwise: set fromID for scheduling in the next step (default: take first ID in list)
           else
-              fromID = getID(usedContexts);
+              toID = getID(usedContexts);
 
       }
       //EXCEPTION_TIMER isn't actually an exception -> only means we should change context (== change process)
       else if (exceptionNumber != EXCEPTION_TIMER) {
-        print(binaryName);
-        print((int*) ": context ");
-        printInteger(getID(fromContext));
-        print((int*) " throws uncaught ");
-        printStatus(savedStatus);
-        println();
+          print(binaryName);
+          print((int *) ": context ");
+          printInteger(getID(fromContext));
+          print((int *) " throws uncaught ");
+          printStatus(savedStatus);
+          println();
 
-        return -1;
+          return -1;
       }
-
-      toID = scheduleRoundRobin(fromID);
+        else{
+          toID = scheduleRoundRobin(fromID);
+      }
     }
   }
 }
@@ -6963,6 +6961,10 @@ int boot(int argc, int* argv) {
             initID = currentID;
         }
 
+        if (usedContexts == (int*) 0)
+            // create duplicate of the initial context on our boot level
+            usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+
         up_loadBinary(getPT(usedContexts));
         up_loadArguments(getPT(usedContexts), argc, argv);
         // propagate page table of initial context to microkernel boot level
@@ -6970,9 +6972,6 @@ int boot(int argc, int* argv) {
         counter = counter + 1;
     }
 
-    if (usedContexts == (int*) 0)
-        // create duplicate of the initial context on our boot level
-        usedContexts = createContext(initID, selfie_ID(), (int*) 0);
 
   // mipsters and hypsters handle page faults
 
