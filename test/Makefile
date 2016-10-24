@@ -42,6 +42,8 @@ test_pre_increment:
 	../selfie -c pre_increment/preinc_pointer_1.c -d 1 | grep -E 'exit code 2345'
 	../selfie -c pre_increment/postinc_pointer_1.c
 	../selfie -c pre_increment/postinc_pointer_1.c -d 1 | grep -E 'exit code 2345'
+	../selfie -c pre_increment/postinc_deref_expr_1.c
+	../selfie -c pre_increment/postinc_deref_expr_1.c -d 1 | grep -E 'exit code 1235'
 
 clean:
 	rm -rf *.s

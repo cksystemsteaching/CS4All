@@ -3710,8 +3710,30 @@ void gr_statement() {
           tfree(2);
 
           numberOfAssignments = numberOfAssignments + 1;
+
+        // "*" "(" expression ")" "++"
+        } else if (symbol == SYM_PLUSPLUS) {
+          getSymbol();
+
+          talloc();
+          emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+          emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+          emitIFormat(OP_ADDIU, currentTemporary(), previousTemporary(), 0);
+          tfree(2);
+
+        } else if (symbol == SYM_MINUSMINUS) {
+          getSymbol();
+
+          talloc();
+          emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+          emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+          emitIFormat(OP_ADDIU, currentTemporary(), previousTemporary(), 0);
+          tfree(2);
+
         } else {
-          syntaxErrorSymbol(SYM_ASSIGN);
+          syntaxErrorUnexpected();
 
           tfree(1);
         }
