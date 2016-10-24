@@ -6814,34 +6814,16 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 	        selfie_map(fromID, exceptionParameter, frame);
 	    } 
     	else if (exceptionNumber == EXCEPTION_EXIT) {
-        // TODO: only return if all contexts have exited
-
         // ***EIFLES*** if current process (e.g. process with bumpID 5) is finished, delete its context
         usedContexts = deleteContext(fromContext, usedContexts);
 
-        //usedContexts = getNextContext(fromContext);
-        //if (usedContexts == (int*) 0) {
-        //    usedContexts = getPrevContext(fromContext);
-        //  if (usedContexts == (int*) 0) {      
-        //        // No contexts left
-        //        print((int*) "No contexts left");
-        //        println();
-        //        doDelete(fromID);
-        //        return exceptionParameter;
-        //    }
-        //}
-
         // ***EIFLES*** if all (user) processes (binaries passed as arguments) are done, exit
         if (usedContexts == (int*) 0) {
-          print((int*) "DEBUG: all processes are done! #######");
-          println();
+          // print((int*) "DEBUG: all processes are done! #######");
+          // println();
           return exceptionParameter;
         }
 
-        // Delete the actual finished context
-        //doDelete(fromID);
-
-        // Set the new id of the next context
         toID = getID(usedContexts);
 			}
 
@@ -6855,11 +6837,9 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         return -1;
       }
-      else {
+      else {  // exceptionNumber == EXCEPTION_TIMER
         toID = runScheduler(fromID);
       }
-      // TODO: scheduler should go here
-      //toID = runScheduler(fromID);
     }
   }
 }
@@ -7059,19 +7039,34 @@ int runScheduler(int thisID) {
   int *thisContext;
   int *nextContext;
   int *previousContext;
+  int *firstContext;
   int nextID;
+  int firstID;
 
-  print((int*) "DEBUG: runScheduler() called");
-  println();
+  // print((int*) "DEBUG: runScheduler() called");
+  // println();
 
   thisContext = findContext(thisID, usedContexts);
   nextContext = getNextContext(thisContext);
 
-  if (nextContext != (int *) 0) {
-    //nextID = getID(nextContext);
-    
+  if (nextContext != (int *) 0) {  
     return getID(nextContext);
+  } else {
+    // are there previous contexts?
+    nextContext = getPrevContext(thisContext);
+
+    while (nextContext != (int *) 0) {
+      firstContext = nextContext;
+      nextContext = getNextContext(firstContext);
+    }
+
+    if (firstContext != (int *) 0) {
+      firstID = getID(firstContext);
+      return firstID;
+    } // else: no previous context (last return will be reached)
   }
+
+  // only this context left, so go on within this context
   return thisID;
 }
 
