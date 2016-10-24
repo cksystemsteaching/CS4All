@@ -6542,7 +6542,7 @@ void freeContext(int* context) {
 }
 
 void traverseContexts(int* head) {
-  if (head != 0) {
+  if (head != (int*) 0) {
     printInteger(getID(head));
     print((int*) " -> ");
     return traverseContexts(getNextContext(head));
