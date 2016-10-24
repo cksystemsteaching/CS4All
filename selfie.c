@@ -1028,7 +1028,7 @@ int debug_exception = 0;
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
-int TIMESLICE = 100000;
+int TIMESLICE = 10000000;
 
 int INSTANCE_COUNT = 1;
 
@@ -6780,7 +6780,7 @@ int runUntilExitWithoutExceptionHandling(int toID) {
               return decodeExceptionParameter(savedStatus);
               //otherwise: set fromID for scheduling in the next step (default: take first ID in list)
           else
-              fromID = getID(usedContexts);
+              toID = getID(usedContexts);
       }
         // TODO: only return if all contexts have exited
         //return decodeExceptionParameter(savedStatus);
@@ -6816,11 +6816,12 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     fromContext = findContext(fromID, usedContexts);
 
     // assert: fromContext must be in usedContexts (created here)
-    if (getParent(fromContext) != selfie_ID())
-      // switch to parent which is in charge of handling exceptions
-      toID = getParent(fromContext);
-      if (findContext(toID, usedContexts) == (int*) 0)
-          return 0;
+    if (getParent(fromContext) != selfie_ID()) {
+        // switch to parent which is in charge of handling exceptions
+        toID = getParent(fromContext);
+        if (findContext(toID, usedContexts) == (int *) 0)
+            return 0;
+    }
     else {
       // we are the parent in charge of handling exceptions
       savedStatus = selfie_status();
@@ -6965,7 +6966,7 @@ int boot(int argc, int* argv) {
 
         if (usedContexts == (int*) 0)
             // create duplicate of the initial context on our boot level
-            usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+            usedContexts = createContext(currentID, selfie_ID(), (int*) 0);
 
         up_loadBinary(getPT(usedContexts));
         up_loadArguments(getPT(usedContexts), argc, argv);
@@ -6977,7 +6978,7 @@ int boot(int argc, int* argv) {
 
   // mipsters and hypsters handle page faults
 
-  exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
+  exitCode = runOrHostUntilExitWithPageFaultHandling(currentID);
 
   print(selfieName);
   print((int*) ": this is selfie's ");
