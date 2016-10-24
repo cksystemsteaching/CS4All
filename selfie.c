@@ -7063,7 +7063,7 @@ int runScheduler(int thisID) {
 
     while (nextContext != (int *) 0) {
       firstContext = nextContext;
-      nextContext = getNextContext(firstContext);
+      nextContext = getPrevContext(firstContext);
     }
 
     if (firstContext != (int *) 0) {
