@@ -6838,7 +6838,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         return -1;
       }
-      else {  // exceptionNumber == EXCEPTION_TIMER
+      else {
         toID = runScheduler(fromID);
       }
     }
