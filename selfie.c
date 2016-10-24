@@ -6931,13 +6931,7 @@ int boot(int argc, int* argv) {
     println();
   }
 
-  if (argc > 2) {
-    //repeats = atoi(argv[2]) - 1;
-    repeats = atoi(*(argv + 2)) - 1;
-    if (debugLocally) printInteger(repeats);
-  } else {
-    repeats = 0;
-  }
+  repeats = 10;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6963,13 +6957,13 @@ int boot(int argc, int* argv) {
   if (usedContexts == (int*) 0) {
     // create duplicate of the initial context on our boot level
     usedContexts = createContext(initID, selfie_ID(), (int*) 0);
-  } else {
-    up_loadBinary(getPT(usedContexts));
-    up_loadArguments(getPT(usedContexts), argc, argv);
-
-    // propagate page table of initial context to microkernel boot level
-    down_mapPageTable(usedContexts);
   }
+
+  up_loadBinary(getPT(usedContexts));
+  up_loadArguments(getPT(usedContexts), argc, argv);
+
+  // propagate page table of initial context to microkernel boot level
+  down_mapPageTable(usedContexts);
 
   while (repeats > 0) {
     bumpID = createID(bumpID);
