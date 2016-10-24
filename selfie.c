@@ -6795,12 +6795,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     // ***EIFLES*** selfie_ID() is part of Hypster Syscalls which is part of Interface; returns mipster or hypster id
     if (getParent(fromContext) != selfie_ID()) {
       // switch to parent which is in charge of handling exceptions
-      if (getParent(fromContext) == (int*) 0) {
-        // no parent?? should be selfie itself, so terminate...
-        return 1;
-      } else {
-        toID = getParent(fromContext);
-      }
+      toID = getParent(fromContext);
     }
     else {
       // we are the parent in charge of handling exceptions
