@@ -5135,7 +5135,7 @@ int doSwitch(int toID) {
   int* toContext;
 
   fromID = getID(currentContext);
-
+  // [EIFLES] In here, we have to assign the correct position in the seg.table for the chosen context!
   toContext = findContext(toID, usedContexts);
 
   if (toContext != (int*) 0) {
@@ -6786,7 +6786,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
     if (getParent(fromContext) != selfie_ID()) {
       // switch to parent which is in charge of handling exceptions
-      // [EIFLES] How ever, we need to check if there even exists a parent! Infinite loop without this check!!
+      // [EIFLES] However, we need to check if there even exists a parent! Infinite loop without this check!!
       toID = getParent(fromContext);
       if(findContext(toID, usedContexts) == (int*) 0) {
         return 0;
@@ -6916,6 +6916,8 @@ int boot(int argc, int* argv) {
 
   processIndex = 0;
 
+  // [EIFLES] in here, we probably have to count how many instances are created within the while loop
+  // [EIFLES] needed to know in how many pieces we have to devide the mainmemory (segmenttable)
   while (processIndex < numProcesses) {
     // create initial context on microkernel boot level
     nextID = selfie_create();
