@@ -6993,6 +6993,20 @@ int selfie_run(int engine, int machine, int debugger) {
   return exitCode;
 }
 
+void setTimeslice() {
+  TIMESLICE = atoi(getArgument());
+  print((int*) "Set TIMESLICE: ");
+  printInteger(TIMESLICE);
+  println();
+}
+
+void setNumProcesses() {
+  numProcesses = atoi(getArgument());
+  print((int*) "Set numProcesses: ");
+  printInteger(numProcesses);
+  println();
+}
+
 // -----------------------------------------------------------------
 // ----------------------------- MAIN ------------------------------
 // -----------------------------------------------------------------
@@ -7074,20 +7088,6 @@ int selfie() {
   }
 
   return 0;
-}
-
-void setTimeslice() {
-  TIMESLICE = atoi(getArgument());
-  print((int*) "Set TIMESLICE: ");
-  printInteger(TIMESLICE);
-  println();
-}
-
-void setNumProcesses() {
-  numProcesses = atoi(getArgument());
-  print((int*) "Set numProcesses: ");
-  printInteger(numProcesses);
-  println();
 }
 
 int main(int argc, int* argv) {
