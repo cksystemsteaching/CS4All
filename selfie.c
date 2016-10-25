@@ -1264,6 +1264,9 @@ int USAGE = 1;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
+// ***EIFLES***
+int numProcesses = 1;   // number of concurrent processes to be executed
+
 int selfie_argc = 0;
 int* selfie_argv = (int*) 0;
 
@@ -6774,15 +6777,20 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int frame;
 
   while (1) {
+    // [EIFLES] Context switch is handled in here!
     fromID = selfie_switch(toID);
 
     fromContext = findContext(fromID, usedContexts);
 
     // assert: fromContext must be in usedContexts (created here)
 
-    if (getParent(fromContext) != selfie_ID())
+    if (getParent(fromContext) != selfie_ID()) {
       // switch to parent which is in charge of handling exceptions
       toID = getParent(fromContext);
+      if(findContext(toID, usedContexts) == (int*) 0) {
+        return 0;
+      }
+    }
     else {
       // we are the parent in charge of handling exceptions
       savedStatus = selfie_status();
@@ -6798,9 +6806,18 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT)
+      } else if (exceptionNumber == EXCEPTION_EXIT) {
         // TODO: only return if all contexts have exited
-        return exceptionParameter;
+        doDelete(toID);
+
+        // [EIFLES] all contexts finished, terminate. 
+        if (usedContexts == (int*) 0) {
+          return exceptionParameter;
+        } else {
+          // [EIFLES] contexts left
+          toID = getID(usedContexts);
+        }
+      }
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
@@ -6810,10 +6827,11 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         println();
 
         return -1;
-      }
-
-      // TODO: scheduler should go here
-      toID = fromID;
+      } else {
+        // TODO: scheduler should go here
+        // toID = fromID;
+        toID = runScheduler(fromID);
+      } 
     }
   }
 }
@@ -6874,8 +6892,10 @@ int bootminmob(int argc, int* argv, int machine) {
 
 int boot(int argc, int* argv) {
   // works with mipsters and hypsters
-  int initID;
+  int initID; // [EIFLES] still necessary?
   int exitCode;
+  int processIndex;// [EIFLES] maybe use global var instead?
+  int nextID;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6895,22 +6915,28 @@ int boot(int argc, int* argv) {
 
   resetMicrokernel();
 
-  // create initial context on microkernel boot level
-  initID = selfie_create();
+  processIndex = 0;
 
-  if (usedContexts == (int*) 0)
-    // create duplicate of the initial context on our boot level
-    usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+  while (processIndex < numProcesses) {
+    // create initial context on microkernel boot level
+    nextID = selfie_create();
 
-  up_loadBinary(getPT(usedContexts));
+    if (usedContexts == (int*) 0)
+      // create duplicate of the initial context on our boot level
+      usedContexts = createContext(nextID, selfie_ID(), (int*) 0);
 
-  up_loadArguments(getPT(usedContexts), argc, argv);
+    up_loadBinary(getPT(usedContexts));
 
-  // propagate page table of initial context to microkernel boot level
-  down_mapPageTable(usedContexts);
+    up_loadArguments(getPT(usedContexts), argc, argv);
+
+    // propagate page table of initial context to microkernel boot level
+    down_mapPageTable(usedContexts);
+
+    processIndex = processIndex + 1;
+  }
 
   // mipsters and hypsters handle page faults
-  exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
+  exitCode = runOrHostUntilExitWithPageFaultHandling(nextID);
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6982,6 +7008,42 @@ int selfie_run(int engine, int machine, int debugger) {
   return exitCode;
 }
 
+void setTimeslice() {
+  TIMESLICE = atoi(getArgument());
+  print((int*) "Set TIMESLICE: ");
+  printInteger(TIMESLICE);
+  println();
+}
+
+void setNumProcesses() {
+  numProcesses = atoi(getArgument());
+  print((int*) "Set numProcesses: ");
+  printInteger(numProcesses);
+  println();
+}
+
+// round robin scheduler
+int runScheduler(int thisID) {
+  int *thisContext;
+  int *nextContext;
+  int *previousContext;
+  int *firstContext;
+  int nextID;
+  int firstID;
+
+  // [EIFLES] print((int*) "DEBUG: runScheduler() called");
+  // [EIFLES] println();
+
+  thisContext = findContext(thisID, usedContexts);
+  nextContext = getNextContext(thisContext);
+
+  if (nextContext != (int *) 0) {  
+    return getID(nextContext);
+  } else {
+    return getID(thisContext);
+  }
+}
+
 // -----------------------------------------------------------------
 // ----------------------------- MAIN ------------------------------
 // -----------------------------------------------------------------
@@ -7037,6 +7099,10 @@ int selfie() {
       else if (numberOfRemainingArguments() == 0)
         // remaining options have at least one argument
         return USAGE;
+      else if (stringCompare(option, (int*) "-timeslice"))
+        setTimeslice();
+      else if (stringCompare(option, (int*) "-numprocesses"))
+        setNumProcesses();
       else if (stringCompare(option, (int*) "-o"))
         selfie_output();
       else if (stringCompare(option, (int*) "-s"))
@@ -7067,6 +7133,9 @@ int main(int argc, int* argv) {
   initSelfie(argc, (int*) argv);
 
   initLibrary();
+
+  print((int*) "This is eifles Selfie");
+  println();
 
   exitCode = selfie();
 
