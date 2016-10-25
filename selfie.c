@@ -6801,9 +6801,19 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT)
+      } else if (exceptionNumber == EXCEPTION_EXIT) {
         // TODO: only return if all contexts have exited
+        doDelete(toID);
+
+        // [EIFLES] all contexts finished, terminate. 
+        if (currentContext == (int*) 0) {
+          return exceptionParameter;
+        } else {
+          // [EIFLES] contexts left
+          toID = getID(usedContexts);
+        }
         return exceptionParameter;
+      }
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
