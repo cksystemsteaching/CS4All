@@ -61,3 +61,19 @@ Implement basic concurrent execution of _n_ processes in mipster. _n >= 2_
 -----------
 [Lecture 2](https://myfiles.sbg.ac.at/index.php/s/DOuC6keTPyEAHcw)
 -----------
+
+Assignment 2: Memory segmentation, yield system call
+----------------------------------------------------
+
+This assignment deals with cooperative multitasking of _n_ processes in mipster using a single instance of physical memory.
+
+* again, duplicate the process state _n_ times
+* but, do not duplicate the whole main memory
+* instead, split the main memory into segments by implementing a segment table in mipster
+* each process has an entry in the segment table for the segment start address and segment size
+* design the segment table for constant time access
+* translate the addresses of read and write operations to memory
+
+* implement [cooperative multitasking](https://en.wikipedia.org/wiki/Computer_multitasking) through a yield system call, i.e., a user process calling [sched_yield()](http://linux.die.net/man/2/sched_yield) will cause the OS to re-schedule
+* implement a simple user program that demonstrates yielding, e.g, yield each time after printing a counter to the console
+* __Deadline__: Nov 7, 8pm
