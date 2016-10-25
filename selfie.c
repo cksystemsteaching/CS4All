@@ -6786,6 +6786,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
     if (getParent(fromContext) != selfie_ID()) {
       // switch to parent which is in charge of handling exceptions
+      // [EIFLES] How ever, we need to check if there even exists a parent! Infinite loop without this check!!
       toID = getParent(fromContext);
       if(findContext(toID, usedContexts) == (int*) 0) {
         return 0;
@@ -6806,8 +6807,8 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT) {
-        // TODO: only return if all contexts have exited
+      } 
+      else if (exceptionNumber == EXCEPTION_EXIT) {
         doDelete(toID);
 
         // [EIFLES] all contexts finished, terminate. 
@@ -6827,9 +6828,8 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         println();
 
         return -1;
-      } else {
-        // TODO: scheduler should go here
-        // toID = fromID;
+      } 
+      else {
         toID = runScheduler(fromID);
       } 
     }
@@ -6892,9 +6892,8 @@ int bootminmob(int argc, int* argv, int machine) {
 
 int boot(int argc, int* argv) {
   // works with mipsters and hypsters
-  int initID; // [EIFLES] still necessary?
   int exitCode;
-  int processIndex;// [EIFLES] maybe use global var instead?
+  int processIndex;
   int nextID;
 
   print(selfieName);
@@ -7026,10 +7025,6 @@ void setNumProcesses() {
 int runScheduler(int thisID) {
   int *thisContext;
   int *nextContext;
-  int *previousContext;
-  int *firstContext;
-  int nextID;
-  int firstID;
 
   // [EIFLES] print((int*) "DEBUG: runScheduler() called");
   // [EIFLES] println();
