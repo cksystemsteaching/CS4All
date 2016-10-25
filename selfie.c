@@ -6784,9 +6784,13 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
     // assert: fromContext must be in usedContexts (created here)
 
-    if (getParent(fromContext) != selfie_ID())
+    if (getParent(fromContext) != selfie_ID()) {
       // switch to parent which is in charge of handling exceptions
       toID = getParent(fromContext);
+      if(findContext(toID, usedContexts) == (int*) 0) {
+        return 0;
+      }
+    }
     else {
       // we are the parent in charge of handling exceptions
       savedStatus = selfie_status();
