@@ -1264,6 +1264,9 @@ int USAGE = 1;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
+// ***EIFLES***
+int numProcesses = 1;   // number of concurrent processes to be executed
+
 int selfie_argc = 0;
 int* selfie_argv = (int*) 0;
 
@@ -6874,8 +6877,10 @@ int bootminmob(int argc, int* argv, int machine) {
 
 int boot(int argc, int* argv) {
   // works with mipsters and hypsters
-  int initID;
+  int initID; // [EIFLES] still necessary?
   int exitCode;
+  int processIndex;// [EIFLES] maybe use global var instead?
+  int nextID;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6895,22 +6900,28 @@ int boot(int argc, int* argv) {
 
   resetMicrokernel();
 
-  // create initial context on microkernel boot level
-  initID = selfie_create();
+  processIndex = 0;
 
-  if (usedContexts == (int*) 0)
-    // create duplicate of the initial context on our boot level
-    usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+  while (processIndex < numProcesses) {
+    // create initial context on microkernel boot level
+    nextID = selfie_create();
 
-  up_loadBinary(getPT(usedContexts));
+    if (usedContexts == (int*) 0)
+      // create duplicate of the initial context on our boot level
+      usedContexts = createContext(nextID, selfie_ID(), (int*) 0);
 
-  up_loadArguments(getPT(usedContexts), argc, argv);
+    up_loadBinary(getPT(usedContexts));
 
-  // propagate page table of initial context to microkernel boot level
-  down_mapPageTable(usedContexts);
+    up_loadArguments(getPT(usedContexts), argc, argv);
+
+    // propagate page table of initial context to microkernel boot level
+    down_mapPageTable(usedContexts);
+
+    processIndex = processIndex + 1;
+  }
 
   // mipsters and hypsters handle page faults
-  exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
+  exitCode = runOrHostUntilExitWithPageFaultHandling(nextID);
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -7037,6 +7048,10 @@ int selfie() {
       else if (numberOfRemainingArguments() == 0)
         // remaining options have at least one argument
         return USAGE;
+      else if (stringCompare(option, (int*) "-timeslice"))
+        setTimeslice();
+      else if (stringCompare(option, (int*) "-numprocesses"))
+        setNumProcesses();
       else if (stringCompare(option, (int*) "-o"))
         selfie_output();
       else if (stringCompare(option, (int*) "-s"))
@@ -7061,12 +7076,29 @@ int selfie() {
   return 0;
 }
 
+void setTimeslice() {
+  TIMESLICE = atoi(getArgument());
+  print((int*) "Set TIMESLICE: ");
+  printInteger(TIMESLICE);
+  println();
+}
+
+void setNumProcesses() {
+  numProcesses = atoi(getArgument());
+  print((int*) "Set numProcesses: ");
+  printInteger(numProcesses);
+  println();
+}
+
 int main(int argc, int* argv) {
   int exitCode;
 
   initSelfie(argc, (int*) argv);
 
   initLibrary();
+
+  print((int*) "This is eifles Selfie");
+  println();
 
   exitCode = selfie();
 
