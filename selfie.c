@@ -6777,6 +6777,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int frame;
 
   while (1) {
+    // [EIFLES] Context switch is handled in here!
     fromID = selfie_switch(toID);
 
     fromContext = findContext(fromID, usedContexts);
@@ -6806,13 +6807,12 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         doDelete(toID);
 
         // [EIFLES] all contexts finished, terminate. 
-        if (currentContext == (int*) 0) {
+        if (usedContexts == (int*) 0) {
           return exceptionParameter;
         } else {
           // [EIFLES] contexts left
           toID = getID(usedContexts);
         }
-        return exceptionParameter;
       }
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
@@ -6823,10 +6823,11 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         println();
 
         return -1;
-      }
-
-      // TODO: scheduler should go here
-      toID = fromID;
+      } else {
+        // TODO: scheduler should go here
+        // toID = fromID;
+        toID = runScheduler(fromID);
+      } 
     }
   }
 }
@@ -7015,6 +7016,28 @@ void setNumProcesses() {
   print((int*) "Set numProcesses: ");
   printInteger(numProcesses);
   println();
+}
+
+// round robin scheduler
+int runScheduler(int thisID) {
+  int *thisContext;
+  int *nextContext;
+  int *previousContext;
+  int *firstContext;
+  int nextID;
+  int firstID;
+
+  // [EIFLES] print((int*) "DEBUG: runScheduler() called");
+  // [EIFLES] println();
+
+  thisContext = findContext(thisID, usedContexts);
+  nextContext = getNextContext(thisContext);
+
+  if (nextContext != (int *) 0) {  
+    return getID(nextContext);
+  } else {
+    return getID(thisContext);
+  }
 }
 
 // -----------------------------------------------------------------
