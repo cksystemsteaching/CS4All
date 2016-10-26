@@ -2466,6 +2466,8 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_MINUSMINUS)
     return 0;
+  else if (symbol == SYM_AMPERSAND)
+    return 0;
   else
     return 1;
 }
@@ -2745,6 +2747,16 @@ int load_variable_with_post_dec(int* variable) {
   return type;
 }
 
+void load_address(int* variable) {
+ int* entry;
+
+ entry = getVariable(variable);
+
+ talloc();
+ emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
+
+}
+
 void load_integer(int value) {
   // assert: value >= 0 or value == INT_MIN
 
@@ -3015,8 +3027,18 @@ int gr_factor() {
     getSymbol();
   }
 
+  // "&" identifier
+  if (symbol == SYM_AMPERSAND) {
+    getSymbol();
+
+    if (symbol == SYM_IDENTIFIER) {
+      load_address(identifier);
+
+      getSymbol();
+    }
+
   // dereference?
-  if (symbol == SYM_ASTERISK) {
+  } else if (symbol == SYM_ASTERISK) {
     getSymbol();
 
     // ["*"] identifier

@@ -45,6 +45,10 @@ test_pre_increment:
 	../selfie -c pre_increment/postinc_deref_expr_1.c
 	../selfie -c pre_increment/postinc_deref_expr_1.c -d 1 | grep -E 'exit code 1235'
 
+test_address_of:
+	../selfie -c address_operator/address_of_ident_stack.c -d 1 | grep -E 'exit code 7'
+	../selfie -c address_operator/address_of_ident_glob.c -d 1 | grep -E 'exit code 334'
+
 clean:
 	rm -rf *.s
 	rm -rf *.m
