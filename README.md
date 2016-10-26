@@ -77,3 +77,7 @@ This assignment deals with cooperative multitasking of _n_ processes in mipster 
 * implement [cooperative multitasking](https://en.wikipedia.org/wiki/Computer_multitasking) through a yield system call, i.e., a user process calling [sched_yield()](http://linux.die.net/man/2/sched_yield) will cause the OS to re-schedule
 * implement a simple user program that demonstrates yielding, e.g, yield each time after printing a counter to the console
 * __Deadline__: Nov 7, 8pm
+
+-----------
+[Lecture 3](https://myfiles.sbg.ac.at/index.php/s/sDpx7HPjbGitXwA)
+-----------
