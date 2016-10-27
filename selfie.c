@@ -407,10 +407,10 @@ void resetScanner() {
 
 void resetSymbolTables();
 
-void createSymbolTableEntry(int which, int* string, int line, int class, int type, int value, int address);
+void createSymbolTableEntry(int which, int* string, int line, int clazz, int type, int value, int address);
 
-int* searchSymbolTable(int* entry, int* string, int class);
-int* getScopedSymbolTableEntry(int* string, int class);
+int* searchSymbolTable(int* entry, int* string, int clazz);
+int* getScopedSymbolTableEntry(int* string, int clazz);
 
 int isUndefinedProcedure(int* entry);
 int reportUndefinedProcedures();
@@ -420,7 +420,7 @@ int reportUndefinedProcedures();
 // |  0 | next    | pointer to next entry
 // |  1 | string  | identifier string, string literal
 // |  2 | line#   | source line number
-// |  3 | class   | VARIABLE, PROCEDURE, STRING
+// |  3 | clazz   | VARIABLE, PROCEDURE, STRING
 // |  4 | type    | INT_T, INTSTAR_T, VOID_T
 // |  5 | value   | VARIABLE: initial value
 // |  6 | address | VARIABLE: offset, PROCEDURE: address, STRING: offset
@@ -439,7 +439,7 @@ int  getScope(int* entry)      { return        *(entry + 7); }
 void setNextEntry(int* entry, int* next)    { *entry       = (int) next; }
 void setString(int* entry, int* identifier) { *(entry + 1) = (int) identifier; }
 void setLineNumber(int* entry, int line)    { *(entry + 2) = line; }
-void setClass(int* entry, int class)        { *(entry + 3) = class; }
+void setClass(int* entry, int clazz)        { *(entry + 3) = clazz; }
 void setType(int* entry, int type)          { *(entry + 4) = type; }
 void setValue(int* entry, int value)        { *(entry + 5) = value; }
 void setAddress(int* entry, int address)    { *(entry + 6) = address; }
@@ -830,6 +830,9 @@ void implementOpen();
 void emitMalloc();
 void implementMalloc();
 
+void emitYield();
+void implementYield();
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_read   = 0;
@@ -851,37 +854,31 @@ int SYSCALL_MALLOC = 4045;
 
 void emitID();
 void implementID();
-
 int selfie_ID();
 
 void emitCreate();
-int  doCreate(int parentID);
+int  doCreateContext(int parentID);
 void implementCreate();
-
 int selfie_create();
 
 void emitSwitch();
 int  doSwitch(int toID);
 void implementSwitch();
 int  mipster_switch(int toID);
-
 int selfie_switch(int toID);
 
 void emitStatus();
 void implementStatus();
-
 int selfie_status();
 
 void emitDelete();
 void doDelete(int ID);
 void implementDelete();
-
 void selfie_delete(int ID);
 
 void emitMap();
 void doMap(int ID, int page, int frame);
 void implementMap();
-
 void selfie_map(int ID, int page, int frame);
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
@@ -898,6 +895,7 @@ int SYSCALL_SWITCH = 4903;
 int SYSCALL_STATUS = 4904;
 int SYSCALL_DELETE = 4905;
 int SYSCALL_MAP    = 4906;
+int SYSCALL_YIELD  = 4907;
 
 // *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~
 // -----------------------------------------------------------------
@@ -1018,6 +1016,7 @@ int EXCEPTION_HEAPOVERFLOW       = 4;
 int EXCEPTION_EXIT               = 5;
 int EXCEPTION_TIMER              = 6;
 int EXCEPTION_PAGEFAULT          = 7;
+int EXCEPTION_YIELD              = 8;
 
 int* EXCEPTIONS; // strings representing exceptions
 
@@ -1027,6 +1026,8 @@ int debug_exception = 0;
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
 int TIMESLICE = 10000000;
+
+int INSTANCE_COUNT = 1;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1071,7 +1072,7 @@ int* storesPerAddress = (int*) 0; // number of executed stores per store operati
 // ------------------------- INITIALIZATION ------------------------
 
 void initInterpreter() {
-  EXCEPTIONS = malloc(8 * SIZEOFINTSTAR);
+  EXCEPTIONS = malloc(9 * SIZEOFINTSTAR);
 
   *(EXCEPTIONS + EXCEPTION_NOEXCEPTION)        = (int) "no exception";
   *(EXCEPTIONS + EXCEPTION_UNKNOWNINSTRUCTION) = (int) "unknown instruction";
@@ -1081,6 +1082,7 @@ void initInterpreter() {
   *(EXCEPTIONS + EXCEPTION_EXIT)               = (int) "exit";
   *(EXCEPTIONS + EXCEPTION_TIMER)              = (int) "timer interrupt";
   *(EXCEPTIONS + EXCEPTION_PAGEFAULT)          = (int) "page fault";
+  *(EXCEPTIONS + EXCEPTION_YIELD)              = (int) "yield";
 }
 
 void resetInterpreter() {
@@ -1229,6 +1231,10 @@ int bootminmob(int argc, int* argv, int machine);
 int boot(int argc, int* argv);
 
 int selfie_run(int engine, int machine, int debugger);
+
+void setTimeslice();
+
+void setInstanceCount();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -2227,14 +2233,14 @@ void getSymbol() {
 // ------------------------- SYMBOL TABLE --------------------------
 // -----------------------------------------------------------------
 
-void createSymbolTableEntry(int whichTable, int* string, int line, int class, int type, int value, int address) {
+void createSymbolTableEntry(int whichTable, int* string, int line, int clazz, int type, int value, int address) {
   int* newEntry;
 
   newEntry = malloc(2 * SIZEOFINTSTAR + 6 * SIZEOFINT);
 
   setString(newEntry, string);
   setLineNumber(newEntry, line);
-  setClass(newEntry, class);
+  setClass(newEntry, clazz);
   setType(newEntry, type);
   setValue(newEntry, value);
   setAddress(newEntry, address);
@@ -2245,11 +2251,11 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
     setNextEntry(newEntry, global_symbol_table);
     global_symbol_table = newEntry;
 
-    if (class == VARIABLE)
+    if (clazz == VARIABLE)
       numberOfGlobalVariables = numberOfGlobalVariables + 1;
-    else if (class == PROCEDURE)
+    else if (clazz == PROCEDURE)
       numberOfProcedures = numberOfProcedures + 1;
-    else if (class == STRING)
+    else if (clazz == STRING)
       numberOfStrings = numberOfStrings + 1;
   } else if (whichTable == LOCAL_TABLE) {
     setScope(newEntry, REG_FP);
@@ -2263,10 +2269,10 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
   }
 }
 
-int* searchSymbolTable(int* entry, int* string, int class) {
+int* searchSymbolTable(int* entry, int* string, int clazz) {
   while (entry != (int*) 0) {
     if (stringCompare(string, getString(entry)))
-      if (class == getClass(entry))
+      if (clazz == getClass(entry))
         return entry;
 
     // keep looking
@@ -2276,20 +2282,20 @@ int* searchSymbolTable(int* entry, int* string, int class) {
   return (int*) 0;
 }
 
-int* getScopedSymbolTableEntry(int* string, int class) {
+int* getScopedSymbolTableEntry(int* string, int clazz) {
   int* entry;
 
-  if (class == VARIABLE)
+  if (clazz == VARIABLE)
     // local variables override global variables
     entry = searchSymbolTable(local_symbol_table, string, VARIABLE);
-  else if (class == PROCEDURE)
+  else if (clazz == PROCEDURE)
     // library procedures override declared or defined procedures
     entry = searchSymbolTable(library_symbol_table, string, PROCEDURE);
   else
     entry = (int*) 0;
 
   if (entry == (int*) 0)
-    return searchSymbolTable(global_symbol_table, string, class);
+    return searchSymbolTable(global_symbol_table, string, clazz);
   else
     return entry;
 }
@@ -4012,6 +4018,7 @@ void selfie_compile() {
   emitMalloc();
 
   emitID();
+  emitYield();
   emitCreate();
   emitSwitch();
   emitStatus();
@@ -5032,6 +5039,22 @@ void implementMalloc() {
   }
 }
 
+void emitYield() {
+    createSymbolTableEntry(LIBRARY_TABLE, (int*)"yield", 0, PROCEDURE, INT_T, 0, binaryLength);
+
+    emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_YIELD);
+    emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+    emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementYield() {
+    printInteger(getID(currentContext));
+    print((int*)" yields");
+    println();
+    throwException(EXCEPTION_YIELD, 0);
+}
+
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
 // -----------------------------------------------------------------
@@ -5070,7 +5093,7 @@ void emitCreate() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
-int doCreate(int parentID) {
+int doCreateContext(int parentID) {
   if (bumpID < INT_MAX) {
     bumpID = createID(bumpID);
 
@@ -5097,17 +5120,17 @@ int doCreate(int parentID) {
 }
 
 void implementCreate() {
-  *(registers+REG_V0) = doCreate(getID(currentContext));
+  *(registers+REG_V0) = doCreateContext(getID(currentContext));
 }
 
 int hypster_create() {
   // this procedure is only executed at boot level zero
-  return doCreate(selfie_ID());
+  return doCreateContext(selfie_ID());
 }
 
 int selfie_create() {
   if (mipster)
-    return doCreate(selfie_ID());
+    return doCreateContext(selfie_ID());
   else
     return hypster_create();
 }
@@ -5199,6 +5222,24 @@ int selfie_switch(int toID) {
     return mipster_switch(toID);
   else
     return hypster_switch(toID);
+}
+
+int scheduleRoundRobin(int fromID) {
+  int nextID;
+  int *nextContext;
+  int *currContext;
+  //get current context
+  currContext = findContext(fromID, usedContexts);
+  // find next context
+  nextContext = getNextContext(currContext);
+
+  if (nextContext != (int *) 0) {
+    nextID = getID(nextContext);
+  } else {
+    nextID = getID(usedContexts);
+  }
+
+  return nextID;
 }
 
 void emitStatus() {
@@ -5507,6 +5548,8 @@ void fct_syscall() {
       implementMalloc();
     else if (*(registers+REG_V0) == SYSCALL_ID)
       implementID();
+    else if (*(registers+REG_V0) == SYSCALL_YIELD)
+        implementYield();
     else if (*(registers+REG_V0) == SYSCALL_CREATE)
       implementCreate();
     else if (*(registers+REG_V0) == SYSCALL_SWITCH)
@@ -6269,15 +6312,15 @@ void execute() {
 
 void interrupt() {
   cycles = cycles + 1;
-
   if (timer > 0)
     if (cycles == timer) {
       cycles = 0;
 
-      if (status == 0)
-        // only throw exception if no other is pending
-        // TODO: handle multiple pending exceptions
-        throwException(EXCEPTION_TIMER, 0);
+      if (status == 0) {
+          // only throw exception if no other is pending
+          // TODO: handle multiple pending exceptions
+          throwException(EXCEPTION_TIMER, 0);
+      }
     }
 }
 
@@ -6724,45 +6767,46 @@ void down_mapPageTable(int* context) {
 }
 
 int runUntilExitWithoutExceptionHandling(int toID) {
-  // works only with mipsters
-  int fromID;
-  int* fromContext;
-  int savedStatus;
-  int exceptionNumber;
+    // works only with mipsters
+    int fromID;
+    int* fromContext;
+    int savedStatus;
+    int exceptionNumber;
 
-  while (1) {
-    fromID = mipster_switch(toID);
+    while (1) {
+        fromID = mipster_switch(toID);
 
-    fromContext = findContext(fromID, usedContexts);
+        fromContext = findContext(fromID, usedContexts);
 
-    // assert: fromContext must be in usedContexts (created here)
+        // assert: fromContext must be in usedContexts (created here)
 
-    if (getParent(fromContext) != MIPSTER_ID)
-      // switch to parent which is in charge of handling exceptions
-      toID = getParent(fromContext);
-    else {
-      // we are the parent in charge of handling exit exceptions
-      savedStatus = doStatus();
+        if (getParent(fromContext) != MIPSTER_ID)
+            // switch to parent which is in charge of handling exceptions
+            toID = getParent(fromContext);
+        else {
+            // we are the parent in charge of handling exit exceptions
+            savedStatus = doStatus();
 
-      exceptionNumber = decodeExceptionNumber(savedStatus);
+            exceptionNumber = decodeExceptionNumber(savedStatus);
 
-      if (exceptionNumber == EXCEPTION_EXIT)
-        // TODO: only return if all contexts have exited
-        return decodeExceptionParameter(savedStatus);
-      else if (exceptionNumber != EXCEPTION_TIMER) {
-        print(binaryName);
-        print((int*) ": context ");
-        printInteger(getID(fromContext));
-        print((int*) " throws uncaught ");
-        printStatus(savedStatus);
-        println();
+            if (exceptionNumber == EXCEPTION_EXIT)
+                // TODO: only return if all contexts have exited
+                return decodeExceptionParameter(savedStatus);
+            else if (exceptionNumber != EXCEPTION_TIMER) {
+                print(binaryName);
+                print((int*) ": context ");
+                printInteger(getID(fromContext));
+                print((int*) " throws uncaught ");
+                printStatus(savedStatus);
+                println();
 
-        return -1;
-      } else
-        toID = fromID;
+                return -1;
+            } else
+                toID = fromID;
+        }
     }
-  }
 }
+
 
 int runOrHostUntilExitWithPageFaultHandling(int toID) {
   // works with mipsters and hypsters
@@ -6774,49 +6818,71 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int frame;
 
   while (1) {
-    fromID = selfie_switch(toID);
 
+    fromID = selfie_switch(toID);
     fromContext = findContext(fromID, usedContexts);
 
     // assert: fromContext must be in usedContexts (created here)
+    if (getParent(fromContext) != selfie_ID()) {
+        // switch to parent which is in charge of handling exceptions. If parent cannot be found -> not good
+        toID = getParent(fromContext);
 
-    if (getParent(fromContext) != selfie_ID())
-      // switch to parent which is in charge of handling exceptions
-      toID = getParent(fromContext);
+        if (findContext(toID, usedContexts) == (int *) 0)
+            return 42;
+    }
     else {
-      // we are the parent in charge of handling exceptions
-      savedStatus = selfie_status();
+        // we are the parent in charge of handling exceptions
+        savedStatus = selfie_status();
+        exceptionNumber = decodeExceptionNumber(savedStatus);
+        exceptionParameter = decodeExceptionParameter(savedStatus);
 
-      exceptionNumber    = decodeExceptionNumber(savedStatus);
-      exceptionParameter = decodeExceptionParameter(savedStatus);
+        if (exceptionNumber == EXCEPTION_PAGEFAULT) {
+            frame = (int) palloc();
 
-      if (exceptionNumber == EXCEPTION_PAGEFAULT) {
-        frame = (int) palloc();
+            // TODO: use this table to unmap and reuse frames
+            mapPage(getPT(fromContext), exceptionParameter, frame);
 
-        // TODO: use this table to unmap and reuse frames
-        mapPage(getPT(fromContext), exceptionParameter, frame);
+            // page table on microkernel boot level
+            selfie_map(fromID, exceptionParameter, frame);
+        }
+        else if (exceptionNumber == EXCEPTION_EXIT) {
 
-        // page table on microkernel boot level
-        selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT)
-        // TODO: only return if all contexts have exited
-        return exceptionParameter;
-      else if (exceptionNumber != EXCEPTION_TIMER) {
-        print(binaryName);
-        print((int*) ": context ");
-        printInteger(getID(fromContext));
-        print((int*) " throws uncaught ");
-        printStatus(savedStatus);
-        println();
+            //delete current context
+            selfie_delete(fromID);
 
-        return -1;
-      }
+            //if hypster is used, also delete context from its local contexts.
+            if (mipster == 0)
+                doDelete(fromID);
 
-      // TODO: scheduler should go here
-      toID = fromID;
+            //if context list is now empty, then terminate
+            if (usedContexts == (int *) 0) {
+                return exceptionParameter;
+            }
+            //otherwise: schedule other process. TODO: make this more fair
+            else
+                toID = getID(usedContexts);
+
+        }
+        //If there is a timer or yield interrupt, then re-schedule
+        else if (exceptionNumber == EXCEPTION_YIELD) {
+            toID = scheduleRoundRobin(fromID);
+        }
+        else if (exceptionNumber == EXCEPTION_TIMER) {
+            toID = scheduleRoundRobin(fromID);
+        }
+        else {
+            print(binaryName);
+            print((int *) ": context ");
+            printInteger(getID(fromContext));
+            print((int *) " throws uncaught ");
+            printStatus(savedStatus);
+            println();
+            return -1;
+        }
     }
   }
 }
+
 
 int bootminmob(int argc, int* argv, int machine) {
   // works only with mipsters
@@ -6840,7 +6906,7 @@ int bootminmob(int argc, int* argv, int machine) {
   resetMicrokernel();
 
   // create initial context on our boot level
-  initID = doCreate(MIPSTER_ID);
+  initID = doCreateContext(MIPSTER_ID);
 
   up_loadBinary(getPT(usedContexts));
 
@@ -6874,8 +6940,9 @@ int bootminmob(int argc, int* argv, int machine) {
 
 int boot(int argc, int* argv) {
   // works with mipsters and hypsters
-  int initID;
   int exitCode;
+  int counter;
+  int currentID;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6895,22 +6962,27 @@ int boot(int argc, int* argv) {
 
   resetMicrokernel();
 
-  // create initial context on microkernel boot level
-  initID = selfie_create();
+    counter = 0;
+    while (counter < INSTANCE_COUNT) {
+        currentID = selfie_create();
 
-  if (usedContexts == (int*) 0)
-    // create duplicate of the initial context on our boot level
-    usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+        if (mipster == 0) {
+            // create duplicate of the initial context on our boot level
+            usedContexts = createContext(currentID, selfie_ID(), usedContexts);
+        }
 
-  up_loadBinary(getPT(usedContexts));
+        up_loadBinary(getPT(usedContexts));
+        up_loadArguments(getPT(usedContexts), argc, argv);
+        // propagate page table of initial context to microkernel boot level
+        down_mapPageTable(usedContexts);
+        counter = counter + 1;
+    }
 
-  up_loadArguments(getPT(usedContexts), argc, argv);
 
-  // propagate page table of initial context to microkernel boot level
-  down_mapPageTable(usedContexts);
 
   // mipsters and hypsters handle page faults
-  exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
+
+  exitCode = runOrHostUntilExitWithPageFaultHandling(currentID);
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6928,6 +7000,24 @@ int boot(int argc, int* argv) {
   println();
 
   return exitCode;
+}
+
+void setTimeslice() {
+    int timeslice;
+    timeslice = atoi(getArgument());
+    if (timeslice < 1)
+        TIMESLICE = 1;
+    else
+        TIMESLICE = timeslice;
+}
+
+void setInstanceCount() {
+    int instanceCount;
+    instanceCount = atoi(getArgument());
+    if (instanceCount < 1)
+        INSTANCE_COUNT = 1;
+    else
+        INSTANCE_COUNT = instanceCount;
 }
 
 int selfie_run(int engine, int machine, int debugger) {
@@ -7043,6 +7133,10 @@ int selfie() {
         selfie_disassemble();
       else if (stringCompare(option, (int*) "-l"))
         selfie_load();
+      else if (stringCompare(option, (int*) "-t"))
+        setTimeslice();
+      else if (stringCompare(option, (int*) "-n"))
+          setInstanceCount();
       else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
@@ -7067,6 +7161,9 @@ int main(int argc, int* argv) {
   initSelfie(argc, (int*) argv);
 
   initLibrary();
+
+  print((int*) " This is WMER Selfie ");
+  println();
 
   exitCode = selfie();
 
