@@ -27,6 +27,27 @@ test: selfie
 	diff -q selfie3.m selfie5.m
 	diff -q selfie3.s selfie5.s
 	./selfie -c -mob 1
+
+testA: selfie
+	./selfie -c selfie.c -o selfie1.m -s selfie1.s -m 2 -c selfie.c -o selfie2.m -s selfie2.s
+	diff -q selfie1.m selfie2.m
+	diff -q selfie1.s selfie2.s
+
+testB: selfie
+	./selfie -c selfie.c -o selfie.m -m 1 -l selfie.m -m 1
+	./selfie -c selfie.c -o selfie3.m -s selfie3.s -y 2 -l selfie3.m -y 2 -l selfie3.m -y 2 -c selfie.c -o selfie4.m -s selfie4.s
+	diff -q selfie3.m selfie4.m
+	diff -q selfie3.s selfie4.s
+	diff -q selfie1.m selfie3.m
+	diff -q selfie1.s selfie3.s
+
+testC: selfie
+	./selfie -c selfie.c -o selfie5.m -s selfie5.s -min 3 -l selfie5.m -y 2 -l selfie5.m -y 2 -c selfie.c -o selfie6.m -s selfie6.s
+	diff -q selfie5.m selfie6.m
+	diff -q selfie5.s selfie6.s
+	diff -q selfie3.m selfie5.m
+	diff -q selfie3.s selfie5.s
+	
 	
 assign2: selfie
 	./selfie -c assign2test.c -o assign2test.m -m 32 -l assign2test.m -m 4
