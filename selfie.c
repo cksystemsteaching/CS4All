@@ -1075,7 +1075,6 @@ int* storesPerAddress = (int*) 0; // number of executed stores per store operati
 // ------------------------- INITIALIZATION ------------------------
 
 void initInterpreter() {
-  EXCEPTIONS = malloc(8 * SIZEOFINTSTAR);
   EXCEPTIONS = malloc(9 * SIZEOFINTSTAR);
 
   *(EXCEPTIONS + EXCEPTION_NOEXCEPTION)        = (int) "no exception";
@@ -1774,7 +1773,8 @@ void sched_yield () {
 	print((int*) "sched_yield() called.");
 	println();
 
-	status = 0;		// [EIFLES] correct parameter?
+	throwException(EXCEPTION_SCHED_YIELD,0);		// [EIFLES] correct parameter?
+	// throwException(EXCEPTION_NOEXCEPTION,0);		// [EIFLES] correct parameter?
 }
 
 // *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~
@@ -6215,6 +6215,12 @@ void throwException(int exception, int parameter) {
   else
     status = encodeException(exception, parameter);
 
+  println();
+  print((int*) "------[throwException, status=");
+  printInteger(status);
+  print((int*) "]------");
+	println();
+
   trap = 1;
 
   if (debug_exception) {
@@ -6822,6 +6828,11 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       exceptionNumber    = decodeExceptionNumber(savedStatus);
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
+      print((int*) "exceptionNumber: ");
+      printInteger(exceptionNumber);
+      println();
+
+
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
         frame = (int) palloc();
 
@@ -6844,6 +6855,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         }
       }
       else if (exceptionNumber == EXCEPTION_SCHED_YIELD) {
+      // else if (exceptionNumber == EXCEPTION_NOEXCEPTION) {
         print((int*) "Caught EXCEPTION_SCHED_YIELD. TODO");
         println();
         toID = runScheduler(fromID);
