@@ -844,7 +844,6 @@ int SYSCALL_EXIT   = 4001;
 int SYSCALL_READ   = 4003;
 int SYSCALL_WRITE  = 4004;
 int SYSCALL_OPEN   = 4005;
-int SYSCALL_SCHED_YIELD = 4006;
 
 int SYSCALL_MALLOC = 4045;
 
@@ -5052,10 +5051,6 @@ void implementMalloc() {
   }
 }
 
-void implementSched_yield () {
-	// [EIFLES] ????
-}
-
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
 // -----------------------------------------------------------------
@@ -5541,8 +5536,6 @@ void fct_syscall() {
       implementDelete();
     else if (*(registers+REG_V0) == SYSCALL_MAP)
       implementMap();
-		else if (*(registers+REG_V0) == SYSCALL_SCHED_YIELD)
-      implementSched_yield();
     else {
       pc = pc - WORDSIZE;
 
