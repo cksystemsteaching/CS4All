@@ -173,6 +173,7 @@ int CHAR_EXCLAMATION = '!';
 int CHAR_PERCENTAGE = '%';
 int CHAR_SINGLEQUOTE = 39; // ASCII code 39 = '
 int CHAR_DOUBLEQUOTE = '"';
+int CHAR_AMPERSAND = '&';
 
 int SIZEOFINT = 4; // must be the same as WORDSIZE
 int SIZEOFINTSTAR = 4; // must be the same as WORDSIZE
@@ -345,6 +346,7 @@ int SYM_CHARACTER = 26; // character
 int SYM_STRING = 27; // string
 int SYM_PLUSPLUS = 28; // ++
 int SYM_MINUSMINUS = 29; // --
+int SYM_AMPERSAND = 30; // &
 
 int *SYMBOLS; // strings representing symbols
 
@@ -381,7 +383,7 @@ int sourceFD = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner() {
-    SYMBOLS = malloc(30 * SIZEOFINTSTAR);
+    SYMBOLS = malloc(31 * SIZEOFINTSTAR);
 
     *(SYMBOLS + SYM_IDENTIFIER) = (int) "identifier";
     *(SYMBOLS + SYM_INTEGER) = (int) "integer";
@@ -413,6 +415,7 @@ void initScanner() {
     *(SYMBOLS + SYM_STRING) = (int) "string";
     *(SYMBOLS + SYM_PLUSPLUS) = (int) "++";
     *(SYMBOLS + SYM_MINUSMINUS) = (int) "--";
+    *(SYMBOLS + SYM_AMPERSAND) = (int) "&";
 
     character = CHAR_EOF;
     symbol = SYM_EOF;
@@ -574,6 +577,8 @@ int *getVariable(int *variable);
 
 int load_variable(int *variable);
 
+void load_variable_address(int *variable);
+
 void load_integer(int value);
 
 void load_string(int *string);
@@ -613,10 +618,6 @@ void gr_procedure(int *procedure, int type);
 void gr_cstar();
 
 int gr_lvalue();
-
-void gr_statement_old();
-
-int gr_factor_old();
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -2299,6 +2300,10 @@ void getSymbol() {
                 getCharacter();
 
                 symbol = SYM_SEMICOLON;
+            } else if (character == CHAR_AMPERSAND) {
+                getCharacter();
+
+                symbol = SYM_AMPERSAND;
 
             } else if (character == CHAR_PLUS) {
                 getCharacter();
@@ -2634,6 +2639,8 @@ int lookForFactor() {
         return 0;
     else if (symbol == SYM_MINUSMINUS)
         return 0;
+    else if (symbol == SYM_AMPERSAND)
+        return 0;
     else
         return 1;
 }
@@ -2805,6 +2812,16 @@ int *getVariable(int *variable) {
     }
 
     return entry;
+}
+
+void load_variable_address(int *variable) {
+    int *entry;
+
+    entry = getVariable(variable);
+
+    talloc();
+
+    emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
 }
 
 int load_variable(int *variable) {
@@ -3030,6 +3047,7 @@ int gr_factor() {
     // assert: n = allocatedTemporaries
 
     hasCast = 0;
+    isDereferenced = 0;
 
     type = INT_T;
 
@@ -3087,8 +3105,6 @@ int gr_factor() {
         // Check if the variable/expression in lvalue is dereferenced. This is important below.
         if (symbol == SYM_ASTERISK)
             isDereferenced = 1;
-        else
-            isDereferenced = 0;
 
         // Evaluate the remaining statement.
         type = gr_lvalue();
@@ -3112,177 +3128,42 @@ int gr_factor() {
                 type = INT_T;
             }
             else {
+                //Increment POINTER value
                 entry = getVariable(identifier);
                 emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), incrDecrValue * WORDSIZE);
                 emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
             }
         } else {
+            //Increment VARIABLE value
             entry = getVariable(identifier);
             emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), incrDecrValue);
             emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
         }
+    }
+    else if (symbol == SYM_AMPERSAND) {
+        getSymbol();
 
-        // * lvalue?
-    } else if (symbol == SYM_ASTERISK) {
+        // dereferencing is not necessary, loaded address must be returned instead.
+        if (symbol == SYM_ASTERISK) {
+            gr_lvalue();
+        }
+        // in case of a variable, find out its address and load it. loading the variable content itself is not necessary.
+        else if (symbol == SYM_IDENTIFIER) {
+            load_variable_address(identifier);
+            getSymbol();
+        }
+        else
+            syntaxErrorUnexpected();
+
+        // type is INTSTAR_T afterwards in any case
+        type = INTSTAR_T;
+    }
+    // * lvalue
+    else if (symbol == SYM_ASTERISK) {
         gr_lvalue();
 
         //dereference
         emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
-        type = INT_T;
-
-        // identifier?
-    } else if (symbol == SYM_IDENTIFIER) {
-        variableOrProcedureName = identifier;
-
-        getSymbol();
-
-        if (symbol == SYM_LPARENTHESIS) {
-            getSymbol();
-
-            // procedure call: identifier "(" ... ")"
-            type = gr_call(variableOrProcedureName);
-
-            talloc();
-
-            // retrieve return value
-            emitIFormat(OP_ADDIU, REG_V0, currentTemporary(), 0);
-
-            // reset return register to initial return value
-            // for missing return expressions
-            emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
-        } else
-            // variable access: identifier
-            type = load_variable(variableOrProcedureName);
-
-        // integer?
-    } else if (symbol == SYM_INTEGER) {
-        load_integer(literal);
-
-        getSymbol();
-
-        type = INT_T;
-
-        // character?
-    } else if (symbol == SYM_CHARACTER) {
-        talloc();
-
-        emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), literal);
-
-        getSymbol();
-
-        type = INT_T;
-
-        // string?
-    } else if (symbol == SYM_STRING) {
-        load_string(string);
-
-        getSymbol();
-
-        type = INTSTAR_T;
-
-        //  "(" expression ")"
-    } else if (symbol == SYM_LPARENTHESIS) {
-        getSymbol();
-
-        type = gr_expression();
-
-        if (symbol == SYM_RPARENTHESIS)
-            getSymbol();
-        else
-            syntaxErrorSymbol(SYM_RPARENTHESIS);
-    } else
-        syntaxErrorUnexpected();
-
-    // assert: allocatedTemporaries == n + 1
-
-    if (hasCast)
-        return cast;
-    else
-        return type;
-}
-
-//old version of gr_factor(), does not work with "++"
-int gr_factor_old() {
-    int hasCast;
-    int cast;
-    int type;
-
-    int *variableOrProcedureName;
-
-    // assert: n = allocatedTemporaries
-
-    hasCast = 0;
-
-    type = INT_T;
-
-    while (lookForFactor()) {
-        syntaxErrorUnexpected();
-
-        if (symbol == SYM_EOF)
-            exit(-1);
-        else
-            getSymbol();
-    }
-
-    // optional cast: [ cast ]
-    if (symbol == SYM_LPARENTHESIS) {
-        getSymbol();
-
-        // cast: "(" "int" [ "*" ] ")"
-        if (symbol == SYM_INT) {
-            hasCast = 1;
-
-            cast = gr_type();
-
-            if (symbol == SYM_RPARENTHESIS)
-                getSymbol();
-            else
-                syntaxErrorSymbol(SYM_RPARENTHESIS);
-
-            // not a cast: "(" expression ")"
-        } else {
-            type = gr_expression();
-
-            if (symbol == SYM_RPARENTHESIS)
-                getSymbol();
-            else
-                syntaxErrorSymbol(SYM_RPARENTHESIS);
-
-            // assert: allocatedTemporaries == n + 1
-
-            return type;
-        }
-    }
-
-    // dereference?
-    if (symbol == SYM_ASTERISK) {
-        getSymbol();
-
-        // ["*"] identifier
-        if (symbol == SYM_IDENTIFIER) {
-            type = load_variable(identifier);
-
-            getSymbol();
-
-            // * "(" expression ")"
-        } else if (symbol == SYM_LPARENTHESIS) {
-            getSymbol();
-
-            type = gr_expression();
-
-            if (symbol == SYM_RPARENTHESIS)
-                getSymbol();
-            else
-                syntaxErrorSymbol(SYM_RPARENTHESIS);
-        } else
-            syntaxErrorUnexpected();
-
-        if (type != INTSTAR_T)
-            typeWarning(INTSTAR_T, type);
-
-        // dereference
-        emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
-
         type = INT_T;
 
         // identifier?
@@ -3761,53 +3642,6 @@ void gr_return() {
     numberOfReturn = numberOfReturn + 1;
 }
 
-
-// old version of gr_lvalue()
-int gr_lvalue_old() {
-    int type;
-    int *variableOrProcedureName;
-
-    // dereference?
-    if (symbol == SYM_ASTERISK) {
-        getSymbol();
-
-        // "*" identifier
-        if (symbol == SYM_IDENTIFIER) {
-            type = load_variable(identifier);
-
-            if (type != INTSTAR_T)
-                typeWarning(INTSTAR_T, type);
-
-            getSymbol();
-        }
-            // * "(" expression ")"
-        else if (symbol == SYM_LPARENTHESIS) {
-            getSymbol();
-            type = gr_expression();
-
-            if (type != INTSTAR_T)
-                typeWarning(INTSTAR_T, type);
-
-            if (symbol == SYM_RPARENTHESIS)
-                getSymbol();
-            else
-                syntaxErrorSymbol(SYM_RPARENTHESIS);
-        } else
-            syntaxErrorUnexpected();
-    }
-        //identifier?
-    else if (symbol == SYM_IDENTIFIER) {
-        variableOrProcedureName = identifier;
-
-        getSymbol();
-
-        type = load_variable(variableOrProcedureName);
-    } else
-        syntaxErrorUnexpected();
-
-    return type;
-}
-
 int gr_lvalue() {
     int type;
     int *variableOrProcedureName;
@@ -4049,170 +3883,6 @@ void gr_statement() {
     }
 
 }
-
-// the old version of gr_statement()
-void gr_statement_old() {
-    int ltype;
-    int rtype;
-    int *variableOrProcedureName;
-    int *entry;
-
-    // assert: allocatedTemporaries == 0;
-
-    while (lookForStatement()) {
-        syntaxErrorUnexpected();
-
-        if (symbol == SYM_EOF)
-            exit(-1);
-        else
-            getSymbol();
-    }
-
-    // ["*"]
-    if (symbol == SYM_ASTERISK) {
-        getSymbol();
-
-        // "*" identifier
-        if (symbol == SYM_IDENTIFIER) {
-            ltype = load_variable(identifier);
-
-            if (ltype != INTSTAR_T)
-                typeWarning(INTSTAR_T, ltype);
-
-            getSymbol();
-
-            // "*" identifier "="
-            if (symbol == SYM_ASSIGN) {
-                getSymbol();
-
-                rtype = gr_expression();
-
-                if (rtype != INT_T)
-                    typeWarning(INT_T, rtype);
-
-                emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
-
-                tfree(2);
-
-                numberOfAssignments = numberOfAssignments + 1;
-            } else {
-                syntaxErrorSymbol(SYM_ASSIGN);
-
-                tfree(1);
-            }
-
-            if (symbol == SYM_SEMICOLON)
-                getSymbol();
-            else
-                syntaxErrorSymbol(SYM_SEMICOLON);
-
-            // "*" "(" expression ")"
-        } else if (symbol == SYM_LPARENTHESIS) {
-            getSymbol();
-
-            ltype = gr_expression();
-
-            if (ltype != INTSTAR_T)
-                typeWarning(INTSTAR_T, ltype);
-
-            if (symbol == SYM_RPARENTHESIS) {
-                getSymbol();
-
-                // "*" "(" expression ")" "="
-                if (symbol == SYM_ASSIGN) {
-                    getSymbol();
-
-                    rtype = gr_expression();
-
-                    if (rtype != INT_T)
-                        typeWarning(INT_T, rtype);
-
-                    emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
-
-                    tfree(2);
-
-                    numberOfAssignments = numberOfAssignments + 1;
-                } else {
-                    syntaxErrorSymbol(SYM_ASSIGN);
-
-                    tfree(1);
-                }
-
-                if (symbol == SYM_SEMICOLON)
-                    getSymbol();
-                else
-                    syntaxErrorSymbol(SYM_SEMICOLON);
-            } else
-                syntaxErrorSymbol(SYM_RPARENTHESIS);
-        } else
-            syntaxErrorSymbol(SYM_LPARENTHESIS);
-    }
-        // identifier "=" expression | call
-    else if (symbol == SYM_IDENTIFIER) {
-        variableOrProcedureName = identifier;
-
-        getSymbol();
-
-        // procedure call
-        if (symbol == SYM_LPARENTHESIS) {
-            getSymbol();
-
-            gr_call(variableOrProcedureName);
-
-            // reset return register to initial return value
-            // for missing return expressions
-            emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
-
-            if (symbol == SYM_SEMICOLON)
-                getSymbol();
-            else
-                syntaxErrorSymbol(SYM_SEMICOLON);
-
-            // identifier = expression
-        } else if (symbol == SYM_ASSIGN) {
-            entry = getVariable(variableOrProcedureName);
-
-            ltype = getType(entry);
-
-            getSymbol();
-
-            rtype = gr_expression();
-
-            if (ltype != rtype)
-                typeWarning(ltype, rtype);
-
-            emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-
-            tfree(1);
-
-            numberOfAssignments = numberOfAssignments + 1;
-
-            if (symbol == SYM_SEMICOLON)
-                getSymbol();
-            else
-                syntaxErrorSymbol(SYM_SEMICOLON);
-        } else
-            syntaxErrorUnexpected();
-    }
-        // while statement?
-    else if (symbol == SYM_WHILE) {
-        gr_while();
-    }
-        // if statement?
-    else if (symbol == SYM_IF) {
-        gr_if();
-    }
-        // return statement?
-    else if (symbol == SYM_RETURN) {
-        gr_return();
-
-        if (symbol == SYM_SEMICOLON)
-            getSymbol();
-        else
-            syntaxErrorSymbol(SYM_SEMICOLON);
-    }
-}
-
 
 int gr_type() {
     int type;
