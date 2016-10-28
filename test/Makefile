@@ -48,6 +48,7 @@ test_pre_increment:
 test_address_of:
 	../selfie -c address_operator/address_of_ident_stack.c -d 1 | grep -E 'exit code 7'
 	../selfie -c address_operator/address_of_ident_glob.c -d 1 | grep -E 'exit code 334'
+	../selfie -c address_operator/address_of_ident_function.c -d 1 | grep -E 'exit code 44'
 
 clean:
 	rm -rf *.s
