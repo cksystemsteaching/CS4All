@@ -7138,7 +7138,8 @@ int main(int argc, int* argv) {
 
   if (exitCode == USAGE) {
     print(selfieName);
-    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary } [ ((-m | -d | -y | -min | -mob ) size ...) ] [ -timeslice numberOfSteps ] [ -numprocesses binaryCount] ");
+    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary } [ ((-m | -d | -y | -min | -mob ) size ...) ]");
+    print((int*) " [ -timeslice numberOfSteps ] [ -numprocesses binaryCount]");
     println();
 
     return 0;
