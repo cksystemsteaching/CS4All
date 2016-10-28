@@ -517,6 +517,7 @@ void typeWarning(int expected, int found);
 
 int* getVariable(int* variable);
 int  load_variable(int* variable);
+int  load_address(int* variable);
 void load_integer(int value);
 void load_string(int* string);
 
@@ -2167,6 +2168,11 @@ void getSymbol() {
 
         symbol = SYM_LPARENTHESIS;
 
+      } else if (character == CHAR_AMPERSAND){
+        getCharacter();
+
+        symbol = SYM_AMPERSAND;
+
       } else if (character == CHAR_RPARENTHESIS) {
         getCharacter();
 
@@ -2450,6 +2456,8 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_EOF)
     return 0;
+  else if (symbol == SYM_AMPERSAND)
+    return 0;
   else
     return 1;
 }
@@ -2641,6 +2649,18 @@ int load_variable(int* variable) {
   return getType(entry);
 }
 
+int load_address(int* variable){
+  int* entry;
+
+  entry = getVariable(variable);
+
+  talloc();
+
+  emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
+
+  return INTSTAR_T;
+}
+
 void load_integer(int value) {
   // assert: value >= 0 or value == INT_MIN
 
@@ -2793,7 +2813,7 @@ int gr_call(int* procedure) {
 
     // TODO: check if types/number of parameters is correct
 
-    // push first parameter onto stack
+    // push first pargr_callgr_callgr_callgr_callgr_callameter onto stack
     emitIFormat(OP_ADDIU, REG_SP, REG_SP, -WORDSIZE);
     emitIFormat(OP_SW, REG_SP, currentTemporary(), 0);
 
@@ -2845,11 +2865,13 @@ int gr_factor() {
   int hasCast;
   int cast;
   int type;
+  int isAmpersand;
+
 
   int* variableOrProcedureName;
 
   // assert: n = allocatedTemporaries
-
+  isAmpersand = 0;
   hasCast = 0;
 
   type = INT_T;
@@ -2892,8 +2914,17 @@ int gr_factor() {
       return type;
     }
   }
+  if (symbol == SYM_AMPERSAND) {
+    getSymbol();
 
-  if (symbol == SYM_PLUSPLUS) {
+    if (symbol == SYM_IDENTIFIER) {
+      type = load_address(identifier);
+      getSymbol();
+    } else {
+      syntaxErrorUnexpected(symbol);
+    }
+
+  } else if (symbol == SYM_PLUSPLUS) {
     plusPlusFound = 1;
     getSymbol();
     if (symbol == SYM_IDENTIFIER) {
@@ -2932,8 +2963,22 @@ int gr_factor() {
   else if (symbol == SYM_ASTERISK) {
     getSymbol();
 
+    if (symbol == SYM_AMPERSAND) {
+      isAmpersand = 1;
+      getSymbol();
+
+      if (symbol == SYM_IDENTIFIER) {
+
+        type = load_variable(identifier);
+        printInteger(type);
+
+        getSymbol();
+      } else {
+        syntaxErrorUnexpected(symbol);
+      }
+
     // ["*"] identifier
-    if (symbol == SYM_IDENTIFIER) {
+   } else if (symbol == SYM_IDENTIFIER) {
       type = load_variable(identifier);
       getSymbol();
 
@@ -2953,10 +2998,13 @@ int gr_factor() {
     if (type != INTSTAR_T)
       typeWarning(INTSTAR_T, type);
 
-    // dereference
-    emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+    if(isAmpersand  == 0){
+      // dereference
+      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+      type = INT_T;
+}
 
-    type = INT_T;
+    isAmpersand = 0;
 
   // identifier?
   } else if (symbol == SYM_IDENTIFIER) {
@@ -3552,7 +3600,7 @@ void gr_statement() {
         syntaxErrorSymbol(SYM_SEMICOLON);
 
     // identifier = expression
-    } else if (symbol == SYM_ASSIGN) {
+  } else if (symbol == SYM_ASSIGN) {
       entry = getVariable(variableOrProcedureName);
 
       ltype = getType(entry);
@@ -7130,7 +7178,6 @@ int main(int argc, int* argv) {
 
   print((int *)"This is the Starc Mipsdustries Selfie");
   println();
-
 
   exitCode = selfie();
 
