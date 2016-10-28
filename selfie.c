@@ -2561,6 +2561,12 @@ int isExpression() {
         return 1;
     else if (symbol == SYM_CHARACTER)
         return 1;
+    else if (symbol == SYM_MINUSMINUS)
+        return 1;
+    else if (symbol == SYM_PLUSPLUS)
+        return 1;
+    else if (symbol == SYM_AMPERSAND)
+        return 1;
     else
         return 0;
 }
