@@ -34,6 +34,8 @@ clean:
 
 # Assignment 1 
 assignment1:
+	make clean
+	make
 	./selfie -c test_program.c selfie.c -o test_program.m 
 	./selfie -timeslice 7777 -numprocesses 5 -l test_program.m -m 32
 

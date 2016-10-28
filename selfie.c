@@ -1076,6 +1076,7 @@ int* storesPerAddress = (int*) 0; // number of executed stores per store operati
 
 void initInterpreter() {
   EXCEPTIONS = malloc(8 * SIZEOFINTSTAR);
+  EXCEPTIONS = malloc(9 * SIZEOFINTSTAR);
 
   *(EXCEPTIONS + EXCEPTION_NOEXCEPTION)        = (int) "no exception";
   *(EXCEPTIONS + EXCEPTION_UNKNOWNINSTRUCTION) = (int) "unknown instruction";
@@ -1085,6 +1086,7 @@ void initInterpreter() {
   *(EXCEPTIONS + EXCEPTION_EXIT)               = (int) "exit";
   *(EXCEPTIONS + EXCEPTION_TIMER)              = (int) "timer interrupt";
   *(EXCEPTIONS + EXCEPTION_PAGEFAULT)          = (int) "page fault";
+  *(EXCEPTIONS + EXCEPTION_SCHED_YIELD)        = (int) "sched_yield";
 }
 
 void resetInterpreter() {
