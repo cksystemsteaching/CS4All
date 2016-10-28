@@ -844,6 +844,7 @@ int SYSCALL_EXIT   = 4001;
 int SYSCALL_READ   = 4003;
 int SYSCALL_WRITE  = 4004;
 int SYSCALL_OPEN   = 4005;
+int SYSCALL_SCHED_YIELD = 4006;
 
 int SYSCALL_MALLOC = 4045;
 
@@ -890,7 +891,7 @@ void selfie_map(int ID, int page, int frame);
 
 int debug_create = 0;
 int debug_switch = 0;
-int debug_status = 0;
+int debug_status = 1;
 int debug_delete = 0;
 int debug_map    = 0;
 
@@ -1020,6 +1021,7 @@ int EXCEPTION_HEAPOVERFLOW       = 4;
 int EXCEPTION_EXIT               = 5;
 int EXCEPTION_TIMER              = 6;
 int EXCEPTION_PAGEFAULT          = 7;
+int EXCEPTION_SCHED_YIELD        = 8;
 
 int* EXCEPTIONS; // strings representing exceptions
 
@@ -1769,6 +1771,8 @@ int* zalloc(int size) {
 void sched_yield () {
 	print((int*) "sched_yield() called.");
 	println();
+
+	status = 0;		// [EIFLES] correct parameter?
 }
 
 // *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~
@@ -5046,6 +5050,10 @@ void implementMalloc() {
   }
 }
 
+void implementSched_yield () {
+	// [EIFLES] ????
+}
+
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
 // -----------------------------------------------------------------
@@ -5531,6 +5539,8 @@ void fct_syscall() {
       implementDelete();
     else if (*(registers+REG_V0) == SYSCALL_MAP)
       implementMap();
+		else if (*(registers+REG_V0) == SYSCALL_SCHED_YIELD)
+      implementSched_yield();
     else {
       pc = pc - WORDSIZE;
 
@@ -6821,6 +6831,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       } 
       else if (exceptionNumber == EXCEPTION_EXIT) {
         doDelete(toID);
+        cycles = 0;		// [EIFLES] reset cycles, so the next process gets the full TIMESLICE (fair scheduling)
 
         // [EIFLES] all contexts finished, terminate. 
         if (usedContexts == (int*) 0) {
@@ -6829,6 +6840,12 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
           // [EIFLES] contexts left
           toID = getID(usedContexts);
         }
+      }
+      else if (exceptionNumber == EXCEPTION_SCHED_YIELD) {
+        print((int*) "Caught EXCEPTION_SCHED_YIELD. TODO");
+        println();
+        toID = runScheduler(fromID);
+        cycles = 0;
       }
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
