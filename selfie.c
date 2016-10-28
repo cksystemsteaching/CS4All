@@ -832,6 +832,10 @@ void implementOpen();
 void emitMalloc();
 void implementMalloc();
 
+// [EIFLES]
+void emitSchedYield();
+void implementSchedYield();
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_read   = 0;
@@ -844,6 +848,8 @@ int SYSCALL_EXIT   = 4001;
 int SYSCALL_READ   = 4003;
 int SYSCALL_WRITE  = 4004;
 int SYSCALL_OPEN   = 4005;
+// [EIFLES]
+int SYSCALL_SCHED_YIELD = 4006;
 
 int SYSCALL_MALLOC = 4045;
 
@@ -4662,6 +4668,30 @@ void implementExit() {
   println();
 }
 
+void emitSchedYield() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "sched yield", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+  // [EIFLES] and now ????
+
+  // load argument for exit
+  //emitIFormat(OP_LW, REG_SP, REG_A0, 0); // exit code
+
+  // remove the argument from the stack
+  //emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  // load the correct syscall number and invoke syscall
+  //emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_EXIT);
+  //emitRFormat(0, 0, 0, 0, FCT_SYSCALL);
+
+  // never returns here
+}
+
+void implementSchedYield() {
+
+  throwException(EXCEPTION_SCHED_YIELD, 0);
+
+}
+
 void emitRead() {
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "read", 0, PROCEDURE, INT_T, 0, binaryLength);
 
@@ -5536,6 +5566,8 @@ void fct_syscall() {
       implementDelete();
     else if (*(registers+REG_V0) == SYSCALL_MAP)
       implementMap();
+    else if (*(registers+REG_V0) == SYSCALL_SCHED_YIELD)
+      implementSchedYield();
     else {
       pc = pc - WORDSIZE;
 
@@ -6209,8 +6241,12 @@ void throwException(int exception, int parameter) {
     status = encodeException(exception, parameter);
 
   println();
-  print((int*) "------[throwException, status=");
+  print((int*) "------[throwException, exception=");
+  printInteger(exception);
+  print((int*) ", status=");
   printInteger(status);
+  print((int*) ", parameter=");
+  printInteger(parameter);
   print((int*) "]------");
 	println();
 
@@ -6821,7 +6857,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       exceptionNumber    = decodeExceptionNumber(savedStatus);
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
-      print((int*) "exceptionNumber: ");
+      print((int*) "############# DEBUG: ############## exceptionNumber: ");
       printInteger(exceptionNumber);
       println();
 
