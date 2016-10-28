@@ -129,6 +129,8 @@ int roundUp(int n, int m);
 
 int* zalloc(int size);
 
+// [EIFLES]
+void sched_yield();
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int CHAR_EOF          = -1; // end of file
@@ -1758,6 +1760,11 @@ int* zalloc(int size) {
   }
 
   return memory;
+}
+
+void sched_yield () {
+	print((int*) "sched_yield() called.");
+	println();
 }
 
 // *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~
