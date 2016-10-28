@@ -1151,6 +1151,8 @@ void mapPage(int* table, int page, int frame);
 // | 7 | pt     | pointer to page table
 // | 8 | brk    | break between code, data, and heap
 // | 9 | parent | ID of context that created this context
+// [EIFLES]
+// | 10| sgmtt 	| pointer to segment table
 // +---+--------+
 
 int* getNextContext(int* context) { return (int*) *context; }
@@ -1163,6 +1165,7 @@ int  getRegLo(int* context)       { return        *(context + 6); }
 int* getPT(int* context)          { return (int*) *(context + 7); }
 int  getBreak(int* context)       { return        *(context + 8); }
 int  getParent(int* context)      { return        *(context + 9); }
+int* getSGMTT(int* context)       { return (int*) *(context + 10); }
 
 void setNextContext(int* context, int* next) { *context       = (int) next; }
 void setPrevContext(int* context, int* prev) { *(context + 1) = (int) prev; }
@@ -1174,6 +1177,7 @@ void setRegLo(int* context, int reg_lo)      { *(context + 6) = reg_lo; }
 void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
 void setBreak(int* context, int brk)         { *(context + 8) = brk; }
 void setParent(int* context, int id)         { *(context + 9) = id; }
+void setSGMTT(int* context, int* sgmtt)      { *(context + 10) = (int) sgmtt; }
 
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
