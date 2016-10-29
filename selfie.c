@@ -1778,7 +1778,7 @@ void sched_yield () {
 	print((int*) "sched_yield() called.");
 	println();
 
-  emitSchedYield();
+  // emitSchedYield();
 	//throwException(EXCEPTION_SCHED_YIELD,0);		// [EIFLES] correct parameter?
 	// throwException(EXCEPTION_NOEXCEPTION,0);		// [EIFLES] correct parameter?
 }
@@ -4036,6 +4036,7 @@ void selfie_compile() {
   emitWrite();
   emitOpen();
   emitMalloc();
+  emitSchedYield();
 
   emitID();
   emitCreate();
