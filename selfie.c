@@ -1778,7 +1778,8 @@ void sched_yield () {
 	print((int*) "sched_yield() called.");
 	println();
 
-	throwException(EXCEPTION_SCHED_YIELD,0);		// [EIFLES] correct parameter?
+  emitSchedYield();
+	//throwException(EXCEPTION_SCHED_YIELD,0);		// [EIFLES] correct parameter?
 	// throwException(EXCEPTION_NOEXCEPTION,0);		// [EIFLES] correct parameter?
 }
 
@@ -4043,6 +4044,9 @@ void selfie_compile() {
   emitDelete();
   emitMap();
 
+  // [EIFLES]
+  //emitSchedYield();
+
   while (link) {
     if (numberOfRemainingArguments() == 0)
       link = 0;
@@ -4671,25 +4675,15 @@ void implementExit() {
 void emitSchedYield() {
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "sched yield", 0, PROCEDURE, VOID_T, 0, binaryLength);
 
-  // [EIFLES] and now ????
-
-  // load argument for exit
-  //emitIFormat(OP_LW, REG_SP, REG_A0, 0); // exit code
-
-  // remove the argument from the stack
-  //emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
-
-  // load the correct syscall number and invoke syscall
-  //emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_EXIT);
-  //emitRFormat(0, 0, 0, 0, FCT_SYSCALL);
-
-  // never returns here
+  // [EIFLES] correct?
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SCHED_YIELD);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
 }
 
 void implementSchedYield() {
 
-  throwException(EXCEPTION_SCHED_YIELD, 0);
 
+  throwException(EXCEPTION_SCHED_YIELD, 0);
 }
 
 void emitRead() {
@@ -6857,8 +6851,9 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       exceptionNumber    = decodeExceptionNumber(savedStatus);
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
-      print((int*) "############# DEBUG: ############## exceptionNumber: ");
+      print((int*) "############# caught exception with exceptionNumber: ");
       printInteger(exceptionNumber);
+      print((int*) " #############");
       println();
 
 
@@ -6885,7 +6880,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       }
       else if (exceptionNumber == EXCEPTION_SCHED_YIELD) {
       // else if (exceptionNumber == EXCEPTION_NOEXCEPTION) {
-        print((int*) "Caught EXCEPTION_SCHED_YIELD. TODO");
+        print((int*) "+++++++++++ exceptionNumber == EXCEPTION_SCHED_YIELD ++++++++++++");
         println();
         toID = runScheduler(fromID);
         cycles = 0;
