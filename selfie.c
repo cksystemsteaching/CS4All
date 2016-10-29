@@ -4673,11 +4673,34 @@ void implementExit() {
 }
 
 void emitSchedYield() {
-  createSymbolTableEntry(LIBRARY_TABLE, (int*) "sched yield", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+  ////////////
+  //createSymbolTableEntry(LIBRARY_TABLE, (int*) "read", 0, PROCEDURE, INT_T, 0, binaryLength);
+  //emitIFormat(OP_LW, REG_SP, REG_A2, 0); // size
+  //emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+  //emitIFormat(OP_LW, REG_SP, REG_A1, 0); // *buffer
+  //emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+  //emitIFormat(OP_LW, REG_SP, REG_A0, 0); // fd
+  //emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+  //emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_READ);
+  //emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+  // jump back to caller, return value is in REG_V0
+  //emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+  ////////////
+
+  //////
+  //createSymbolTableEntry(LIBRARY_TABLE, (int*) "hypster_status", 0, PROCEDURE, INT_T, 0, binaryLength);
+  //emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_STATUS);
+  //emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+  //emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+  ///////
 
   // [EIFLES] correct?
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "sched_yield", 0, PROCEDURE, VOID_T, 0, binaryLength);
   emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SCHED_YIELD);
   emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+  // jump back to caller, return value is in REG_V0
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
 void implementSchedYield() {
