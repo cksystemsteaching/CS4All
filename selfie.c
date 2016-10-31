@@ -1173,7 +1173,6 @@ int  getRegLo(int* context)       { return        *(context + 6); }
 int* getPT(int* context)          { return (int*) *(context + 7); }
 int  getBreak(int* context)       { return        *(context + 8); }
 int  getParent(int* context)      { return        *(context + 9); }
-int* getSGMTT(int* context)       { return (int*) *(context + 10); }
 
 void setNextContext(int* context, int* next) { *context       = (int) next; }
 void setPrevContext(int* context, int* prev) { *(context + 1) = (int) prev; }
@@ -1185,7 +1184,25 @@ void setRegLo(int* context, int reg_lo)      { *(context + 6) = reg_lo; }
 void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
 void setBreak(int* context, int brk)         { *(context + 8) = brk; }
 void setParent(int* context, int id)         { *(context + 9) = id; }
-void setSGMTT(int* context, int* sgmtt)      { *(context + 10) = (int) sgmtt; }
+
+// -----------------------------------------------------------------
+// ------------------------ SEGMENT TABLE --------------------------
+// -----------------------------------------------------------------
+
+
+// we want the address of the code segment of the given context
+int* getSegAddrOfCode(int* context) { return (int*) *(context + 10); }
+int* getSegAddrOfHeap(int* context) { return (int*) *(context + 11); }
+int* getSegAddrOfStack(int* context) { return (int*) *(context + 12); }
+
+int getSegSizeOfCode(int* context) { return (int*) *(context + 13); }
+int getSegSizeOfHeap(int* context) { return (int*) *(context + 14); }
+int getSegSizeOfStack(int* context) { return (int*) *(context + 15); }
+
+void setSegAddrOfCode(int* context, int* codeAddress) { *(context + 10)           = (int) codeAddress; }
+void setSegAddrOfHeap(int* context, int* heapAddress) { *(context + 11)       = (int) heapAddress; }
+void setSegAddrOfStack(int* context, int* stackAddress) { *(context + 12)     = (int) stackAddress; }
+
 
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
@@ -1205,6 +1222,8 @@ int* currentContext = (int*) 0; // context currently running
 
 int* usedContexts = (int*) 0; // doubly-linked list of used contexts
 int* freeContexts = (int*) 0; // singly-linked list of free contexts
+
+int* freeSegments = (int*) 0; // singly-linked list of free segments
 
 // ------------------------- INITIALIZATION ------------------------
 
@@ -6512,8 +6531,10 @@ int createID(int seed) {
 int* allocateContext(int ID, int parentID) {
   int* context;
 
-  if (freeContexts == (int*) 0)
-    context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
+  if (freeContexts == (int*) 0){
+    //context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
+    context = malloc(7 * SIZEOFINTSTAR + 9 * SIZEOFINT);
+  }
   else {
     context = freeContexts;
 
@@ -6542,6 +6563,9 @@ int* allocateContext(int ID, int parentID) {
   setBreak(context, maxBinaryLength);
 
   setParent(context, parentID);
+
+  // [EIFLES]
+  
 
   return context;
 }
