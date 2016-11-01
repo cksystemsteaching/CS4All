@@ -1174,6 +1174,9 @@ int* getPT(int* context)          { return (int*) *(context + 7); }
 int  getBreak(int* context)       { return        *(context + 8); }
 int  getParent(int* context)      { return        *(context + 9); }
 
+// [EIFLES] not sure if we really need this pointer...
+int* getSGMTT(int* context)       { return (int*) *(context + 10); }
+
 void setNextContext(int* context, int* next) { *context       = (int) next; }
 void setPrevContext(int* context, int* prev) { *(context + 1) = (int) prev; }
 void setID(int* context, int id)             { *(context + 2) = id; }
@@ -1185,23 +1188,46 @@ void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
 void setBreak(int* context, int brk)         { *(context + 8) = brk; }
 void setParent(int* context, int id)         { *(context + 9) = id; }
 
+// [EIFLES] not sure about SGMTT (segmenttable)
+void setSGMTT(int* context, int* sgmtt)         { *(context + 10) = (int) sgmtt; }
+
 // -----------------------------------------------------------------
 // ------------------------ SEGMENT TABLE --------------------------
 // -----------------------------------------------------------------
 
 
 // we want the address of the code segment of the given context
-int* getSegAddrOfCode(int* context) { return (int*) *(context + 10); }
-int* getSegAddrOfHeap(int* context) { return (int*) *(context + 11); }
-int* getSegAddrOfStack(int* context) { return (int*) *(context + 12); }
+//int* getSegAddrOfCode(int* context) { return (int*) *(context + 10); }
+//int* getSegAddrOfHeap(int* context) { return (int*) *(context + 11); }
+//int* getSegAddrOfStack(int* context) { return (int*) *(context + 12); }
 
-int getSegSizeOfCode(int* context) { return (int*) *(context + 13); }
-int getSegSizeOfHeap(int* context) { return (int*) *(context + 14); }
-int getSegSizeOfStack(int* context) { return (int*) *(context + 15); }
+//int getSegSizeOfCode(int* context) { return (int*) *(context + 13); }
+//int getSegSizeOfHeap(int* context) { return (int*) *(context + 14); }
+//int getSegSizeOfStack(int* context) { return (int*) *(context + 15); }
 
-void setSegAddrOfCode(int* context, int* codeAddress) { *(context + 10)           = (int) codeAddress; }
-void setSegAddrOfHeap(int* context, int* heapAddress) { *(context + 11)       = (int) heapAddress; }
-void setSegAddrOfStack(int* context, int* stackAddress) { *(context + 12)     = (int) stackAddress; }
+//void setSegAddrOfCode(int* context, int* codeAddress) { *(context + 10)           = (int) codeAddress; }
+//void setSegAddrOfHeap(int* context, int* heapAddress) { *(context + 11)       = (int) heapAddress; }
+//void setSegAddrOfStack(int* context, int* stackAddress) { *(context + 12)     = (int) stackAddress; }
+
+//void setSegSizeOfCode(int* context, int sizeOfCode) { *(context + 10)           = (int) sizeOfCode; }
+//void setSegSizeOfHeap(int* context, int sizeOfHeap) { *(context + 11)           = (int) sizeOfHeap; }
+//void setSegSizeOfStack(int* context, int sizeOfStack) { *(context + 12)           = (int) sizeOfStack; }
+
+int* getSegAddrOfCode(int* context) { return (int*) *(context + 0); }
+int* getSegAddrOfHeap(int* context) { return (int*) *(context + 1); }
+int* getSegAddrOfStack(int* context) { return (int*) *(context + 2); }
+
+int getSegSizeOfCode(int* context) { return (int*) *(context + 3); }
+int getSegSizeOfHeap(int* context) { return (int*) *(context + 4); }
+int getSegSizeOfStack(int* context) { return (int*) *(context + 5); }
+
+void setSegAddrOfCode(int* context, int* codeAddress) { *(context + 0)           = (int) codeAddress; }
+void setSegAddrOfHeap(int* context, int* heapAddress) { *(context + 1)       = (int) heapAddress; }
+void setSegAddrOfStack(int* context, int* stackAddress) { *(context + 2)     = (int) stackAddress; }
+
+void setSegSizeOfCode(int* context, int sizeOfCode) { *(context + 3)           = (int) sizeOfCode; }
+void setSegSizeOfHeap(int* context, int sizeOfHeap) { *(context + 4)           = (int) sizeOfHeap; }
+void setSegSizeOfStack(int* context, int sizeOfStack) { *(context + 5)           = (int) sizeOfStack; }
 
 
 // -----------------------------------------------------------------
@@ -1247,6 +1273,9 @@ int* palloc();
 void pfree(int* frame);
 
 void up_loadBinary(int* table);
+
+// [EIFLES]
+void up_loadBinaryToSegments(int* segTable);
 
 int  up_loadString(int* table, int* s, int SP);
 void up_loadArguments(int* table, int argc, int* argv);
@@ -1299,6 +1328,9 @@ int USAGE = 1;
 
 // ***EIFLES***
 int numProcesses = 1;   // number of concurrent processes to be executed
+
+// [EIFLES]
+int segmentationIsUsed = 0; // segmentation is not used by default
 
 int selfie_argc = 0;
 int* selfie_argv = (int*) 0;
@@ -6533,6 +6565,7 @@ int* allocateContext(int ID, int parentID) {
 
   if (freeContexts == (int*) 0){
     //context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
+    // [EIFLES] mallocate memory for context struct
     context = malloc(7 * SIZEOFINTSTAR + 9 * SIZEOFINT);
   }
   else {
@@ -6563,9 +6596,6 @@ int* allocateContext(int ID, int parentID) {
   setBreak(context, maxBinaryLength);
 
   setParent(context, parentID);
-
-  // [EIFLES]
-  
 
   return context;
 }
@@ -6711,6 +6741,19 @@ void up_loadBinary(int* table) {
 
   while (vaddr < binaryLength) {
     mapAndStoreVirtualMemory(table, vaddr, loadBinary(vaddr));
+
+    vaddr = vaddr + WORDSIZE;
+  }
+}
+
+void up_loadBinaryToSegments(int* segTable) {
+  int vaddr;
+
+  // binaries start at lowest virtual address
+  vaddr = 0;
+
+  while (vaddr < binaryLength) {
+    mapAndStoreVirtualMemory(segTable, vaddr, loadBinary(vaddr));
 
     vaddr = vaddr + WORDSIZE;
   }
@@ -7031,7 +7074,7 @@ int boot(int argc, int* argv) {
   processIndex = 0;
 
   // [EIFLES] in here, we probably have to count how many instances are created within the while loop
-  // [EIFLES] needed to know in how many pieces we have to devide the mainmemory (segmenttable)
+  // [EIFLES] needed to know in how many pieces we have to devide the main memory (segmenttable)
   while (processIndex < numProcesses) {
     // create initial context on microkernel boot level
     nextID = selfie_create();
@@ -7040,7 +7083,13 @@ int boot(int argc, int* argv) {
       // create duplicate of the initial context on our boot level
       usedContexts = createContext(nextID, selfie_ID(), (int*) 0);
 
-    up_loadBinary(getPT(usedContexts));
+    // [EIFLES] just an idea ...
+    if(segmentationIsUsed){
+      up_loadBinaryToSegments(getSGMTT(usedContexts));
+    }
+    else{
+      up_loadBinary(getPT(usedContexts));
+    }
 
     up_loadArguments(getPT(usedContexts), argc, argv);
 
@@ -7137,6 +7186,13 @@ void setNumProcesses() {
   println();
 }
 
+// [EIFLES] idea to enable or disable segmentation (do not interfere with current paging implementation)
+void enableSegmentation() {
+  segmentationIsUsed = 1;
+  print((int*) "Segmentation has been enabled!");
+  println();
+}
+
 // round robin scheduler
 int runScheduler(int thisID) {
   int *thisContext;
@@ -7214,6 +7270,8 @@ int selfie() {
         setTimeslice();
       else if (stringCompare(option, (int*) "-numprocesses"))
         setNumProcesses();
+      else if (stringCompare(option, (int*) "-segmentation"))
+        enableSegmentation();
       else if (stringCompare(option, (int*) "-o"))
         selfie_output();
       else if (stringCompare(option, (int*) "-s"))
