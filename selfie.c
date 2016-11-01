@@ -2391,6 +2391,8 @@ int isExpression() {
     return 1;
   else if (symbol == SYM_CHARACTER)
     return 1;
+  else if (symbol == SYM_AMPERSAND)
+    return 1;
   else
     return 0;
 }
@@ -2926,24 +2928,30 @@ int gr_factor() {
 
         getSymbol();
 
+        //dereference
+        emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
       // ["&"] "*" "(" expression ")"
       } else if (symbol == SYM_LPARENTHESIS) {
         getSymbol();
 
         type = gr_expression();
-        
+
+        emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+        talloc();
+        emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
+
+        getSymbol();
       } else
         syntaxErrorUnexpected();
-
-    //dereference
-    emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
     // ["&"] identifier
     } else if (symbol == SYM_IDENTIFIER) {
       type = load_address(identifier);
-
       getSymbol();
     }
+
+    type = INTSTAR_T;
 
   // ["++"] ...
   } else if (symbol == SYM_PLUSPLUS) {
@@ -2964,6 +2972,8 @@ int gr_factor() {
         getSymbol();
 
         type = gr_expression();
+
+        getSymbol();
 
       } else
         syntaxErrorUnexpected();
@@ -2993,8 +3003,10 @@ int gr_factor() {
         emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
 
       emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
+      getSymbol();
     }
-    getSymbol();
+
 
   // ["--"] ...
   } else if (symbol == SYM_MINUSMINUS) {
@@ -3016,6 +3028,7 @@ int gr_factor() {
 
         type = gr_expression();
 
+        getSymbol();
       } else
         syntaxErrorUnexpected();
 
@@ -3044,8 +3057,9 @@ int gr_factor() {
         emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
 
       emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+      
+      getSymbol();
     }
-    getSymbol();
 
   // dereference?
   } else if (symbol == SYM_ASTERISK) {
