@@ -1,7 +1,8 @@
 int main(int argc, int* argv) {
-  initLibrary();
   int* i;
   int a;
+
+  initLibrary();
 
   i = malloc(1*4);
   a = 5;
@@ -9,5 +10,6 @@ int main(int argc, int* argv) {
   i = &a;
 
   if(*i == 5)
-    printf("OK");
+    print("OK");
+  println();
 }

@@ -152,6 +152,7 @@ int CHAR_LT           = '<';
 int CHAR_GT           = '>';
 int CHAR_EXCLAMATION  = '!';
 int CHAR_PERCENTAGE   = '%';
+int CHAR_AMPERSAND    = '&';
 int CHAR_SINGLEQUOTE  = 39; // ASCII code 39 = '
 int CHAR_DOUBLEQUOTE  = '"';
 
@@ -318,6 +319,7 @@ int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
 int SYM_PLUSPLUS     = 28; // ++
 int SYM_MINUSMINUS   = 29; // --
+int SYM_AMPERSAND    = 30; // &
 
 int* SYMBOLS; // strings representing symbols
 
@@ -354,7 +356,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(30 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(31 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -386,6 +388,7 @@ void initScanner () {
   *(SYMBOLS + SYM_STRING)       = (int) "string";
   *(SYMBOLS + SYM_PLUSPLUS)     = (int) "++";
   *(SYMBOLS + SYM_MINUSMINUS)   = (int) "--";
+  *(SYMBOLS + SYM_AMPERSAND)    = (int) "&";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -516,6 +519,7 @@ void typeWarning(int expected, int found);
 
 int* getVariable(int* variable);
 int  load_variable(int* variable);
+int  load_address(int* variable);
 void load_integer(int value);
 void load_string(int* string);
 
@@ -2222,6 +2226,10 @@ void getSymbol() {
 
         symbol = SYM_MOD;
 
+      } else if (character == CHAR_AMPERSAND) {
+        getCharacter();
+
+        symbol = SYM_AMPERSAND;
       } else {
         printLineNumber((int*) "error", lineNumber);
         print((int*) "found unknown character ");
@@ -2452,6 +2460,8 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_MINUSMINUS)
     return 0;
+  else if (symbol == SYM_AMPERSAND)
+    return 0;
   else
     return 1;
 }
@@ -2633,6 +2643,18 @@ int load_variable(int* variable) {
   talloc();
 
   emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
+
+  return getType(entry);
+}
+
+int load_address(int* variable) {
+  int* entry;
+
+  entry = getVariable(variable);
+
+  talloc();
+
+  emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
 
   return getType(entry);
 }
@@ -2890,8 +2912,41 @@ int gr_factor() {
     }
   }
 
+  // ["&"] ...
+  if (symbol == SYM_AMPERSAND) {
+    getSymbol();
+
+    // ["&"] "*"
+    if (symbol == SYM_ASTERISK) {
+      getSymbol();
+
+      // ["&"] "*" identifier
+      if (symbol == SYM_IDENTIFIER) {
+        type = load_address(identifier);
+
+        getSymbol();
+
+      // ["&"] "*" "(" expression ")"
+      } else if (symbol == SYM_LPARENTHESIS) {
+        getSymbol();
+
+        type = gr_expression();
+        
+      } else
+        syntaxErrorUnexpected();
+
+    //dereference
+    emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
+    // ["&"] identifier
+    } else if (symbol == SYM_IDENTIFIER) {
+      type = load_address(identifier);
+
+      getSymbol();
+    }
+
   // ["++"] ...
-  if (symbol == SYM_PLUSPLUS) {
+  } else if (symbol == SYM_PLUSPLUS) {
     getSymbol();
 
     // ["++"] "*"

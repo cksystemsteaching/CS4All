@@ -1,15 +1,15 @@
+int a;
+
 int main(int argc, int* argv) {
   int* i;
-  int* j;
   initLibrary();
 
   i = malloc(1*4);
+  a = 5;
 
-  *i = 99;
+  i = &a;
 
-  j = &*i;
-
-  if(*j == 99)
+  if(*i == 5)
     print("OK");
   println();
 }

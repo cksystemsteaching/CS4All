@@ -3,15 +3,16 @@ int foo(int* x) {
 }
 
 int main(int argc, int* argv) {
-  initLibrary();
   int* i;
   int a;
+  initLibrary();
 
-  i=malloc(1*4);
+  i = malloc(1*4);
   a = 7;
 
   foo(&a);
 
   if(a == 14)
     print("OK");
+  println();
 }

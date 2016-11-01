@@ -1,8 +1,8 @@
 int main(int argc, int* argv) {
-  initLibrary();
   int* i;
   int* j;
   int a;
+  initLibrary();
 
   i = malloc(1*4);
   j = malloc(1*4);
@@ -15,5 +15,6 @@ int main(int argc, int* argv) {
 
   if(*i == 34)
     if(*j == 34)
-      printf("OK");
+      print("OK");
+  println();
 }
