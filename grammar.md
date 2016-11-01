@@ -50,8 +50,11 @@ procedure        = "(" [ variable { "," variable } ] ")"
 variable         = type identifier .
 
 statement        = call ";" | while | if | return ";" |
-                   ( [ "*" ] identifier | "*" "(" expression ")" )
-                     "=" expression ";" .
+                    [ "++" | "--" ] [ "*" ] identifier |
+                    [ "*" ] identifier [ "++" | "--" ] |
+                    ( "++" | "--" ) "*" "(" expression ")" |
+                    "*" "(" expression ")" ( "++" | "--" ) |
+                    ( [ "*" ] identifier | "*" "(" expression ")" ) "=" expression ";" .
 
 call             = identifier "(" [ expression { "," expression } ] ")" .
 
@@ -62,10 +65,11 @@ simpleExpression = [ "-" ] term { ( "+" | "-" ) term } .
 term             = factor { ( "*" | "/" | "%" ) factor } .
 
 factor           = [ cast ]
-                    ([ "++" | "--" ] [ "*" ] ( identifier | "(" expression ")" [ "++" | "--" ]) |
-                      call |
-                      literal |
-                      string ) .
+                    ( [ "++" | "--" ] [ "*" ] ( identifier |  "(" expression ")" ) |
+                    ( [ "*" ] ( identifier |  "(" expression ")" [ "++" | "--" ] ) |
+                    call |
+                    literal |
+                    string ) .
 
 while            = "while" "(" expression ")"
                              ( statement |
