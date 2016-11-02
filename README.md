@@ -1,10 +1,14 @@
 # Assignment 1 (Instructions)
 
-
 Run printexample.c three times concurrently, switch context (scheduling between processes) after every instruction
 ./selfie -c testfiles/printexample.c selfie.c -conc 3 -freq 1 -m 1
 
 printexample.c prints out the numbers from 0 to 9, straightforward way to demonstrate context switching
+
+# Assignment 2 (Instructions)
+
+Run program like you did in Assignment 1. Everytime sched_yield() occures in code,
+a manual context switch is triggered.
 
 
 # Selfie [![Build Status](https://travis-ci.org/cksystemsteaching/selfie.svg?branch=master)](https://travis-ci.org/cksystemsteaching/selfie)
