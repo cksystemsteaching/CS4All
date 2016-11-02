@@ -128,6 +128,8 @@ void print(int *s);
 
 void println();
 
+void printDebug();
+
 void printCharacter(int c);
 
 void printString(int *s);
@@ -461,6 +463,7 @@ int reportUndefinedProcedures();
 // |  5 | value   | VARIABLE: initial value
 // |  6 | address | VARIABLE: offset, PROCEDURE: address, STRING: offset
 // |  7 | scope   | REG_GP, REG_FP
+// |  8 | fixup   | indicates required fixup, only for procedures
 // +----+---------+
 
 int *getNextEntry(int *entry) { return (int *) *entry; }
@@ -479,6 +482,8 @@ int getAddress(int *entry) { return *(entry + 6); }
 
 int getScope(int *entry) { return *(entry + 7); }
 
+int needsFixup(int *entry) {return *(entry + 8); }
+
 void setNextEntry(int *entry, int *next) { *entry = (int) next; }
 
 void setString(int *entry, int *identifier) { *(entry + 1) = (int) identifier; }
@@ -494,6 +499,8 @@ void setValue(int *entry, int value) { *(entry + 5) = value; }
 void setAddress(int *entry, int address) { *(entry + 6) = address; }
 
 void setScope(int *entry, int scope) { *(entry + 7) = scope; }
+
+void setFixup(int *entry, int status) { *(entry + 8) = status; }
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -574,6 +581,10 @@ void printType(int type);
 void typeWarning(int expected, int found);
 
 int *getVariable(int *variable);
+
+int existsVariable(int *variable);
+
+int *getProcedure(int *procedure);
 
 int load_variable(int *variable);
 
@@ -807,6 +818,7 @@ int OP_JAL = 3;
 int OP_BEQ = 4;
 int OP_BNE = 5;
 int OP_ADDIU = 9;
+//int OP_LUI = 15;
 int OP_LW = 35;
 int OP_SW = 43;
 
@@ -814,6 +826,7 @@ int *OPCODES; // strings representing MIPS opcodes
 
 int FCT_NOP = 0;
 int FCT_JR = 8;
+int FCT_JALR = 9;
 int FCT_SYSCALL = 12;
 int FCT_MFHI = 16;
 int FCT_MFLO = 18;
@@ -848,6 +861,7 @@ void initDecoder() {
     *(OPCODES + OP_ADDIU) = (int) "addiu";
     *(OPCODES + OP_LW) = (int) "lw";
     *(OPCODES + OP_SW) = (int) "sw";
+    //*(OPCODES + OP_LUI) = (int) "lui";
 
     FUNCTIONS = malloc(43 * SIZEOFINTSTAR);
 
@@ -1102,7 +1116,11 @@ void op_bne();
 
 void op_addiu();
 
+void op_lui();
+
 void fct_jr();
+
+void fct_jalr();
 
 void fct_mfhi();
 
@@ -1851,6 +1869,12 @@ void println() {
     putCharacter(CHAR_LF);
 }
 
+void printDebug() {
+    println();
+    print((int*)"---DEBUG---");
+    println();
+}
+
 void printCharacter(int c) {
     putCharacter(CHAR_SINGLEQUOTE);
 
@@ -2422,7 +2446,7 @@ void getSymbol() {
 void createSymbolTableEntry(int whichTable, int *string, int line, int class, int type, int value, int address) {
     int *newEntry;
 
-    newEntry = malloc(2 * SIZEOFINTSTAR + 6 * SIZEOFINT);
+    newEntry = malloc(2 * SIZEOFINTSTAR + 7 * SIZEOFINT);
 
     setString(newEntry, string);
     setLineNumber(newEntry, line);
@@ -2430,6 +2454,7 @@ void createSymbolTableEntry(int whichTable, int *string, int line, int class, in
     setType(newEntry, type);
     setValue(newEntry, value);
     setAddress(newEntry, address);
+    setFixup(newEntry, 0);
 
     // create entry at head of symbol table
     if (whichTable == GLOBAL_TABLE) {
@@ -2488,7 +2513,6 @@ int *getScopedSymbolTableEntry(int *string, int class) {
 
 int isUndefinedProcedure(int *entry) {
     int *libraryEntry;
-
     if (getClass(entry) == PROCEDURE) {
         // library procedures override declared or defined procedures
         libraryEntry = searchSymbolTable(library_symbol_table, getString(entry), PROCEDURE);
@@ -2499,7 +2523,7 @@ int isUndefinedProcedure(int *entry) {
         else if (getAddress(entry) == 0)
             // procedure declared but not defined
             return 1;
-        else if (getOpcode(loadBinary(getAddress(entry))) == OP_JAL)
+        else if (needsFixup(entry))
             // procedure called but not defined
             return 1;
     }
@@ -2803,6 +2827,19 @@ void typeWarning(int expected, int found) {
     println();
 }
 
+int existsVariable(int *variable) {
+    int *entry;
+
+    entry = getScopedSymbolTableEntry(variable, VARIABLE);
+
+    if (entry == (int*)0) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
+
 int *getVariable(int *variable) {
     int *entry;
 
@@ -2813,20 +2850,69 @@ int *getVariable(int *variable) {
         print(variable);
         print((int *) " undeclared");
         println();
-
         exit(-1);
     }
 
     return entry;
 }
 
-void load_variable_address(int *variable) {
+int *getProcedure(int *procedure) {
     int *entry;
+    entry = getScopedSymbolTableEntry(procedure, PROCEDURE);
 
-    entry = getVariable(variable);
+    if (entry == (int *) 0) {
+        printLineNumber((int *) "error", lineNumber);
+        print(procedure);
+        print((int *) " undeclared");
+        println();
+        exit(-1);
+    }
 
+    return entry;
+}
+
+void load_procedure_address(int *procedure) {
+    int *entry;
+    int type;
+
+    entry = getScopedSymbolTableEntry(procedure, PROCEDURE);
     talloc();
 
+    if (entry == (int*) 0) {
+        // if there is no entry for the procedure yet, create one
+        type = INT_T;
+        createSymbolTableEntry(GLOBAL_TABLE, procedure, lineNumber, PROCEDURE, type, 0, binaryLength);
+        emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 0);
+
+        // new procedure needs fixup
+        setFixup(getProcedure(procedure), 1);
+    }
+    else {
+        if (getAddress(entry) == 0) {
+            // procedure declared or called, but not yet defined
+            setAddress(entry, binaryLength);
+            emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), REG_ZR);
+
+            // procedure needs fixup
+            setFixup(entry, 1);
+        }
+        else if (needsFixup(entry)) {
+            // create fixup chain
+            emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), getAddress(entry) / WORDSIZE);
+            setAddress(entry, binaryLength - 2 * WORDSIZE);
+        }
+        else {
+            // procedure is already defined
+            emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), getAddress(entry));
+        }
+    }
+}
+
+
+void load_variable_address(int *variable) {
+    int *entry;
+    entry = getVariable(variable);
+    talloc();
     emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
 }
 
@@ -2902,14 +2988,21 @@ int help_call_codegen(int *entry, int *procedure) {
     int type;
 
     if (entry == (int *) 0) {
-        // procedure never called nor declared nor defined
 
-        // default return type is "int"
-        type = INT_T;
-
-        createSymbolTableEntry(GLOBAL_TABLE, procedure, lineNumber, PROCEDURE, type, 0, binaryLength);
-
-        emitJFormat(OP_JAL, 0);
+        if (existsVariable(procedure)) {
+            // if the identifier refers to a variable, it seems to be a function pointer. jump there.
+            type = load_variable(procedure);
+            emitRFormat(OP_SPECIAL, currentTemporary(), REG_ZR, REG_RA, FCT_JALR);
+            tfree(1);
+        }
+        else {
+            // procedure never called nor declared nor defined
+            // default return type is "int"
+            type = INT_T;
+            createSymbolTableEntry(GLOBAL_TABLE, procedure, lineNumber, PROCEDURE, type, 0, binaryLength);
+            setFixup(getProcedure(procedure), 1);
+            emitJFormat(OP_JAL, 0);
+        }
 
     } else {
         type = getType(entry);
@@ -2917,15 +3010,15 @@ int help_call_codegen(int *entry, int *procedure) {
         if (getAddress(entry) == 0) {
             // procedure declared but never called nor defined
             setAddress(entry, binaryLength);
-
+            setFixup(entry, 1);
             emitJFormat(OP_JAL, 0);
-        } else if (getOpcode(loadBinary(getAddress(entry))) == OP_JAL) {
-            // procedure called and possibly declared but not defined
-
+        }
+        else if (needsFixup(entry)) {
             // create fixup chain
             emitJFormat(OP_JAL, getAddress(entry) / WORDSIZE);
             setAddress(entry, binaryLength - 2 * WORDSIZE);
-        } else
+        }
+        else
             // procedure defined, use address
             emitJFormat(OP_JAL, getAddress(entry) / WORDSIZE);
     }
@@ -2986,7 +3079,6 @@ int gr_call(int *procedure) {
     numberOfTemporaries = allocatedTemporaries;
 
     save_temporaries();
-
     // assert: allocatedTemporaries == 0
 
     if (isExpression()) {
@@ -3014,7 +3106,6 @@ int gr_call(int *procedure) {
 
         if (symbol == SYM_RPARENTHESIS) {
             getSymbol();
-
             type = help_call_codegen(entry, procedure);
         } else {
             syntaxErrorSymbol(SYM_RPARENTHESIS);
@@ -3023,7 +3114,6 @@ int gr_call(int *procedure) {
         }
     } else if (symbol == SYM_RPARENTHESIS) {
         getSymbol();
-
         type = help_call_codegen(entry, procedure);
     } else {
         syntaxErrorSymbol(SYM_RPARENTHESIS);
@@ -3032,7 +3122,6 @@ int gr_call(int *procedure) {
     }
 
     // assert: allocatedTemporaries == 0
-
     restore_temporaries(numberOfTemporaries);
 
     numberOfCalls = numberOfCalls + 1;
@@ -3149,19 +3238,25 @@ int gr_factor() {
     else if (symbol == SYM_AMPERSAND) {
         getSymbol();
 
-        // dereferencing is not necessary, loaded address must be returned instead.
+        // dereferencing is not necessary, loaded address must be returned instead
         if (symbol == SYM_ASTERISK) {
             gr_lvalue();
         }
-        // in case of a variable, find out its address and load it. loading the variable content itself is not necessary.
         else if (symbol == SYM_IDENTIFIER) {
-            load_variable_address(identifier);
+            // Check whether the identifier refers to an already declared variable
+            if (existsVariable(identifier)) {
+                // In this case, load the the address of the variable
+                load_variable_address(identifier);
+            }
+            else {
+                // Otherwise, treat the identifier as a (possibly still undeclared/undefined) function
+                load_procedure_address(identifier);
+            }
             getSymbol();
         }
         else
             syntaxErrorUnexpected();
 
-        // type is INTSTAR_T afterwards in any case
         type = INTSTAR_T;
     }
     // * lvalue
@@ -4055,9 +4150,10 @@ void gr_procedure(int *procedure, int type) {
 
     if (symbol == SYM_SEMICOLON) {
         // this is a procedure declaration
-        if (entry == (int *) 0)
+        if (entry == (int *) 0) {
             // procedure never called nor declared nor defined
             createSymbolTableEntry(GLOBAL_TABLE, procedure, lineNumber, PROCEDURE, type, 0, 0);
+        }
         else if (getType(entry) != type)
             // procedure already called, declared, or even defined
             // check return type but otherwise ignore
@@ -4073,17 +4169,22 @@ void gr_procedure(int *procedure, int type) {
         else {
             // procedure already called or declared or defined
             if (getAddress(entry) != 0) {
-                // procedure already called or defined
-                if (getOpcode(loadBinary(getAddress(entry))) == OP_JAL) {
-                    // procedure already called but not defined
+                // procedure already called but not defined
+
+                if (needsFixup(entry)) {
+                    //procedure still needs a fixup
                     fixlink_absolute(getAddress(entry), binaryLength);
 
                     if (stringCompare(procedure, (int *) "main"))
                         // first source containing main procedure provides binary name
                         binaryName = sourceName;
-                } else
+                }
+                else
                     // procedure already defined
                     isUndefined = 0;
+
+                // the procedure does not need fixup afterwards in any case
+                setFixup(entry, 0);
             }
 
             if (isUndefined) {
@@ -4272,6 +4373,9 @@ void emitMainEntry() {
     mainJump = binaryLength;
 
     createSymbolTableEntry(GLOBAL_TABLE, (int *) "main", 0, PROCEDURE, INT_T, 0, mainJump);
+
+    // main needs a fixup
+    setFixup(getProcedure((int*)"main"), 1);
 
     // jump and link to main, will return here only if there is no exit call
     emitJFormat(OP_JAL, 0);
@@ -4473,7 +4577,6 @@ void selfie_compile() {
     print((int *) " instructions and ");
     printInteger(binaryLength - codeLength + WORDSIZE);
     print((int *) " bytes of data");
-    println();
 }
 
 // *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~
@@ -4724,17 +4827,60 @@ void fixup_relative(int fromAddress) {
 }
 
 void fixup_absolute(int fromAddress, int toAddress) {
+    //print((int*)"fixup_absolute:");
+    //println();
+    //print((int*)"fromAddress:");
+    //printInteger(fromAddress);
+    //println();
+    //print((int*)"toAddress:");
+    //printInteger(toAddress);
+    //println();
+    //println();
     storeBinary(fromAddress,
                 encodeJFormat(getOpcode(loadBinary(fromAddress)), toAddress / WORDSIZE));
 }
 
+void fixup_absolute_func(int fromAddress, int toAddress) {
+    //print((int*)"fixup_absolute_func:");
+    //println();
+    //print((int*)"fromAddress:");
+    //printInteger(fromAddress);
+    //println();
+    //print((int*)"toAddress:");
+    //printInteger(toAddress);
+    //println();
+    //println();
+    int rt;
+    rt = getRT(loadBinary(fromAddress));
+    storeBinary(fromAddress,
+                encodeIFormat(getOpcode(loadBinary(fromAddress)), REG_ZR, rt, toAddress));
+}
+
 void fixlink_absolute(int fromAddress, int toAddress) {
+    //print((int*)"fixlink_absolute - ");
+    //print((int*)"fromAddress:");
+    //printInteger(fromAddress);
+    //print((int*)", toAddress:");
+    //printInteger(toAddress);
+    //println();
+
     int previousAddress;
+    int previousOpcode;
 
     while (fromAddress != 0) {
-        previousAddress = getInstrIndex(loadBinary(fromAddress)) * WORDSIZE;
 
-        fixup_absolute(fromAddress, toAddress);
+        previousOpcode = getOpcode(loadBinary(fromAddress));
+
+        if (previousOpcode == OP_ADDIU) {
+            previousAddress = getImmediate(loadBinary(fromAddress)) * WORDSIZE;
+
+            fixup_absolute_func(fromAddress, toAddress);
+        }
+        else {
+            previousAddress = getInstrIndex(loadBinary(fromAddress)) * WORDSIZE;
+
+            fixup_absolute(fromAddress, toAddress);
+        }
 
         fromAddress = previousAddress;
     }
@@ -6052,6 +6198,18 @@ void op_bne() {
     }
 }
 
+void op_lui() {
+    //TODO: debug output; signextend?
+
+    if (interpret) {
+        *(registers + rt) = leftShift(immediate, 16);
+
+        // TODO: check for overflow
+
+        pc = pc + WORDSIZE;
+    }
+}
+
 void op_addiu() {
     if (debug) {
         printOpcode(opcode);
@@ -6104,7 +6262,6 @@ void fct_jr() {
             printHexadecimal(*(registers + rs), 0);
         }
     }
-
     if (interpret)
         pc = *(registers + rs);
 
@@ -6116,6 +6273,21 @@ void fct_jr() {
         println();
     }
 }
+
+void fct_jalr() {
+
+    if (interpret) {
+        *(registers + rd) = pc + 8;
+
+        pc = *(registers + rs);
+
+        // keep track of number of procedure calls
+        calls = calls + 1;
+
+        *(callsPerAddress + pc / WORDSIZE) = *(callsPerAddress + pc / WORDSIZE) + 1;
+    }
+}
+
 
 void fct_mfhi() {
     if (debug) {
@@ -6587,6 +6759,8 @@ void execute() {
             fct_nop();
         else if (function == FCT_ADDU)
             fct_addu();
+        else if (function == FCT_JALR)
+            fct_jalr();
         else if (function == FCT_SUBU)
             fct_subu();
         else if (function == FCT_MULTU)

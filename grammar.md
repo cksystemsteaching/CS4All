@@ -62,7 +62,7 @@ term             = factor { ( "*" | "/" | "%" ) factor } .
 
 lvalue           = "*" ( [ "++" | "--" ] identifier | "(" expression ")" ) | identifier .
 
-factor           = [ cast ] ( [ "++" | "--" ] lvalue | "(" expression ")" | call | literal | string ) .
+factor           = [ cast ] ( [ ("++" | "--") | "&" ] lvalue | "(" expression ")" | call | literal | string ) .
 
 while            = "while" "(" expression ")"
                              ( statement |
