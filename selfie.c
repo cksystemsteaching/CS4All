@@ -815,7 +815,6 @@ int  assemblyFD   = 0;        // file descriptor of open assembly file
 // -----------------------------------------------------------------
 // ----------------------- MIPSTER SYSCALLS ------------------------
 // -----------------------------------------------------------------
-
 void emitExit();
 void implementExit();
 
@@ -832,6 +831,9 @@ void implementOpen();
 void emitMalloc();
 void implementMalloc();
 
+void emitYield();
+void implementYield();
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_read   = 0;
@@ -846,6 +848,7 @@ int SYSCALL_WRITE  = 4004;
 int SYSCALL_OPEN   = 4005;
 
 int SYSCALL_MALLOC = 4045;
+int SYSCALL_YIELD  = 4046;
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
@@ -1026,6 +1029,7 @@ int EXCEPTION_HEAPOVERFLOW       = 4;
 int EXCEPTION_EXIT               = 5;
 int EXCEPTION_TIMER              = 6;
 int EXCEPTION_PAGEFAULT          = 7;
+int EXCEPTION_YIELD          	 = 8;
 
 int* EXCEPTIONS; // strings representing exceptions
 
@@ -1084,7 +1088,9 @@ int hypsterIDValue = 0;
 // ------------------------- INITIALIZATION ------------------------
 
 void initInterpreter() {
-  EXCEPTIONS = malloc(8 * SIZEOFINTSTAR);
+
+  // 9 because of the yield exception
+  EXCEPTIONS = malloc(9 * SIZEOFINTSTAR);
 
   *(EXCEPTIONS + EXCEPTION_NOEXCEPTION)        = (int) "no exception";
   *(EXCEPTIONS + EXCEPTION_UNKNOWNINSTRUCTION) = (int) "unknown instruction";
@@ -1094,6 +1100,7 @@ void initInterpreter() {
   *(EXCEPTIONS + EXCEPTION_EXIT)               = (int) "exit";
   *(EXCEPTIONS + EXCEPTION_TIMER)              = (int) "timer interrupt";
   *(EXCEPTIONS + EXCEPTION_PAGEFAULT)          = (int) "page fault";
+  *(EXCEPTIONS + EXCEPTION_YIELD)              = (int) "yield";
 }
 
 void resetInterpreter() {
@@ -4025,6 +4032,7 @@ void selfie_compile() {
   emitWrite();
   emitOpen();
   emitMalloc();
+  emitYield();
 
   emitID();
   emitCreate();
@@ -5047,6 +5055,20 @@ void implementMalloc() {
   }
 }
 
+void emitYield() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*)"sched_yield", 0, PROCEDURE, INT_T, 0, binaryLength);
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_YIELD);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementYield() {
+  print((int*)" Yield triggered");
+  println();
+  throwException(EXCEPTION_YIELD, 0);
+}
+
+
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
 // -----------------------------------------------------------------
@@ -5541,6 +5563,8 @@ void fct_syscall() {
       implementOpen();
     else if (*(registers+REG_V0) == SYSCALL_MALLOC)
       implementMalloc();
+    else if (*(registers+REG_V0) == SYSCALL_YIELD)
+      implementYield();
     else if (*(registers+REG_V0) == SYSCALL_ID)
       implementID();
     else if (*(registers+REG_V0) == SYSCALL_CREATE)
@@ -6884,8 +6908,12 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 				//print((int*)"AFTER DELETE ID");
 				//printInteger(toID);
 				//println();
+			}else if(exceptionNumber == EXCEPTION_YIELD){
+			  toID=schedule(fromContext);
+			}else if(exceptionNumber == EXCEPTION_TIMER){
+			  toID=schedule(fromContext);
 			}
-      else if (exceptionNumber != EXCEPTION_TIMER) {
+      else {
         print(binaryName);
         print((int*) ": context ");
         printInteger(getID(fromContext));
@@ -6894,8 +6922,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         println();
         return -1;
       }
-			else
-				toID=schedule(fromContext);
+
 			
       // TODO: scheduler should go here
       //toID = fromID;
