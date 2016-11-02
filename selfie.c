@@ -1052,6 +1052,8 @@ int cycles = 0; // cycle counter where one cycle is equal to one instruction
 
 int timer = 0; // counter for timer interrupt
 
+int repeats = 0; // number of repeats (gets set when option "-r" is used)
+
 int mipster = 0; // flag for forcing to use mipster rather than hypster
 
 int interpret = 0; // flag for executing or disassembling code
@@ -6931,7 +6933,6 @@ int boot(int argc, int* argv) {
   // works with mipsters and hypsters
   int initID;
   int exitCode;
-  int repeats;
   int* tempCtx;
 
   if (debugLocally) {
@@ -6939,8 +6940,6 @@ int boot(int argc, int* argv) {
     printInteger(argc);
     println();
   }
-
-  repeats = 10;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6974,7 +6973,7 @@ int boot(int argc, int* argv) {
   // propagate page table of initial context to microkernel boot level
   down_mapPageTable(usedContexts);
 
-  while (repeats > 0) {
+  while ((repeats - 1) > 0) {
     bumpID = createID(bumpID);
     tempCtx = createContext(bumpID, selfie_ID(), usedContexts);
 
@@ -7126,7 +7125,10 @@ int selfie() {
         selfie_disassemble();
       else if (stringCompare(option, (int*) "-l"))
         selfie_load();
-      else if (stringCompare(option, (int*) "-m"))
+      else if (stringCompare(option, (int*) "-r")) {
+        repeats = atoi(*(selfie_argv)); // number of repeats
+        return selfie_run(MIPSTER, MIPSTER, 0);
+      } else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
         return selfie_run(MIPSTER, MIPSTER, 1);
@@ -7136,9 +7138,7 @@ int selfie() {
         return selfie_run(MIPSTER, MINSTER, 0);
       else if (stringCompare(option, (int*) "-mob"))
         return selfie_run(MIPSTER, MOBSTER, 0);
-      else if (stringCompare(option, (int*) "-r")) {
-        return selfie_run(MIPSTER, MOBSTER, 0);
-      } else {
+      else {
         return USAGE;
       }
     }
