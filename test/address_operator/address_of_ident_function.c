@@ -7,7 +7,7 @@ void swap(int* one, int* two) {
 	*two = help;
 }
 
-int main(int argc, int* argv) {
+int main() {
 
 	int a;
 	int b;
@@ -17,5 +17,5 @@ int main(int argc, int* argv) {
 
 	swap(&a, &b);
 
-	return 0; //44
+	return *b; //44
 }
