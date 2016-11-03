@@ -154,6 +154,7 @@ int CHAR_EXCLAMATION  = '!';
 int CHAR_PERCENTAGE   = '%';
 int CHAR_SINGLEQUOTE  = 39; // ASCII code 39 = '
 int CHAR_DOUBLEQUOTE  = '"';
+int CHAR_AMPERSAND    = '&';
 
 int SIZEOFINT     = 4; // must be the same as WORDSIZE
 int SIZEOFINTSTAR = 4; // must be the same as WORDSIZE
@@ -318,6 +319,7 @@ int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
 int SYM_INCREMENT    = 28; // ++
 int SYM_DECREMENT    = 29; // --
+int SYM_AMPERSAND    = 30; // &
 
 int* SYMBOLS; // strings representing symbols
 
@@ -354,7 +356,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(30 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(31 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -386,6 +388,7 @@ void initScanner () {
   *(SYMBOLS + SYM_STRING)       = (int) "string";
   *(SYMBOLS + SYM_INCREMENT)    = (int) "++";
   *(SYMBOLS + SYM_DECREMENT)    = (int) "--";
+  *(SYMBOLS + SYM_AMPERSAND)    = (int) "&";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -2222,6 +2225,11 @@ void getSymbol() {
 
         symbol = SYM_MOD;
 
+      } else if (character == CHAR_AMPERSAND) {
+        getCharacter();
+
+        symbol = SYM_AMPERSAND;
+
       } else {
         printLineNumber((int*) "error", lineNumber);
         print((int*) "found unknown character ");
@@ -2387,6 +2395,8 @@ int isExpression() {
     return 1;
   else if (symbol == SYM_DECREMENT)
     return 1;
+  else if (symbol == SYM_AMPERSAND)
+    return 1;
   else
     return 0;
 }
@@ -2456,6 +2466,8 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_DECREMENT)
     return 0;
+  else if (symbol == SYM_AMPERSAND)
+    return 0;
   else
     return 1;
 }
@@ -2476,6 +2488,8 @@ int lookForStatement() {
   else if (symbol == SYM_INCREMENT)
     return 0;
   else if (symbol == SYM_DECREMENT)
+    return 0;
+  else if (symbol == SYM_AMPERSAND)
     return 0;
   else
     return 1;
@@ -2647,6 +2661,18 @@ void store_variable(int* variable) {
 	entry = getVariable(variable);
 
 	emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+}
+
+int load_address(int* variable) {
+  int* entry;
+
+  entry = getVariable(variable);
+
+  talloc();
+
+  emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
+
+  return INTSTAR_T;
 }
 
 void load_integer(int value) {
@@ -2901,8 +2927,24 @@ int gr_factor() {
     }
   }
 
+  // address operator
+  if (symbol == SYM_AMPERSAND) {
+    getSymbol();
+
+    if (symbol == SYM_ASTERISK) {
+      getSymbol();
+    }
+
+    if(symbol == SYM_IDENTIFIER) {
+        getSymbol();
+
+        type = load_address(identifier);
+        if(type != INTSTAR_T)
+          typeWarning(INTSTAR_T, type);
+    }
+
   // dereference?
-  if (symbol == SYM_ASTERISK) {
+  } else if (symbol == SYM_ASTERISK) {
     getSymbol();
 
     // ["*"] identifier
@@ -2921,6 +2963,18 @@ int gr_factor() {
         getSymbol();
       else
         syntaxErrorSymbol(SYM_RPARENTHESIS);
+
+    } else if (symbol == SYM_AMPERSAND) {
+      getSymbol();
+
+      if (symbol == SYM_IDENTIFIER) {
+          getSymbol();
+
+          type = load_address(identifier);
+          if(type != INTSTAR_T)
+            typeWarning(INTSTAR_T, type);
+      }
+
     } else
       syntaxErrorUnexpected();
 
@@ -2966,12 +3020,11 @@ int gr_factor() {
       store_variable(identifier);
 
     // postfix decrement
-  } else {
-    type = load_variable(identifier);
-    emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
-    store_variable(identifier);
-  }
-
+    } else {
+      type = load_variable(identifier);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+      store_variable(identifier);
+    }
 
   // identifier?
   } else if (symbol == SYM_IDENTIFIER) {
@@ -7176,43 +7229,17 @@ int selfie() {
   return 0;
 }
 
-void testInAndDecrement(){
-  int i;
-
-  i = 0;
-
-  printInteger(i);
-  println();
-
-  i--;
-
-  printInteger(i--);
-  println();
-
-  printInteger(i);
-  println();
-
-  --i;
-
-  printInteger(--i);
-  println();
-
-  i++;
-
-  printInteger(i++);
-  println();
-
-  printInteger(i);
-  println();
-
-  ++i;
-
-  printInteger(++i);
-  println();
+int addrTest(int* addr1);
+int addrTest(int* addr1) {
+  *addr1 = 555;
+  return *addr1;
 }
 
 int main(int argc, int* argv) {
   int exitCode;
+  int x1;
+  int x2;
+  int* p1;
 
   initSelfie(argc, (int*) argv);
 
@@ -7221,7 +7248,23 @@ int main(int argc, int* argv) {
   print((int*) "This is TheSerializables Selfie");
   println();
 
-  testInAndDecrement();
+  x1 = 5;
+  p1 = &x1;
+  x2 = *&x1;
+
+  println();
+  printInteger(*p1);
+  println();
+  printInteger(x2);
+  println();
+
+  x1 = 42;
+  addrTest(&x1);
+  println();
+  printInteger(x1);
+  println();
+
+
 
   exitCode = selfie();
 
