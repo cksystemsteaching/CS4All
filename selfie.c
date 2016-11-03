@@ -3029,40 +3029,32 @@ int gr_factor() {
     getSymbol();
   }
 
-  // "&" identifier
+  // "&" identifier || "&" "*" "(" expression ")"
   if (symbol == SYM_AMPERSAND) {
     getSymbol();
 
+    // "&" identifier
     if (symbol == SYM_IDENTIFIER) {
       load_address(identifier);
 
       getSymbol();
-    }
-    else if (symbol == SYM_ASTERISK){
+
+    // "&" "*" "(" expression ")"
+    } else if (symbol == SYM_ASTERISK){
         getSymbol();
-        if(symbol == SYM_ASTERISK){
+
+        if (symbol == SYM_LPARENTHESIS) {
           getSymbol();
-          if(symbol == SYM_IDENTIFIER){
-            type = load_address(identifier);
+
+          type = gr_expression();
+
+          if (symbol == SYM_RPARENTHESIS)
             getSymbol();
-            //dereferencing
-            emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+          else
+            syntaxErrorSymbol(SYM_RPARENTHESIS);
 
-          }else if (symbol == SYM_LPARENTHESIS){
-            getSymbol();
-
-            type = gr_expression();
-
-            emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
-            talloc();
-            emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
-            getSymbol();
-
-
-          }else
-             syntaxErrorSymbol(SYM_LPARENTHESIS);
-
-        }
+        } else
+           syntaxErrorSymbol(SYM_LPARENTHESIS);
     }
 
   // dereference?

@@ -24,6 +24,6 @@ int  main(){
     i = i + 1;
   }
 
-  return *arr2 + 4; //4
+  return *arr2 + 4; // 4 + 4 = 8
 
 }

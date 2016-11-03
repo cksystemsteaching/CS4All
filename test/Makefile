@@ -1,6 +1,8 @@
 # Compiler flags
 CFLAGS := -w -m32 -D'main(a,b)=main(a,char**argv)'
 
+test: test_pre_increment test_address_of
+
 test_pre_increment:
 	../selfie -c pre_increment/preinc1.c
 	../selfie -c pre_increment/preinc1.c -d 1 | grep -E 'exit code 4'
@@ -48,7 +50,7 @@ test_pre_increment:
 test_address_of:
 	../selfie -c address_operator/address_of_ident_stack.c -d 1 | grep -E 'exit code 7'
 	../selfie -c address_operator/address_of_ident_glob.c -d 1 | grep -E 'exit code 334'
-	../selfie -c address_operator/address_of_ident_array_0.c -d 1 | grep -E 'exit code 4'
+	../selfie -c address_operator/address_of_ident_array_0.c -d 1 | grep -E 'exit code 8'
 	../selfie -c address_operator/address_of_ident_function.c -d 1 | grep -E 'exit code 44'
 
 clean:
