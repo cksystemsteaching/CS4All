@@ -6885,26 +6885,25 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         selfie_map(fromID, exceptionParameter, frame);
       } else if (exceptionNumber == EXCEPTION_EXIT) {
 
-	    print((int*) "Context "); printInteger(getID(currentContext)); print((int*) " is exiting");
-    	println();
+        print((int*) "Context "); printInteger(getID(currentContext)); print((int*) " is exiting");
+        println();
 
-    	if(contextCount == 1)  {
-    		print((int*) "Bye bye!");
-    		return exceptionParameter;
-    	}
+        if (contextCount == 1) {
+          print((int*) "Bye bye!");
+          return exceptionParameter;
+        }
 
-    	toID = schedule();
+        toID = schedule();
 
-    	  // CAUTION: doSwitch() modifies the global variable registers
-    	  // but some compilers dereference the lvalue *(registers+REG_V1)
-    	  // before evaluating the rvalue doSwitch()
+        // CAUTION: doSwitch() modifies the global variable registers
+        // but some compilers dereference the lvalue *(registers+REG_V1)
+        // before evaluating the rvalue doSwitch()
+        fromID = doSwitch(toID);
 
-    	  fromID = doSwitch(toID);
+        // use REG_V1 instead of REG_V0 to avoid race condition with interrupt
+        *(registers+REG_V1) = fromID;
 
-    	  // use REG_V1 instead of REG_V0 to avoid race condition with interrupt
-    	  *(registers+REG_V1) = fromID;
-
-    	deleteContext(findContext(fromID, usedContexts), usedContexts);
+        deleteContext(findContext(fromID, usedContexts), usedContexts);
 
       } else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
@@ -6924,25 +6923,22 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 }
 
 int schedule() {
+  int fromId;
+  int toId;
 
-	int fromid;
-	int toid;
+  fromId = getID(currentContext);
 
-	fromid = getID(currentContext);
+  if (getNextContext(currentContext) == 0) {
+    toId = getID(usedContexts);
+  } else {
+    toId = getID(getNextContext(currentContext));
+  }
 
+  print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
 
-	if(getNextContext(currentContext) == 0) {
-		toid = getID(usedContexts);
-	}
-	else {
-		toid = getID(getNextContext(currentContext));
-	}
+  //traverseContexts(usedContexts);
 
-	print((int*) "Scheduling from "); printInteger(fromid); print((int*) " to context "); printInteger(toid); println();
-
-	//traverseContexts(usedContexts);
-
-	return toid;
+  return toId;
 }
 
 int bootminmob(int argc, int* argv, int machine) {
