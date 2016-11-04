@@ -7079,17 +7079,22 @@ int boot(int argc, int* argv) {
     // create initial context on microkernel boot level
     nextID = selfie_create();
 
-    if (usedContexts == (int*) 0)
+    // [EIFLES] just an idea ...
+    if (usedContexts == (int*) 0) {
       // create duplicate of the initial context on our boot level
       usedContexts = createContext(nextID, selfie_ID(), (int*) 0);
-
-    // [EIFLES] just an idea ...
-    if(segmentationIsUsed){
-      up_loadBinaryToSegments(getSGMTT(usedContexts));
-    }
-    else{
+      // upload binary only once for all contexts
       up_loadBinary(getPT(usedContexts));
     }
+
+
+    // [EIFLES] just an idea ...
+    //if(segmentationIsUsed){
+    //  up_loadBinaryToSegments(getSGMTT(usedContexts));
+    //}
+    //else{
+    //  up_loadBinary(getPT(usedContexts));
+    //}
 
     up_loadArguments(getPT(usedContexts), argc, argv);
 
