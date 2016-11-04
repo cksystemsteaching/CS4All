@@ -830,6 +830,9 @@ void implementOpen();
 void emitMalloc();
 void implementMalloc();
 
+int sched_yield();
+void implement_sched_yield();
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_read   = 0;
@@ -866,8 +869,6 @@ void implementSwitch();
 int  mipster_switch(int toID);
 
 int selfie_switch(int toID);
-
-int sched_yield();
 
 void emitStatus();
 void implementStatus();
@@ -5053,6 +5054,17 @@ void implementMalloc() {
   }
 }
 
+int sched_yield() {
+  // TODO: sched_yield() causes the calling thread to relinquish (i.e. "give up") the CPU
+  // the thread is moved to the end of the queue for its static priority and a new thread gets to run
+
+  return 0; // return 0 on success, -1 otherwise
+}
+
+void implement_sched_yield() {
+
+}
+
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
 // -----------------------------------------------------------------
@@ -5229,13 +5241,6 @@ int selfie_switch(int toID) {
     return mipster_switch(toID);
   else
     return hypster_switch(toID);
-}
-
-int sched_yield() {
-  // TODO: sched_yield() causes the calling thread to relinquish (i.e. "give up") the CPU
-  // the thread is moved to the end of the queue for its static priority and a new thread gets to run
-
-  return 0; // return 0 on success, -1 otherwise
 }
 
 void emitStatus() {
