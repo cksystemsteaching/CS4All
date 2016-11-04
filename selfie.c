@@ -2389,6 +2389,8 @@ int isExpression() {
     return 1;
   else if (symbol == SYM_CHARACTER)
     return 1;
+  else if(symbol == SYM_AMPERSAND)
+    return 1;
   else
     return 0;
 }
@@ -2630,6 +2632,42 @@ int* getVariable(int* variable) {
   return entry;
 }
 
+int* getVariableOrProcedure(int* variableOrProcedure) {
+  int* entry;
+
+  entry = getScopedSymbolTableEntry(variableOrProcedure, VARIABLE);
+  if(entry == (int*) 0){
+    entry = getScopedSymbolTableEntry(variableOrProcedure, PROCEDURE);
+  }
+
+  if (entry == (int*) 0) {
+    printLineNumber((int*) "error", lineNumber);
+    print(variableOrProcedure);
+    print((int*) " undeclared");
+    println();
+
+    exit(-1);
+  }
+
+  return entry;
+}
+
+int* getProcedure(int* procedure) {
+  int* entry;
+
+  entry = getScopedSymbolTableEntry(procedure, PROCEDURE);
+
+  if (entry == (int*) 0) {
+    printLineNumber((int*) "error", lineNumber);
+    print(procedure);
+    print((int*) " undeclared");
+    println();
+
+    exit(-1);
+  }
+  return entry;
+}
+
 int load_variable(int* variable) {
   int* entry;
 
@@ -2652,10 +2690,12 @@ int load_variable(int* variable) {
 int load_address(int* variable){
   int* entry;
 
-  entry = getVariable(variable);
+  entry = getVariableOrProcedure(variable);
 
   talloc();
 
+  printInteger(getAddress(entry));
+  println();
   emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
 
   return INTSTAR_T;
@@ -2813,7 +2853,7 @@ int gr_call(int* procedure) {
 
     // TODO: check if types/number of parameters is correct
 
-    // push first pargr_callgr_callgr_callgr_callgr_callameter onto stack
+    // push first parameter onto stack
     emitIFormat(OP_ADDIU, REG_SP, REG_SP, -WORDSIZE);
     emitIFormat(OP_SW, REG_SP, currentTemporary(), 0);
 
@@ -2919,6 +2959,7 @@ int gr_factor() {
 
     if (symbol == SYM_IDENTIFIER) {
       type = load_address(identifier);
+
       getSymbol();
     } else {
       syntaxErrorUnexpected(symbol);
@@ -7171,6 +7212,7 @@ int selfie() {
 
 int main(int argc, int* argv) {
   int exitCode;
+  int* a;
 
   initSelfie(argc, (int*) argv);
 
@@ -7178,6 +7220,11 @@ int main(int argc, int* argv) {
 
   print((int *)"This is the Starc Mipsdustries Selfie");
   println();
+
+  a = &load_variable;
+  printInteger(&load_variable);
+  println();
+  printInteger(a);
 
   exitCode = selfie();
 
