@@ -830,8 +830,9 @@ void implementOpen();
 void emitMalloc();
 void implementMalloc();
 
-int sched_yield();
-void implement_sched_yield();
+void emitSchedYield();
+void implementSchedYield();
+int  sched_yield();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -847,6 +848,8 @@ int SYSCALL_WRITE  = 4004;
 int SYSCALL_OPEN   = 4005;
 
 int SYSCALL_MALLOC = 4045;
+
+int SYSCALL_SCHED_YIELD = 4158;
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
@@ -4032,6 +4035,7 @@ void selfie_compile() {
   emitWrite();
   emitOpen();
   emitMalloc();
+  emitSchedYield();
 
   emitID();
   emitCreate();
@@ -5054,15 +5058,22 @@ void implementMalloc() {
   }
 }
 
+void emitSchedYield() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "sched_yield", 0, PROCEDURE, INT_T, 0, binaryLength);
+
+  // TODO:
+  // emitIFormat()
+  // emitRFormat()
+}
+
+void implementSchedYield() {
+
+}
+
 int sched_yield() {
   // TODO: sched_yield() causes the calling thread to relinquish (i.e. "give up") the CPU
   // the thread is moved to the end of the queue for its static priority and a new thread gets to run
-
   return 0; // return 0 on success, -1 otherwise
-}
-
-void implement_sched_yield() {
-
 }
 
 // -----------------------------------------------------------------
@@ -5559,6 +5570,8 @@ void fct_syscall() {
       implementDelete();
     else if (*(registers+REG_V0) == SYSCALL_MAP)
       implementMap();
+    else if (*(registers+REG_V0) == SYSCALL_SCHED_YIELD)
+      implementSchedYield();
     else {
       pc = pc - WORDSIZE;
 
