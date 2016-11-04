@@ -946,7 +946,9 @@ int VIRTUALMEMORYSIZE = 67108864; // 64MB of virtual memory
 
 int WORDSIZE = 4; // must be the same as SIZEOFINT and SIZEOFINTSTAR
 
+// [EIFLES] 
 int PAGESIZE = 4096; // we use standard 4KB pages
+
 int PAGEBITS = 12;   // 2^12 == 4096
 
 // ------------------------ GLOBAL VARIABLES -----------------------
@@ -1221,13 +1223,13 @@ int getSegSizeOfCode(int* context) { return (int*) *(context + 3); }
 int getSegSizeOfHeap(int* context) { return (int*) *(context + 4); }
 int getSegSizeOfStack(int* context) { return (int*) *(context + 5); }
 
-void setSegAddrOfCode(int* context, int* codeAddress) { *(context + 0)           = (int) codeAddress; }
-void setSegAddrOfHeap(int* context, int* heapAddress) { *(context + 1)       = (int) heapAddress; }
-void setSegAddrOfStack(int* context, int* stackAddress) { *(context + 2)     = (int) stackAddress; }
+void setSegAddrOfCode(int* context, int* codeAddress) { *(context + 0) = (int) codeAddress; }
+void setSegAddrOfHeap(int* context, int* heapAddress) { *(context + 1) = (int) heapAddress; }
+void setSegAddrOfStack(int* context, int* stackAddress) { *(context + 2) = (int) stackAddress; }
 
-void setSegSizeOfCode(int* context, int sizeOfCode) { *(context + 3)           = (int) sizeOfCode; }
-void setSegSizeOfHeap(int* context, int sizeOfHeap) { *(context + 4)           = (int) sizeOfHeap; }
-void setSegSizeOfStack(int* context, int sizeOfStack) { *(context + 5)           = (int) sizeOfStack; }
+void setSegSizeOfCode(int* context, int sizeOfCode) { *(context + 3) = (int) sizeOfCode; }
+void setSegSizeOfHeap(int* context, int sizeOfHeap) { *(context + 4) = (int) sizeOfHeap; }
+void setSegSizeOfStack(int* context, int sizeOfStack) { *(context + 5) = (int) sizeOfStack; }
 
 
 // -----------------------------------------------------------------
@@ -6588,9 +6590,15 @@ int* allocateContext(int ID, int parentID) {
   setRegHi(context, 0);
   setRegLo(context, 0);
 
+  // [EIFLES] Create SegTable here; How big does that thingy have to be?!
+  setSGMTT(context, zalloc(2048)); 
+
   // allocate zeroed memory for page table
   // TODO: save and reuse memory for page table
-  setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
+  //setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
+
+  // [EIFLES] replace setPT call, page table can be smaller in our approach!
+  setPT();
 
   // heap starts where it is safe to start
   setBreak(context, maxBinaryLength);
