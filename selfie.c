@@ -1028,7 +1028,7 @@ int debug_exception = 0;
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
-int TIMESLICE = 50;
+int TIMESLICE = 5000;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1073,6 +1073,8 @@ int* loadsPerAddress = (int*) 0; // number of executed loads per load operation
 
 int  stores           = 0;        // total number of executed memory stores
 int* storesPerAddress = (int*) 0; // number of executed stores per store operation
+
+int contextCount = 0;
 
 // ------------------------- INITIALIZATION ------------------------
 
@@ -1145,6 +1147,13 @@ void traverseContexts(int* ctxHead);
 
 void mapPage(int* table, int page, int frame);
 
+//Context status constants
+int STATUS_SUSPENDED = 0;
+int STATUS_RUNNING = 1;
+int STATUS_READY = 2;
+int STATUS_WAITING = 3;
+int STATUS_FINISHED = 4;
+
 // context struct:
 // +---+--------+
 // | 0 | next   | pointer to next context
@@ -1157,6 +1166,7 @@ void mapPage(int* table, int page, int frame);
 // | 7 | pt     | pointer to page table
 // | 8 | brk    | break between code, data, and heap
 // | 9 | parent | ID of context that created this context
+// | 10| status | Status of the context
 // +---+--------+
 
 int* getNextContext(int* context) { return (int*) *context; }
@@ -1169,6 +1179,7 @@ int  getRegLo(int* context)       { return        *(context + 6); }
 int* getPT(int* context)          { return (int*) *(context + 7); }
 int  getBreak(int* context)       { return        *(context + 8); }
 int  getParent(int* context)      { return        *(context + 9); }
+int  getStatus(int* context)      { return        *(context + 10); }
 
 void setNextContext(int* context, int* next) { *context       = (int) next; }
 void setPrevContext(int* context, int* prev) { *(context + 1) = (int) prev; }
@@ -1180,6 +1191,7 @@ void setRegLo(int* context, int reg_lo)      { *(context + 6) = reg_lo; }
 void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
 void setBreak(int* context, int brk)         { *(context + 8) = brk; }
 void setParent(int* context, int id)         { *(context + 9) = id; }
+void setStatus(int* context, int id)         { *(context + 10) = id; }
 
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
@@ -1232,6 +1244,7 @@ void down_mapPageTable(int* context);
 
 int runUntilExitWithoutExceptionHandling(int toID);
 int runOrHostUntilExitWithPageFaultHandling(int toID);
+int schedule();
 
 int bootminmob(int argc, int* argv, int machine);
 int boot(int argc, int* argv);
@@ -6312,7 +6325,8 @@ void interrupt() {
 }
 
 void runUntilException() {
-//  trap = 0;
+
+  trap = 0;
 
   if (trap != 0) {
     print((int*) "TRAP");
@@ -6499,6 +6513,8 @@ int* allocateContext(int ID, int parentID) {
 
   setParent(context, parentID);
 
+  contextCount = contextCount + 1;
+
   return context;
 }
 
@@ -6511,6 +6527,8 @@ int* createContext(int ID, int parentID, int* in) {
 
   if (in != (int*) 0)
     setPrevContext(in, context);
+
+  setStatus(context, STATUS_READY);
 
   return context;
 }
@@ -6550,6 +6568,8 @@ void freeContext(int* context) {
   setNextContext(context, freeContexts);
 
   freeContexts = context;
+
+  contextCount = contextCount - 1;
 }
 
 void traverseContexts(int* head) {
@@ -6574,6 +6594,10 @@ int* deleteContext(int* context, int* from) {
     from = getNextContext(context);
 
   freeContext(context);
+
+  print((int*) "Deleted Context "); printInteger(getID(context)); println();
+
+  traverseContexts(from);
 
   return from;
 }
@@ -6818,6 +6842,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int exceptionNumber;
   int exceptionParameter;
   int frame;
+  int deleteFromContext = 0;
 
   while (1) {
     fromID = selfie_switch(toID);
@@ -6854,8 +6879,28 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
       } else if (exceptionNumber == EXCEPTION_EXIT) {
-        // TODO: only return if all contexts have exited
-        return exceptionParameter;
+
+	    print((int*) "Context "); printInteger(getID(currentContext)); print((int*) " is exiting");
+    	println();
+
+    	if(contextCount == 1)  {
+    		print((int*) "Bye bye!");
+    		return exceptionParameter;
+    	}
+
+    	toID = schedule();
+
+    	  // CAUTION: doSwitch() modifies the global variable registers
+    	  // but some compilers dereference the lvalue *(registers+REG_V1)
+    	  // before evaluating the rvalue doSwitch()
+
+    	  fromID = doSwitch(toID);
+
+    	  // use REG_V1 instead of REG_V0 to avoid race condition with interrupt
+    	  *(registers+REG_V1) = fromID;
+
+    	deleteContext(findContext(fromID, usedContexts), usedContexts);
+
       } else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
@@ -6867,12 +6912,32 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         return -1;
       } else if (exceptionNumber == EXCEPTION_TIMER) {
         //print((int*) "asdfasdf"); printInteger(getID(fromContext));
-        toID = getID(getNextContext(fromContext));
-      } else {
-        toID = fromID;
+        toID = schedule();
       }
     }
   }
+}
+
+int schedule() {
+
+	int fromid;
+	int toid;
+
+	fromid = getID(currentContext);
+
+
+	if(getNextContext(currentContext) == 0) {
+		toid = getID(usedContexts);
+	}
+	else {
+		toid = getID(getNextContext(currentContext));
+	}
+
+	print((int*) "Scheduling from "); printInteger(fromid); print((int*) " to context "); printInteger(toid); println();
+
+	//traverseContexts(usedContexts);
+
+	return toid;
 }
 
 int bootminmob(int argc, int* argv, int machine) {
@@ -6984,8 +7049,6 @@ int boot(int argc, int* argv) {
 
     repeats = repeats - 1;
   }
-
-  setNextContext(findContext(initID, usedContexts), usedContexts);
 
   if (debugLocally) {
     traverseContexts(usedContexts);
