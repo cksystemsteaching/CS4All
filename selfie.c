@@ -849,7 +849,7 @@ int SYSCALL_OPEN   = 4005;
 
 int SYSCALL_MALLOC = 4045;
 
-int SYSCALL_SCHED_YIELD = 4158;
+int SYSCALL_SCHED_YIELD = 4158; // linux opcode for sched yield
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
@@ -4035,7 +4035,7 @@ void selfie_compile() {
   emitWrite();
   emitOpen();
   emitMalloc();
-  emitSchedYield();
+  //emitSchedYield();
 
   emitID();
   emitCreate();
@@ -5059,18 +5059,23 @@ void implementMalloc() {
 }
 
 void emitSchedYield() {
-  createSymbolTableEntry(LIBRARY_TABLE, (int*) "sched_yield", 0, PROCEDURE, INT_T, 0, binaryLength);
+  // create entry in symboltable for sched_yield
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "sched_yield", 0, PROCEDURE, INT_T, 0, binaryLength); // use INT_T, as sched_yield should return an integer value
 
-  // TODO:
-  // emitIFormat()
-  // emitRFormat()
+  // load correct syscall number
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SCHED_YIELD);
+  // invoke the syscall
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
-void implementSchedYield() {
+void implementSchedYield() { // TODO: should we change method type to int?
 
 }
 
-int sched_yield() {
+int sched_yield() { // TODO: are both methods sched_yield AND implementSchedYield() needed?
   // TODO: sched_yield() causes the calling thread to relinquish (i.e. "give up") the CPU
   // the thread is moved to the end of the queue for its static priority and a new thread gets to run
   return 0; // return 0 on success, -1 otherwise
@@ -6947,7 +6952,7 @@ int schedule() {
     toId = getID(getNextContext(currentContext));
   }
 
-  print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
+  //print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
 
   //traverseContexts(usedContexts);
 
