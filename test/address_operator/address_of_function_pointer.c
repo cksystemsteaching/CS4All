@@ -7,15 +7,21 @@ int f2(int one, int two) {
 }
 
 int main() {
+
   int x;
-  // by now, points nowhere (i.e., NOT DEFINED yet)
-  // int (*f)(int, int); // in selfie: int* f;
-  int (*f);
+  int y;
 
-  x = f1(1, 10);
+  int (*fp);
 
-  // let f point to DEFINED function f1
-  f = &f1; // compiler knows f1 and thus if f is called, actually f1 is called
-  x = f(1, 10);
-  return x; //r -9
+  x = f1(42, 42);
+
+  fp = &f1;
+
+  x = fp(55, 77);
+
+  fp = &f2;
+
+  y = fp(66, 99);
+
+  return x + y; // -22 + 33 = 11
 }

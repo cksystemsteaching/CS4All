@@ -3713,6 +3713,7 @@ void gr_statement() {
   int rtype;
   int* variableOrProcedureName;
   int* entry;
+  int* procedure;
 
   // assert: allocatedTemporaries == 0;
 
@@ -3876,14 +3877,34 @@ void gr_statement() {
 
       getSymbol();
 
-      rtype = gr_expression();
+      if (getClass(entry) == VARIABLE) {
 
-      if (ltype != rtype)
-        typeWarning(ltype, rtype);
+        rtype = gr_expression();
 
-      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+        if (ltype != rtype)
+          typeWarning(ltype, rtype);
 
-      tfree(1);
+        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
+        tfree(1);
+
+      } else if (getClass(entry) == FUNCPTR) {
+
+        if (symbol == SYM_AMPERSAND) {
+          getSymbol();
+          if (symbol == SYM_IDENTIFIER) {
+            // copy information from identifier to FUNCPTR
+            procedure = searchSymbolTable(global_symbol_table, identifier, PROCEDURE);
+
+            setAddress(entry, getAddress(procedure));
+
+            getSymbol();
+          } else
+            syntaxErrorSymbol(SYM_IDENTIFIER);
+        } else
+          syntaxErrorSymbol(SYM_AMPERSAND);
+
+      }
 
       numberOfAssignments = numberOfAssignments + 1;
 
