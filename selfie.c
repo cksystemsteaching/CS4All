@@ -430,6 +430,7 @@ int reportUndefinedProcedures();
 // |  5 | value   | VARIABLE: initial value
 // |  6 | address | VARIABLE: offset, PROCEDURE: address, STRING: offset
 // |  7 | scope   | REG_GP, REG_FP
+// |  8 | fctPtr  | Pointer to function this pointer is pointing to
 // +----+---------+
 
 int* getNextEntry(int* entry)  { return (int*) *entry; }
@@ -440,6 +441,7 @@ int  getType(int* entry)       { return        *(entry + 4); }
 int  getValue(int* entry)      { return        *(entry + 5); }
 int  getAddress(int* entry)    { return        *(entry + 6); }
 int  getScope(int* entry)      { return        *(entry + 7); }
+int* getFctPtr(int* entry)     { return (int*) *(entry + 8); }
 
 void setNextEntry(int* entry, int* next)    { *entry       = (int) next; }
 void setString(int* entry, int* identifier) { *(entry + 1) = (int) identifier; }
@@ -449,6 +451,7 @@ void setType(int* entry, int type)          { *(entry + 4) = type; }
 void setValue(int* entry, int value)        { *(entry + 5) = value; }
 void setAddress(int* entry, int address)    { *(entry + 6) = address; }
 void setScope(int* entry, int scope)        { *(entry + 7) = scope; }
+void setFctPtr(int* entry, int* fctPtr)     { *(entry + 8) = (int) fctPtr; }
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -521,11 +524,11 @@ int  load_address(int* variable);
 void load_integer(int value);
 void load_string(int* string);
 
-int  help_call_codegen(int* entry, int* procedure);
+int  help_call_codegen(int* entry, int* procedure, int isFunctionPtr);
 void help_procedure_prologue(int localVariables);
 void help_procedure_epilogue(int parameters);
 
-int  gr_call(int* procedure);
+int  gr_call(int* procedure, int isFunctionPtr);
 int  gr_factor();
 int  gr_term();
 int  gr_simpleExpression();
@@ -541,6 +544,8 @@ void gr_procedure(int* procedure, int type);
 void gr_cstar();
 
 // ------------------------ GLOBAL VARIABLES -----------------------
+int* functionPtrEntry = (int*) 0;
+
 int plusPlusFound = 0;
 
 int allocatedTemporaries = 0; // number of allocated temporaries
@@ -2250,7 +2255,7 @@ void getSymbol() {
 void createSymbolTableEntry(int whichTable, int* string, int line, int class, int type, int value, int address) {
   int* newEntry;
 
-  newEntry = malloc(2 * SIZEOFINTSTAR + 6 * SIZEOFINT);
+  newEntry = malloc(3 * SIZEOFINTSTAR + 6 * SIZEOFINT);
 
   setString(newEntry, string);
   setLineNumber(newEntry, line);
@@ -2258,6 +2263,7 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
   setType(newEntry, type);
   setValue(newEntry, value);
   setAddress(newEntry, address);
+  setFctPtr(newEntry, (int*) 0);
 
   // create entry at head of symbol table
   if (whichTable == GLOBAL_TABLE) {
@@ -2480,6 +2486,8 @@ int lookForStatement() {
     return 0;
   else if (symbol == SYM_EOF)
     return 0;
+  else if (symbol == SYM_LPARENTHESIS)
+    return 0;
   else
     return 1;
 }
@@ -2691,11 +2699,10 @@ int load_address(int* variable){
   int* entry;
 
   entry = getVariableOrProcedure(variable);
+  functionPtrEntry = entry;
 
   talloc();
 
-  printInteger(getAddress(entry));
-  println();
   emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
 
   return INTSTAR_T;
@@ -2757,7 +2764,7 @@ void load_string(int* string) {
   emitIFormat(OP_ADDIU, REG_GP, currentTemporary(), -allocatedMemory);
 }
 
-int help_call_codegen(int* entry, int* procedure) {
+int help_call_codegen(int* entry, int* procedure, int isFunctionPtr) {
   int type;
 
   if (entry == (int*) 0) {
@@ -2833,14 +2840,20 @@ void help_procedure_epilogue(int parameters) {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
-int gr_call(int* procedure) {
+int gr_call(int* procedure, int isFunctionPtr) {
   int* entry;
   int numberOfTemporaries;
   int type;
 
+
   // assert: n = allocatedTemporaries
 
-  entry = getScopedSymbolTableEntry(procedure, PROCEDURE);
+  if (isFunctionPtr == 1) {
+    entry = getScopedSymbolTableEntry(procedure, VARIABLE);
+    entry = getFctPtr(entry);
+  } else {
+    entry = getScopedSymbolTableEntry(procedure, PROCEDURE);
+  }
 
   numberOfTemporaries = allocatedTemporaries;
 
@@ -2874,7 +2887,7 @@ int gr_call(int* procedure) {
     if (symbol == SYM_RPARENTHESIS) {
       getSymbol();
 
-      type = help_call_codegen(entry, procedure);
+      type = help_call_codegen(entry, procedure, isFunctionPtr);
     } else {
       syntaxErrorSymbol(SYM_RPARENTHESIS);
 
@@ -2883,7 +2896,7 @@ int gr_call(int* procedure) {
   } else if (symbol == SYM_RPARENTHESIS) {
     getSymbol();
 
-    type = help_call_codegen(entry, procedure);
+    type = help_call_codegen(entry, procedure, isFunctionPtr);
   } else {
     syntaxErrorSymbol(SYM_RPARENTHESIS);
 
@@ -2915,6 +2928,8 @@ int gr_factor() {
   hasCast = 0;
 
   type = INT_T;
+
+  print((int*) "bla");
 
   while (lookForFactor()) {
     syntaxErrorUnexpected();
@@ -2958,6 +2973,7 @@ int gr_factor() {
     getSymbol();
 
     if (symbol == SYM_IDENTIFIER) {
+
       type = load_address(identifier);
 
       getSymbol();
@@ -3057,7 +3073,7 @@ int gr_factor() {
       getSymbol();
 
       // procedure call: identifier "(" ... ")"
-      type = gr_call(variableOrProcedureName);
+      type = gr_call(variableOrProcedureName, 0);
 
       talloc();
 
@@ -3540,8 +3556,33 @@ void gr_statement() {
       getSymbol();
   }
 
+  if (symbol == SYM_LPARENTHESIS) {
+    getSymbol();
+    if (symbol == SYM_ASTERISK) {
+      getSymbol();
+      if (symbol == SYM_IDENTIFIER) {
+        variableOrProcedureName = identifier;
+        getSymbol();
+        if (symbol == SYM_RPARENTHESIS) {
+          getSymbol();
+          if (symbol == SYM_LPARENTHESIS) {
+            getSymbol();
+            gr_call(variableOrProcedureName, 1);
+
+            // reset return register to initial return value
+            // for missing return expressions
+            emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
+            if (symbol == SYM_SEMICOLON)
+               getSymbol();
+            else
+               syntaxErrorSymbol(SYM_SEMICOLON);
+          }
+        }
+      }
+    }
+  }
   // ["*"]
-  if (symbol == SYM_ASTERISK) {
+  else if (symbol == SYM_ASTERISK) {
     getSymbol();
 
     // "*" identifier
@@ -3629,7 +3670,7 @@ void gr_statement() {
     if (symbol == SYM_LPARENTHESIS) {
       getSymbol();
 
-      gr_call(variableOrProcedureName);
+      gr_call(variableOrProcedureName, 0);
 
       // reset return register to initial return value
       // for missing return expressions
@@ -3649,6 +3690,8 @@ void gr_statement() {
       getSymbol();
 
       rtype = gr_expression();
+
+      setFctPtr(entry, functionPtrEntry);
 
       if (ltype != rtype)
         typeWarning(ltype, rtype);
@@ -7210,9 +7253,13 @@ int selfie() {
   return 0;
 }
 
+void bla(int* (*blabla)(int)){
+  (*blabla)(99999);
+}
+
 int main(int argc, int* argv) {
   int exitCode;
-  int* a;
+  int* (*a)(int);
 
   initSelfie(argc, (int*) argv);
 
@@ -7221,10 +7268,11 @@ int main(int argc, int* argv) {
   print((int *)"This is the Starc Mipsdustries Selfie");
   println();
 
-  a = &load_variable;
-  printInteger(&load_variable);
-  println();
-  printInteger(a);
+  a = &printInteger;
+  bla(a);
+  //printInteger(&load_variable);
+  //println();
+  //printInteger(a);
 
   exitCode = selfie();
 
