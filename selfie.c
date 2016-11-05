@@ -115,6 +115,7 @@ void putCharacter(int c);
 
 void print(int* s);
 void println();
+void printd(int* text, int value);
 
 void printCharacter(int c);
 void printString(int* s);
@@ -5473,9 +5474,8 @@ int isPageMapped(int* table, int page) {
 
 int isValidVirtualAddress(int vaddr) {
 
-	print((int*)"Valid virtual adress ");
-	printInteger(vaddr);
-	println();
+	printd((int*)"Valid virtual adress:",vaddr);
+
   if (vaddr >= 0)
     if (vaddr < VIRTUALMEMORYSIZE)
       // memory must be word-addressed for lack of byte-sized data type
@@ -7332,3 +7332,12 @@ int main(int argc, int* argv) {
   } else
     return exitCode;
 }
+
+void printd(int* text, int value) {
+  print(text);
+	println();
+	printInteger(value);
+	println();
+}
+
+
