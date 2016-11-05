@@ -1156,7 +1156,7 @@ int STATUS_SUSPENDED = 0;
 int STATUS_RUNNING = 1;
 int STATUS_READY = 2;
 int STATUS_WAITING = 3;
-int STATUS_FINISHED = 4;
+int STATUS_EXITING = 4;
 
 // context struct:
 // +---+--------+
@@ -5073,13 +5073,11 @@ void emitSchedYield() {
 
 void implementSchedYield() { // TODO: should we change method type to int?
 
+	print((int*) "Now yielding context: "); printInteger(getID(currentContext)); println();
+
+	throwException(EXCEPTION_TIMER,0);
 }
 
-int sched_yield() { // TODO: are both methods sched_yield AND implementSchedYield() needed?
-  // TODO: sched_yield() causes the calling thread to relinquish (i.e. "give up") the CPU
-  // the thread is moved to the end of the queue for its static priority and a new thread gets to run
-  return 0; // return 0 on success, -1 otherwise
-}
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
@@ -5203,6 +5201,7 @@ int doSwitch(int toID) {
     printInteger(toID);
     print((int*) " not found");
     println();
+    traverseContexts(usedContexts);
   }
 
   return fromID;
@@ -5235,7 +5234,7 @@ int mipster_switch(int toID) {
 
   runUntilException();
 
-  return getID(currentContext);
+  return fromID;
 }
 
 int hypster_switch(int toID) {
@@ -6351,11 +6350,6 @@ void runUntilException() {
 
   trap = 0;
 
-  if (trap != 0) {
-    print((int*) "TRAP");
-    println();
-  }
-
   while (trap == 0) {
     fetch();
     decode();
@@ -6589,6 +6583,7 @@ void switchContext(int* from, int* to) {
 
 void freeContext(int* context) {
   setNextContext(context, freeContexts);
+  setPrevContext(context, 0);
 
   freeContexts = context;
 
@@ -6618,9 +6613,9 @@ int* deleteContext(int* context, int* from) {
 
   freeContext(context);
 
-  print((int*) "Deleted Context "); printInteger(getID(context)); println();
+  //print((int*) "Deleted Context "); printInteger(getID(context)); println();
 
-  traverseContexts(from);
+  //traverseContexts(from);
 
   return from;
 }
@@ -6865,27 +6860,26 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int exceptionNumber;
   int exceptionParameter;
   int frame;
-  int deleteFromContext = 0;
+  int fromParentID;
 
   while (1) {
     fromID = selfie_switch(toID);
 
-    if (debugLocally) {
-      print((int*) "from ctx ");
-      printInteger(fromID);
-      println();
-    }
+    //traverseContexts(usedContexts);
+    //print((int*)"current context trap: "); printInteger(getID(currentContext));println();
 
     fromContext = findContext(fromID, usedContexts);
+    fromParentID = getParent(fromContext);
+
+    if(getStatus(fromContext) == STATUS_EXITING) {
+    	usedContexts = deleteContext(fromContext, usedContexts);
+    }
 
     // assert: fromContext must be in usedContexts (created here)
-
-    if (getParent(fromContext) != selfie_ID()) {
-
-      print((int*) "In exception parent"); printInteger(getID(getParent(fromContext)));
+    if (fromParentID != selfie_ID()) {
 
       // switch to parent which is in charge of handling exceptions
-      toID = getParent(fromContext);
+      toID = fromParentID;
     } else {
       // we are the parent in charge of handling exceptions
       savedStatus = selfie_status();
@@ -6913,15 +6907,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         toID = schedule();
 
-        // CAUTION: doSwitch() modifies the global variable registers
-        // but some compilers dereference the lvalue *(registers+REG_V1)
-        // before evaluating the rvalue doSwitch()
-        fromID = doSwitch(toID);
-
-        // use REG_V1 instead of REG_V0 to avoid race condition with interrupt
-        *(registers+REG_V1) = fromID;
-
-        deleteContext(findContext(fromID, usedContexts), usedContexts);
+        setStatus(currentContext, STATUS_EXITING);
 
       } else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
@@ -6952,7 +6938,7 @@ int schedule() {
     toId = getID(getNextContext(currentContext));
   }
 
-  //print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
+  print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
 
   //traverseContexts(usedContexts);
 
@@ -7069,12 +7055,11 @@ int boot(int argc, int* argv) {
     repeats = repeats - 1;
   }
 
-  if (debugLocally) {
-    traverseContexts(usedContexts);
-  }
+  traverseContexts(usedContexts);
+  printInteger(contextCount); println();
 
   // mipsters and hypsters handle page faults
-  exitCode = runOrHostUntilExitWithPageFaultHandling(getID(usedContexts));
+  exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
 
   print(selfieName);
   print((int*) ": this is selfie's ");
