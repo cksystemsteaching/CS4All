@@ -427,7 +427,7 @@ int reportUndefinedProcedures();
 // |  0 | next    | pointer to next entry
 // |  1 | string  | identifier string, string literal
 // |  2 | line#   | source line number
-// |  3 | class   | VARIABLE, PROCEDURE, STRING
+// |  3 | class   | VARIABLE, PROCEDURE, STRING, FUNCPTR
 // |  4 | type    | INT_T, INTSTAR_T, VOID_T
 // |  5 | value   | VARIABLE: initial value
 // |  6 | address | VARIABLE: offset, PROCEDURE: address, STRING: offset
@@ -458,6 +458,7 @@ void setScope(int* entry, int scope)        { *(entry + 7) = scope; }
 int VARIABLE  = 1;
 int PROCEDURE = 2;
 int STRING    = 3;
+int FUNCPTR   = 4;
 
 // types
 int INT_T     = 1;
@@ -2271,6 +2272,7 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
 
     if (class == VARIABLE)
       numberOfGlobalVariables = numberOfGlobalVariables + 1;
+      // Stefan TODO: Also count FUNCPTRs as variables
     else if (class == PROCEDURE)
       numberOfProcedures = numberOfProcedures + 1;
     else if (class == STRING)
@@ -2309,6 +2311,8 @@ int* getScopedSymbolTableEntry(int* string, int class) {
   else if (class == PROCEDURE)
     // library procedures override declared or defined procedures
     entry = searchSymbolTable(library_symbol_table, string, PROCEDURE);
+  else if (class == FUNCPTR)
+    entry = searchSymbolTable(local_symbol_table, string, FUNCPTR);
   else
     entry = (int*) 0;
 
@@ -2643,6 +2647,50 @@ int* getVariable(int* variable) {
   return entry;
 }
 
+int* getVariableOrProcedure(int* variable) {
+  int* entry;
+
+  entry = getScopedSymbolTableEntry(variable, VARIABLE);
+
+  if (entry == (int*) 0) {
+
+    entry = getScopedSymbolTableEntry(variable, PROCEDURE);
+
+    if (entry == (int*) 0) {
+      printLineNumber((int*) "error", lineNumber);
+      print(variable);
+      print((int*) " undeclared");
+      println();
+
+      exit(-1);
+    }
+  }
+
+  return entry;
+}
+
+int* getVariableOrFuncPtr(int* variable) {
+  int* entry;
+
+  entry = getScopedSymbolTableEntry(variable, VARIABLE);
+
+  if (entry == (int*) 0) {
+
+    entry = getScopedSymbolTableEntry(variable, FUNCPTR);
+
+    if (entry == (int*) 0) {
+      printLineNumber((int*) "error", lineNumber);
+      print(variable);
+      print((int*) " undeclared");
+      println();
+
+      exit(-1);
+    }
+  }
+
+  return entry;
+}
+
 int load_variable(int* variable) {
   int* entry;
 
@@ -2750,12 +2798,16 @@ int load_variable_with_post_dec(int* variable) {
 }
 
 void load_address(int* variable) {
- int* entry;
+  int* entry;
 
- entry = getVariable(variable);
+  entry = getVariableOrProcedure(variable);
 
- talloc();
- emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
+  talloc();
+
+  if (getClass(entry) == VARIABLE)
+    emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
+  else
+    emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), getAddress(entry));
 
 }
 
@@ -2899,6 +2951,9 @@ int gr_call(int* procedure) {
   // assert: n = allocatedTemporaries
 
   entry = getScopedSymbolTableEntry(procedure, PROCEDURE);
+
+  if (entry == (int*) 0)
+    entry = getScopedSymbolTableEntry(procedure, FUNCPTR);
 
   numberOfTemporaries = allocatedTemporaries;
 
@@ -3815,7 +3870,7 @@ void gr_statement() {
 
     // identifier = expression
     } else if (symbol == SYM_ASSIGN) {
-      entry = getVariable(variableOrProcedureName);
+      entry = getVariableOrFuncPtr(variableOrProcedureName);
 
       ltype = getType(entry);
 
@@ -3917,8 +3972,28 @@ void gr_variable(int offset) {
     createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset);
 
     getSymbol();
+  } else if (symbol == SYM_LPARENTHESIS) {
+    getSymbol();
+
+    if (symbol == SYM_ASTERISK) {
+      getSymbol();
+
+      if (symbol == SYM_IDENTIFIER) {
+        createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, FUNCPTR, type, 0, offset);
+        getSymbol();
+      } else
+        syntaxErrorSymbol(SYM_IDENTIFIER);
+
+    } else
+      syntaxErrorSymbol(SYM_ASTERISK);
+
+    if (symbol == SYM_RPARENTHESIS)
+      getSymbol();
+    else
+      syntaxErrorSymbol(SYM_RPARENTHESIS);
+
   } else {
-    syntaxErrorSymbol(SYM_IDENTIFIER);
+    syntaxErrorUnexpected();
 
     createSymbolTableEntry(LOCAL_TABLE, (int*) "missing variable name", lineNumber, VARIABLE, type, 0, offset);
   }

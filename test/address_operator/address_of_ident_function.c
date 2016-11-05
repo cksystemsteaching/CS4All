@@ -17,5 +17,5 @@ int main() {
 
 	swap(&a, &b);
 
-	return *b; //44
+	return b; //44
 }
