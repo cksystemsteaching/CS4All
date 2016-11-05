@@ -2871,18 +2871,38 @@ int *getProcedure(int *procedure) {
     return entry;
 }
 
-void load_procedure_address(int *procedure) {
+void load_procedure_address(int value, int offset) {
+
+    // load the power of 15. Can also be done with numbers larger than 2^15, but it must not be smaller.
+    // That is, instructions must be emitted in load_integer() in order to load function addresses with vaddr >= 2^15
+    // when fix-ups are done later.
+    load_integer(twoToThePowerOf(15));
+
+    // set the immediate value of the very first OP_ADDIU instruction to the given value.
+    // This is necessary for including the load operation in the fixup-chain.
+    storeBinary(binaryLength - offset,
+                encodeIFormat(OP_ADDIU, REG_ZR,
+                              getRT(loadBinary(binaryLength - offset)),
+                              value));
+}
+
+void load_procedure(int *procedure) {
     int *entry;
     int type;
+    int offset;
+
+    // the offset is the address space between both OP_ADDIU instructions emitted by load_integer()
+    offset = 7 * WORDSIZE;
 
     entry = getScopedSymbolTableEntry(procedure, PROCEDURE);
-    talloc();
 
     if (entry == (int*) 0) {
         // if there is no entry for the procedure yet, create one
         type = INT_T;
+
         createSymbolTableEntry(GLOBAL_TABLE, procedure, lineNumber, PROCEDURE, type, 0, binaryLength);
-        emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 0);
+
+        load_procedure_address(REG_ZR, offset);
 
         // new procedure needs fixup
         setFixup(getProcedure(procedure), 1);
@@ -2891,19 +2911,20 @@ void load_procedure_address(int *procedure) {
         if (getAddress(entry) == 0) {
             // procedure declared or called, but not yet defined
             setAddress(entry, binaryLength);
-            emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), REG_ZR);
 
-            // procedure needs fixup
+            load_procedure_address(REG_ZR, offset);
+
+            // new procedure needs fixup
             setFixup(entry, 1);
         }
         else if (needsFixup(entry)) {
-            // create fixup chain
-            emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), getAddress(entry) / WORDSIZE);
-            setAddress(entry, binaryLength - 2 * WORDSIZE);
+            load_procedure_address(getAddress(entry) / WORDSIZE, offset);
+
+            setAddress(entry, binaryLength - offset);
         }
         else {
-            // procedure is already defined
-            emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), getAddress(entry));
+            // procedure is already defined and thus can be loaded directly
+            load_integer(getAddress(entry));
         }
     }
 }
@@ -3250,7 +3271,7 @@ int gr_factor() {
             }
             else {
                 // Otherwise, treat the identifier as a (possibly still undeclared/undefined) function
-                load_procedure_address(identifier);
+                load_procedure(identifier);
             }
             getSymbol();
         }
@@ -4827,42 +4848,31 @@ void fixup_relative(int fromAddress) {
 }
 
 void fixup_absolute(int fromAddress, int toAddress) {
-    //print((int*)"fixup_absolute:");
-    //println();
-    //print((int*)"fromAddress:");
-    //printInteger(fromAddress);
-    //println();
-    //print((int*)"toAddress:");
-    //printInteger(toAddress);
-    //println();
-    //println();
+
     storeBinary(fromAddress,
                 encodeJFormat(getOpcode(loadBinary(fromAddress)), toAddress / WORDSIZE));
 }
 
-void fixup_absolute_func(int fromAddress, int toAddress) {
-    //print((int*)"fixup_absolute_func:");
-    //println();
-    //print((int*)"fromAddress:");
-    //printInteger(fromAddress);
-    //println();
-    //print((int*)"toAddress:");
-    //printInteger(toAddress);
-    //println();
-    //println();
+void fixup_absolute_load(int fromAddress, int toAddress) {
     int rt;
+    int offset;
+
+    // The offset is the address space between both OP_ADDIU operations emitted
+    // during load_procedure_address()
+
+    offset = 6 * WORDSIZE;
+
     rt = getRT(loadBinary(fromAddress));
-    storeBinary(fromAddress,
-                encodeIFormat(getOpcode(loadBinary(fromAddress)), REG_ZR, rt, toAddress));
+
+    // Finally, the fixup is done for both OP_ADDIU operations
+    storeBinary(fromAddress, encodeIFormat(
+            getOpcode(loadBinary(fromAddress)), REG_ZR, rt, rightShift(toAddress, 14)));
+
+    storeBinary(fromAddress + offset, encodeIFormat(
+            getOpcode(loadBinary(fromAddress)), REG_ZR, rt, rightShift(leftShift(toAddress, 18), 18)));
 }
 
 void fixlink_absolute(int fromAddress, int toAddress) {
-    //print((int*)"fixlink_absolute - ");
-    //print((int*)"fromAddress:");
-    //printInteger(fromAddress);
-    //print((int*)", toAddress:");
-    //printInteger(toAddress);
-    //println();
 
     int previousAddress;
     int previousOpcode;
@@ -4874,7 +4884,7 @@ void fixlink_absolute(int fromAddress, int toAddress) {
         if (previousOpcode == OP_ADDIU) {
             previousAddress = getImmediate(loadBinary(fromAddress)) * WORDSIZE;
 
-            fixup_absolute_func(fromAddress, toAddress);
+            fixup_absolute_load(fromAddress, toAddress);
         }
         else {
             previousAddress = getInstrIndex(loadBinary(fromAddress)) * WORDSIZE;

@@ -1,6 +1,4 @@
 //used for simple integer output in range [0 - 99];
-void dumbITOA(int number);
-
 void dumbITOA(int number) {
     int i;
     int *buff;
@@ -22,18 +20,19 @@ void dumbITOA(int number) {
     write(1, buff, 20);
 }
 
-int meta(int a, int b, int *func);
-
-int main(int argc, int *argv)  {
-    int a;
-    int *ptr;
-    a = 4;
-    ptr = &a;
-    *ptr = 99;
-    dumbITOA(a);
+int add(int a, int b) {
+    return a +b ;
 }
 
-void fun() {
+int sub(int a, int b);
+
+int mult(int a, int b);
+
+int meta(int a, int b, int *func);
+
+
+
+int main(int argc, int *argv)  {
     int a;
     int b;
     int *func;
@@ -45,38 +44,36 @@ void fun() {
     *funcarray = &add;
     *(funcarray+1) = &sub;
     *(funcarray+2) = &mult;
-    *(funcarray+3) = &div;
+    *(funcarray+3) = &divi;
 
     func = funcarray;
 
-    while (func != funcarray + 4) {
+    while (func != funcarray+4) {
         dumbITOA(meta(a, b, *func));
         ++func;
     }
-}
 
-int add(int a, int b) {
-    return a + b;
-}
-
-int sub(int a, int b) {
-    return a - b;
+    dumbITOA(a);
+    func = &a;
+    *func = 99;
+    dumbITOA(a);
 }
 
 int mult(int a, int b) {
     return a * b;
 }
 
-int div(int a, int b) {
+int sub(int a, int b) {
+    return a - b;
+}
+
+int divi(int a, int b) {
     return a / b;
 }
 
-int meta(int a, int b, int *fun) {
-    return fun(a, b);
+int meta(int a, int b, int *func) {
+    return func(a, b);
 }
-
-
-
 
 
 
