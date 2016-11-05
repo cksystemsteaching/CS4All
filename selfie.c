@@ -6526,7 +6526,12 @@ int* allocateContext(int ID, int parentID) {
   setRegHi(context, 0);
   setRegLo(context, 0);
 
-	setSTCode(context, zalloc(maxBinaryLength*WORDSIZE));
+	// only allocate if not first 
+	if(stCode == (int*) 0){
+		stCode = zalloc(maxBinaryLength*WORDSIZE);
+	}
+	setSTCode(context, stCode);
+
   // allocate zeroed memory for page table
   // TODO: save and reuse memory for page table
   setPT(context, zalloc((VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE)/2));
