@@ -6538,7 +6538,7 @@ int* allocateContext(int ID, int parentID) {
 
 	// only allocate if not first 
 	if(stCode == (int*) 0){
-		stCode = zalloc(maxBinaryLength*WORDSIZE);
+		stCode = zalloc(maxBinaryLength / PAGESIZE * WORDSIZE);
 	}
 
 	setSTCode(context, stCode);
