@@ -5502,6 +5502,16 @@ void printPageTable(int *pt) {
     }
 }
 
+void printSegmentTable(int *st) {
+    int i;
+    i = 0;
+    while (i < 512) {
+        printInteger(*(st+i));
+        println();
+        i = i + 1;
+    }
+}
+
 // leftShift(15) to remove segment number in vaddr, rightShift(15 + 12)
 // to remove offset in vaddr => only page number of vaddr remains
 int getPageOfVirtualAddress(int vaddr) {
@@ -5517,13 +5527,20 @@ int getSegmentOfVirtualAdress(int vaddr) {
 
 // Load the page table of the given segment.
 int *loadSPTbySegment(int *segtable, int segment) {
+
+    // if the required segment is not allocated yet, then allocate it.
+    if ((int*) *(segtable + segment) == (int*)0) {
+        *(segtable + segment) = (int) zalloc((VIRTUALMEMORYSIZE * WORDSIZE) / (PAGESIZE * SEGMENTCOUNT));
+    }
     return (int*) *(segtable + segment);
 }
 
 // Load the page table of the given vaddr.
 // The segment of the vaddr must therefore be computed first.
 int *loadSPT(int *segtable, int vaddr) {
-    return (int*) *(segtable + getSegmentOfVirtualAdress(vaddr));
+    int segment;
+    segment = getSegmentOfVirtualAdress(vaddr);
+    return loadSPTbySegment(segtable, segment);
 }
 
 int isVirtualAddressMapped(int* table, int vaddr) {
@@ -6600,11 +6617,11 @@ int* allocateContext(int ID, int parentID) {
   *segmentTable = (int) codePT;
 
   // All other segment page-tables have to be private for every process.
-  i = 1;
-  while (i < SEGMENTCOUNT) {
-      *(segmentTable + i) = (int) zalloc((VIRTUALMEMORYSIZE * WORDSIZE) / (PAGESIZE * SEGMENTCOUNT));
-      i = i + 1;
-  }
+  //i = 1;
+  //while (i < SEGMENTCOUNT) {
+  //    *(segmentTable + i) = (int) zalloc((VIRTUALMEMORYSIZE * WORDSIZE) / (PAGESIZE * SEGMENTCOUNT));
+  //    i = i + 1;
+  //}
 
   // Set the segment table for the process context
   setST(context, segmentTable);
@@ -7107,10 +7124,9 @@ int boot(int argc, int* argv) {
 
   // resetting interpreter is only necessary for mipsters
   resetInterpreter();
-
   resetMicrokernel();
 
-    counter = 0;
+  counter = 0;
     while (counter < INSTANCE_COUNT) {
         currentID = selfie_create();
 
@@ -7128,6 +7144,7 @@ int boot(int argc, int* argv) {
         down_mapPageTable(usedContexts);
         counter = counter + 1;
     }
+
   // mipsters and hypsters handle page fault
   exitCode = runOrHostUntilExitWithPageFaultHandling(currentID);
 
