@@ -48,7 +48,8 @@ test_pre_increment:
 	../selfie -c pre_increment/postinc_deref_expr_1.c -d 1 | grep -E 'exit code 1235'
 
 test_address_of:
-	../selife -c address_operator/address_of_function_pointer.c -d 1 |grep -E 'exit code 51'
+	../selfie -c address_operator/address_of_function_pointer.c -d 1 |grep -E 'exit code 11'
+	../selfie -c address_operator/address_of_function_pointer_void.c -d 1 |grep -E 'exit code 44'
 	../selfie -c address_operator/address_of_ident_stack.c -d 1 | grep -E 'exit code 7'
 	../selfie -c address_operator/address_of_ident_glob.c -d 1 | grep -E 'exit code 334'
 	../selfie -c address_operator/address_of_ident_array_0.c -d 1 | grep -E 'exit code 8'

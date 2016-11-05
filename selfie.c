@@ -129,6 +129,8 @@ int roundUp(int n, int m);
 
 int* zalloc(int size);
 
+int or(int a, int b);
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int CHAR_EOF          = -1; // end of file
@@ -1765,6 +1767,14 @@ int* zalloc(int size) {
   return memory;
 }
 
+int or(int a, int b) {
+  if (a)
+    return 1;
+  if (b)
+    return 1;
+  return 0;
+}
+
 // *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~
 // -----------------------------------------------------------------
 // ---------------------    C O M P I L E R    ---------------------
@@ -2272,7 +2282,8 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
 
     if (class == VARIABLE)
       numberOfGlobalVariables = numberOfGlobalVariables + 1;
-      // Stefan TODO: Also count FUNCPTRs as variables
+    else if (class == FUNCPTR)
+      numberOfGlobalVariables = numberOfGlobalVariables + 1;
     else if (class == PROCEDURE)
       numberOfProcedures = numberOfProcedures + 1;
     else if (class == STRING)
@@ -2804,10 +2815,7 @@ void load_address(int* variable) {
 
   talloc();
 
-  if (getClass(entry) == VARIABLE)
-    emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
-  else
-    emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), getAddress(entry));
+  emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
 
 }
 
@@ -3977,8 +3985,12 @@ int gr_type() {
 
       getSymbol();
     }
+  } else if (symbol == SYM_VOID) {
+    type = VOID_T;
+
+    getSymbol();
   } else
-    syntaxErrorSymbol(SYM_INT);
+    syntaxErrorUnexpected();
 
   return type;
 }
@@ -4203,7 +4215,7 @@ void gr_procedure(int* procedure, int type) {
 
     localVariables = 0;
 
-    while (symbol == SYM_INT) {
+    while (or(symbol == SYM_INT, symbol == SYM_VOID)) {
       localVariables = localVariables + 1;
 
       gr_variable(-localVariables * WORDSIZE);

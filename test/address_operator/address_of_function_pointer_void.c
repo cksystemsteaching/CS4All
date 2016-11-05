@@ -9,11 +9,14 @@ int main() {
 
 	int a;
 	int b;
+  void (*fp);
 
 	a = 44;
 	b = 42;
 
-	swap(&a, &b);
+  fp = &swap;
+
+	fp(&a, &b);
 
 	return b; //44
 }
