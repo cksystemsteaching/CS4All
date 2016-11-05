@@ -5473,6 +5473,9 @@ int isPageMapped(int* table, int page) {
 
 int isValidVirtualAddress(int vaddr) {
 
+	print((int*)"Valid virtual adress ");
+	printInteger(vaddr);
+	println();
   if (vaddr >= 0)
     if (vaddr < VIRTUALMEMORYSIZE)
       // memory must be word-addressed for lack of byte-sized data type
@@ -6508,6 +6511,7 @@ int createID(int seed) {
 int* allocateContext(int ID, int parentID) {
   int* context;
 
+
   if (freeContexts == (int*) 0)
     context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
   else {
@@ -6536,13 +6540,12 @@ int* allocateContext(int ID, int parentID) {
 	if(stCode == (int*) 0){
 		stCode = zalloc(maxBinaryLength*WORDSIZE);
 	}
+
 	setSTCode(context, stCode);
 
   // allocate zeroed memory for page table
   // TODO: save and reuse memory for page table
-  setPT(context, zalloc((VIRTUALMEMORYSIZE-maxBinaryLength) / PAGESIZE * WORDSIZE));
- 	
-
+	setPT(context, zalloc((VIRTUALMEMORYSIZE-maxBinaryLength) / PAGESIZE * WORDSIZE));
 
 	printInteger(getPT(context));
   // heap starts where it is safe to start
@@ -7091,27 +7094,40 @@ int boot(int argc, int* argv) {
 			
 		if(count==0)
 			firstID=initID;
-		if (usedContexts == (int*) 0)
+		if (usedContexts == (int*) 0){
 		  // create duplicate of the initial context on our boot level
 		  usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+		}
+
 		if (count==0){
+
 			up_loadBinary(getSTCode(usedContexts));
 			print((int*)"binary loaded");			
+			println();
+
 			up_loadArguments(getPT(usedContexts), argc, argv);
-				print((int*)"arguments loaded");
+			print((int*)"arguments loaded");
+			println();
+
 		}else{
-					print((int*)"other");
+			print((int*)"other");
+			println();
 			//setPT(findContext(initID,usedContexts),getPT(findContext(firstID,usedContexts)));
 		}
+
+
+
 		// propagate page table of initial context to microkernel boot level
 		down_mapPageTable(usedContexts);
 
-					print((int*)"map after");
+		print((int*)"map page table after");
+		println();
 		count = count + 1;
 	}
 
 	down_mapCodeSegment(usedContexts);
-	
+	print((int*)"map segment table after");
+	println();
 
   // mipsters and hypsters handle page faults
   exitCode = runOrHostUntilExitWithPageFaultHandling(firstID);
