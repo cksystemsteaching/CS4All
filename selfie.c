@@ -1051,7 +1051,8 @@ int reg_hi = 0; // hi register for multiplication/division
 int reg_lo = 0; // lo register for multiplication/division
 
 int* pt = (int*) 0; // page table
-
+int* stCode =(int*)0;	
+int*	stStack =(int*)0;
 int brk = 0; // break between code, data, and heap
 
 int trap = 0; // flag for creating a trap
@@ -1113,7 +1114,8 @@ void resetInterpreter() {
   reg_lo = 0;
 
   pt = (int*) 0;
-
+	stCode =(int*)0;	
+	stStack =(int*)0;
   brk = maxBinaryLength;
 
   trap = 0;
@@ -1178,9 +1180,12 @@ int  getPC(int* context)          { return        *(context + 3); }
 int* getRegs(int* context)        { return (int*) *(context + 4); }
 int  getRegHi(int* context)       { return        *(context + 5); }
 int  getRegLo(int* context)       { return        *(context + 6); }
-int* getPT(int* context)          { return (int*) *(context + 7); }
-int  getBreak(int* context)       { return        *(context + 8); }
-int  getParent(int* context)      { return        *(context + 9); }
+int* getPT(int* context)          { return (int*) *(context+7); 	}
+int* getSTCode(int* context)      { return (int*) *(context + 8); }
+int* getSTStack(int* context)     { return (int*) *(context +9); 	}
+int  getBreak(int* context)       { return        *(context + 10); }
+int  getParent(int* context)      { return        *(context + 11); }
+
 
 void setNextContext(int* context, int* next) { *context       = (int) next; }
 void setPrevContext(int* context, int* prev) { *(context + 1) = (int) prev; }
@@ -1190,8 +1195,11 @@ void setRegs(int* context, int* regs)        { *(context + 4) = (int) regs; }
 void setRegHi(int* context, int reg_hi)      { *(context + 5) = reg_hi; }
 void setRegLo(int* context, int reg_lo)      { *(context + 6) = reg_lo; }
 void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
-void setBreak(int* context, int brk)         { *(context + 8) = brk; }
-void setParent(int* context, int id)         { *(context + 9) = id; }
+void setSTCode(int* context, int* st)            { *(context + 8) = (int) st; }
+void setSTStack(int* context, int* st)            { *(context + 9) = (int) st; }
+void setBreak(int* context, int brk)         { *(context + 10) = brk; }
+void setParent(int* context, int id)         { *(context + 11) = id; }
+
 
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
@@ -6266,7 +6274,10 @@ void fetch() {
   // assert: isValidVirtualAddress(pc) == 1
   // assert: isVirtualAddressMapped(pt, pc) == 1
 
-  ir = loadVirtualMemory(pt, pc);
+  ir = loadVirtualMemory(stCode, pc);
+	printInteger((int*)pc);
+	println();
+	
 }
 
 void execute() {
@@ -6515,10 +6526,12 @@ int* allocateContext(int ID, int parentID) {
   setRegHi(context, 0);
   setRegLo(context, 0);
 
+	setSTCode(context, zalloc(maxBinaryLength*WORDSIZE));
   // allocate zeroed memory for page table
   // TODO: save and reuse memory for page table
-  setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
-
+  setPT(context, zalloc((VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE)/2));
+ 	
+	printInteger(getPT(context));
   // heap starts where it is safe to start
   setBreak(context, maxBinaryLength);
 
@@ -6568,6 +6581,7 @@ void switchContext(int* from, int* to) {
   reg_hi    = getRegHi(to);
   reg_lo    = getRegLo(to);
   pt        = getPT(to);
+	stCode		= getSTCode(to);
   brk       = getBreak(to);
 }
 
@@ -7014,6 +7028,7 @@ int boot(int argc, int* argv) {
   int exitCode;
 	int count;
 	int firstID;
+	
 	count=0;
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -7034,20 +7049,27 @@ int boot(int argc, int* argv) {
 		
 	while(count < processCallNumber){
 		// create initial context on microkernel boot level
+	
 		initID = selfie_create();
+			
 		if(count==0)
 			firstID=initID;
 		if (usedContexts == (int*) 0)
 		  // create duplicate of the initial context on our boot level
 		  usedContexts = createContext(initID, selfie_ID(), (int*) 0);
-
-		up_loadBinary(getPT(usedContexts));
-	
-		up_loadArguments(getPT(usedContexts), argc, argv);
-
+		if (count==0){
+			up_loadBinary(getSTCode(usedContexts));
+			print((int*)"binary loaded");			
+			up_loadArguments(getPT(usedContexts), argc, argv);
+				print((int*)"arguments loaded");
+		}else{
+					print((int*)"other");
+			//setPT(findContext(initID,usedContexts),getPT(findContext(firstID,usedContexts)));
+		}
 		// propagate page table of initial context to microkernel boot level
 		down_mapPageTable(usedContexts);
 
+					print((int*)"map after");
 		count = count + 1;
 	}
 	
