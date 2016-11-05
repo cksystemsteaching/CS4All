@@ -4035,7 +4035,7 @@ void selfie_compile() {
   emitWrite();
   emitOpen();
   emitMalloc();
-  //emitSchedYield();
+  emitSchedYield();
 
   emitID();
   emitCreate();
