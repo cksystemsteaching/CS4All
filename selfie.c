@@ -1251,6 +1251,7 @@ void up_loadArguments(int* table, int argc, int* argv);
 void mapUnmappedPages(int* table);
 
 void down_mapPageTable(int* context);
+void down_mapCodeSegment(int* context);
 
 int runUntilExitWithoutExceptionHandling(int toID);
 int runOrHostUntilExitWithPageFaultHandling(int toID);
@@ -1762,6 +1763,7 @@ int roundUp(int n, int m) {
 }
 
 int* zalloc(int size) {
+
   // this procedure is only executed at boot level zero
   // zalloc allocates size bytes rounded up to word size
   // and then zeroes that memory, similar to calloc, but
@@ -5470,6 +5472,7 @@ int isPageMapped(int* table, int page) {
 }
 
 int isValidVirtualAddress(int vaddr) {
+
   if (vaddr >= 0)
     if (vaddr < VIRTUALMEMORYSIZE)
       // memory must be word-addressed for lack of byte-sized data type
@@ -6275,12 +6278,13 @@ void fetch() {
   // assert: isVirtualAddressMapped(pt, pc) == 1
 
   ir = loadVirtualMemory(stCode, pc);
-	printInteger((int*)pc);
-	println();
+	//printInteger((int*)pc);
+	//println();
 	
 }
 
 void execute() {
+
   if (debug) {
     if (interpret) {
       print(binaryName);
@@ -6526,6 +6530,8 @@ int* allocateContext(int ID, int parentID) {
   setRegHi(context, 0);
   setRegLo(context, 0);
 
+
+
 	// only allocate if not first 
 	if(stCode == (int*) 0){
 		stCode = zalloc(maxBinaryLength*WORDSIZE);
@@ -6534,8 +6540,10 @@ int* allocateContext(int ID, int parentID) {
 
   // allocate zeroed memory for page table
   // TODO: save and reuse memory for page table
-  setPT(context, zalloc((VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE)/2));
+  setPT(context, zalloc((VIRTUALMEMORYSIZE-maxBinaryLength) / PAGESIZE * WORDSIZE));
  	
+
+
 	printInteger(getPT(context));
   // heap starts where it is safe to start
   setBreak(context, maxBinaryLength);
@@ -6793,7 +6801,7 @@ void down_mapPageTable(int* context) {
     page = page + 1;
   }
 
-  page = (VIRTUALMEMORYSIZE - WORDSIZE) / PAGESIZE;
+  page = (VIRTUALMEMORYSIZE - maxBinaryLength - WORDSIZE) / PAGESIZE;
 
   while (isPageMapped(getPT(context), page)) {
     selfie_map(getID(context), page, getFrameForPage(getPT(context), page));
@@ -6801,6 +6809,30 @@ void down_mapPageTable(int* context) {
     page = page - 1;
   }
 }
+
+
+void down_mapCodeSegment(int* context) {
+  int page;
+
+  // assert: context page table is only mapped from beginning up and end down
+
+  page = 0;
+
+  while (isPageMapped(getSTCode(context), page)) {
+    selfie_map(getID(context), page, getFrameForPage(getSTCode(context), page));
+
+    page = page + 1;
+  }
+
+  page = (maxBinaryLength - WORDSIZE) / PAGESIZE;
+
+  while (isPageMapped(getSTCode(context), page)) {
+    selfie_map(getID(context), page, getFrameForPage(getSTCode(context), page));
+
+    page = page - 1;
+  }
+}
+
 
 int runUntilExitWithoutExceptionHandling(int toID) {
   // works only with mipsters
@@ -7077,6 +7109,8 @@ int boot(int argc, int* argv) {
 					print((int*)"map after");
 		count = count + 1;
 	}
+
+	down_mapCodeSegment(usedContexts);
 	
 
   // mipsters and hypsters handle page faults
