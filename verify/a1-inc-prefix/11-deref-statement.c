@@ -8,5 +8,5 @@ int main(int argc, int* argv) {
   i = malloc(8); // 2x int
   *(i+1)=41; // msg
   ++*(i+1); // msg
-  return *(i+1);
+  return *(i+1); // msg
 }

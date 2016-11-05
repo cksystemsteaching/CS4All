@@ -5,7 +5,6 @@
 // assemblyNg: 66
 int main(int argc, int* argv) {
   int* i;
-  //initLibrary();
   i = malloc(8); // 2x int
   *(i+1)=41; // msg
   if( ++*(i+1) == 42)// msg
