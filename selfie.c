@@ -2485,6 +2485,10 @@ int lookForStatement() {
     return 0;
   else if (symbol == SYM_RETURN)
     return 0;
+  else if (symbol == SYM_PLUSPLUS)
+    return 0;
+  else if (symbol == SYM_MINUSMINUS)
+    return 0;
   else if (symbol == SYM_EOF)
     return 0;
   else
@@ -3497,6 +3501,8 @@ void gr_return() {
 void gr_statement() {
   int ltype;
   int rtype;
+  int hasPrefixOperator;
+  int operator;
   int* variableOrProcedureName;
   int* entry;
 
@@ -3509,6 +3515,19 @@ void gr_statement() {
       exit(-1);
     else
       getSymbol();
+  }
+
+  hasPrefixOperator = 0;
+
+  // increment/decrement?
+  if (isIncrementOrDecrement()) {
+    operator = symbol;
+    getSymbol();
+
+    if (isLvalue())
+      hasPrefixOperator = 1;
+    else
+      syntaxErrorMessage((int*) "increment/decrement operator only with lvalues");
   }
 
   // ["*"]
@@ -3634,6 +3653,47 @@ void gr_statement() {
         getSymbol();
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
+
+    // preincrement/predecrement
+    } else if (hasPrefixOperator) {
+      load_variable(variableOrProcedureName);
+
+      if (operator == SYM_PLUSPLUS)
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      else
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+
+      entry = getVariable(variableOrProcedureName);
+
+      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+      tfree(1);
+
+      if (symbol == SYM_SEMICOLON)
+        getSymbol();
+      else
+        syntaxErrorUnexpected();
+
+    // postincrement/postdecrement
+    } else if (isIncrementOrDecrement()) {
+      load_variable(variableOrProcedureName);
+
+      if (symbol == SYM_PLUSPLUS)
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      else
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+
+      entry = getVariable(variableOrProcedureName);
+
+      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+      tfree(1);
+
+      getSymbol();
+
+      if (symbol == SYM_SEMICOLON)
+        getSymbol();
+      else
+        syntaxErrorUnexpected();
+
     } else
       syntaxErrorUnexpected();
   }
@@ -7193,55 +7253,6 @@ int main(int argc, int* argv) {
   initLibrary();
 
   print((int*) "This is RSQ Selfie");
-  println();
-
-  a = 1;
-  print((int*) "a = ");
-  printInteger(a);
-  println();
-  b = a++;   // b = 1, a = 2
-  print((int*) "b = a++ = ");
-  printInteger(b);
-  println();
-  print((int*) "a = ");
-  printInteger(a);
-  println();
-  c = ++a;   // c = 3, a = 3
-  print((int*) "c = a++ = ");
-  printInteger(c);
-  println();
-  print((int*) "a = ");
-  printInteger(a);
-  println();
-
-  c = --b + a--;
-  print((int*) "c = --b + a-- = ");
-  printInteger(c);
-  println();
-  print((int*) "b = ");
-  printInteger(b);
-  println();
-  print((int*) "a = ");
-  printInteger(a);
-  println();
-  print((int*) "------");
-  println();
-
-  // pointer tests
-  pointer = malloc(2 * SIZEOFINT);
-  *pointer = 3;
-  *(pointer + 1) = 5;
-  print((int*) "*pointer = ");
-  printInteger(*pointer);
-  println();print((int*) "*(pointer + 1) = ");
-  printInteger(*(pointer + 1));
-  println();
-  a = *pointer++;
-  print((int*) "a = *pointer++ = ");
-  printInteger(a);
-  println();
-  print((int*) "*pointer = ");
-  printInteger(*pointer);
   println();
 
   exitCode = selfie();
