@@ -2916,17 +2916,17 @@ int gr_factor() {
     }
   }
 
-  // dereference?
+  // * ( [++] identifier | "(" expression ")" )
   if (symbol == SYM_ASTERISK) {
     getSymbol();
 
-    // ["*"] identifier
+    // * identifier
     if (symbol == SYM_IDENTIFIER) {
       type = load_variable(identifier);
 
       getSymbol();
 
-    // "*" "++" identifier
+    // * ++ identifier
     } else if (symbol == SYM_PLUSPLUS) {
       getSymbol();
 
@@ -2959,7 +2959,7 @@ int gr_factor() {
 
     type = INT_T;
 
-  // ++ [*] identifier;
+  // ++  ( [*] identifier | * "(" expression ")")
   } else if (symbol == SYM_PLUSPLUS) {
     getSymbol();
 
@@ -3494,11 +3494,11 @@ void gr_statement() {
       getSymbol();
   }
 
-  // ["*"]
+  // *  ( identifier | "(" expression ")" )
   if (symbol == SYM_ASTERISK) {
     getSymbol();
 
-    // "*" identifier
+    // * identifier
     if (symbol == SYM_IDENTIFIER) {
       ltype = load_variable(identifier);
 
@@ -3507,7 +3507,7 @@ void gr_statement() {
 
       getSymbol();
 
-      // "*" identifier "="
+      // * identifier "="
       if (symbol == SYM_ASSIGN) {
         getSymbol();
 
@@ -3532,7 +3532,7 @@ void gr_statement() {
       else
         syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_40");
 
-    // "*" "(" expression ")"
+    // * "(" expression ")"
     } else if (symbol == SYM_LPARENTHESIS) {
       getSymbol();
 
@@ -3544,7 +3544,7 @@ void gr_statement() {
       if (symbol == SYM_RPARENTHESIS) {
         getSymbol();
 
-        // "*" "(" expression ")" "="
+        // * "(" expression ")" "="
         if (symbol == SYM_ASSIGN) {
           getSymbol();
 
@@ -3573,7 +3573,7 @@ void gr_statement() {
     } else
       syntaxErrorSymbol(SYM_LPARENTHESIS, (int*) "ERR_44");
 
-  // ++ [*] identifier;
+  // ++ [*] (identifier | "(" expression ")")
   } else if (symbol == SYM_PLUSPLUS) {
     getSymbol();
 
