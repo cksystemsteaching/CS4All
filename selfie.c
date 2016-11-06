@@ -832,7 +832,6 @@ void implementMalloc();
 
 void emitSchedYield();
 void implementSchedYield();
-int  sched_yield();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -916,6 +915,10 @@ int SYSCALL_MAP    = 4906;
 // -----------------------------------------------------------------
 
 void initMemory(int megabytes);
+void newSegmentEntry(int* context);
+int getSegTableEntryAddr(int entry);
+int getSegTableEntrySize(int entry);
+
 
 int  loadPhysicalMemory(int* paddr);
 void storePhysicalMemory(int* paddr, int data);
@@ -949,7 +952,10 @@ int PAGEBITS = 12;   // 2^12 == 4096
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
+int segmentSize = 0;
+int nextFreeSegment = 0;
 int pageFrameMemory = 0; // size of memory for frames in bytes
+int* segmentTable;
 
 // ------------------------- INITIALIZATION ------------------------
 
@@ -960,7 +966,44 @@ void initMemory(int megabytes) {
     megabytes = 64;
 
   pageFrameMemory = megabytes * MEGABYTE;
+  segmentSize = MEGABYTE / 1024;
+
+  segmentTable = zalloc((pageFrameMemory / segmentSize) * SIZEOFINT * 2);
 }
+
+void newSegmentEntry(int* context) {
+	setCodeSegment(context, nextFreeSegment);
+	nextFreeSegment = nextFreeSegment + 1;
+
+	setDataSegment(context, nextFreeSegment);
+	nextFreeSegment = nextFreeSegment + 1;
+
+	setStackSegment(context, nextFreeSegment);
+	nextFreeSegment = nextFreeSegment + 1;
+
+	if(nextFreeSegment > (pageFrameMemory / segmentSize)) {
+		syntaxErrorMessage((int*) "No more free segments!");
+	}
+}
+
+int getSegTableEntryAddr(int entry) {
+
+	if(entry > pageFrameMemory / segmentSize) {
+		syntaxErrorMessage((int*) "!!!! Error: Trying to reach segment that is outside of memory!");
+	}
+
+	return *(segmentTable + SIZEOFINT*2*entry);
+}
+
+int getSegTableEntrySize(int entry) {
+
+	if(entry > pageFrameMemory / segmentSize) {
+		syntaxErrorMessage((int*) "!!!! Error: Trying to reach segment that is outside of memory!");
+	}
+
+	return *(segmentTable + SIZEOFINT*2*entry+SIZEOFINT);
+}
+
 
 // -----------------------------------------------------------------
 // ------------------------- INSTRUCTIONS --------------------------
@@ -1151,6 +1194,7 @@ void traverseContexts(int* ctxHead);
 
 void mapPage(int* table, int page, int frame);
 
+
 //Context status constants
 int STATUS_SUSPENDED = 0;
 int STATUS_RUNNING = 1;
@@ -1171,6 +1215,9 @@ int STATUS_EXITING = 4;
 // | 8 | brk    | break between code, data, and heap
 // | 9 | parent | ID of context that created this context
 // | 10| status | Status of the context
+// | 11| CodeSeg| Start Code Segment
+// | 12| DataSeg| Start Data Segment
+// | 13| StacSeg| Start Stack Segment
 // +---+--------+
 
 int* getNextContext(int* context) { return (int*) *context; }
@@ -1184,6 +1231,9 @@ int* getPT(int* context)          { return (int*) *(context + 7); }
 int  getBreak(int* context)       { return        *(context + 8); }
 int  getParent(int* context)      { return        *(context + 9); }
 int  getStatus(int* context)      { return        *(context + 10); }
+int* getCodeSegment(int* context) { return (int*) *(context + 11); }
+int* getDataSegment(int* context) { return (int*) *(context + 12); }
+int* getStackSegment(int* context){ return (int*) *(context + 13); }
 
 void setNextContext(int* context, int* next) { *context       = (int) next; }
 void setPrevContext(int* context, int* prev) { *(context + 1) = (int) prev; }
@@ -1196,6 +1246,11 @@ void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
 void setBreak(int* context, int brk)         { *(context + 8) = brk; }
 void setParent(int* context, int id)         { *(context + 9) = id; }
 void setStatus(int* context, int id)         { *(context + 10) = id; }
+void setCodeSegment(int* context, int* addr) { *(context + 11) = addr; }
+void setDataSegment(int* context, int* addr) { *(context + 12) = addr; }
+void setStackSegment(int* context, int* addr){ *(context + 13) = addr; }
+
+
 
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
@@ -5073,7 +5128,7 @@ void emitSchedYield() {
 
 void implementSchedYield() { // TODO: should we change method type to int?
 
-	print((int*) "Now yielding context: "); printInteger(getID(currentContext)); println();
+	//print((int*) "Now yielding context: "); printInteger(getID(currentContext)); println();
 
 	throwException(EXCEPTION_TIMER,0);
 }
@@ -5201,7 +5256,6 @@ int doSwitch(int toID) {
     printInteger(toID);
     print((int*) " not found");
     println();
-    traverseContexts(usedContexts);
   }
 
   return fromID;
@@ -5234,7 +5288,7 @@ int mipster_switch(int toID) {
 
   runUntilException();
 
-  return fromID;
+  return getID(currentContext);
 }
 
 int hypster_switch(int toID) {
@@ -6499,8 +6553,11 @@ int createID(int seed) {
 int* allocateContext(int ID, int parentID) {
   int* context;
 
-  if (freeContexts == (int*) 0)
-    context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
+  if (freeContexts == (int*) 0) {
+    context = malloc(7 * SIZEOFINTSTAR + 7 * SIZEOFINT);
+  	newSegmentEntry(context);
+
+  }
   else {
     context = freeContexts;
 
@@ -6546,6 +6603,8 @@ int* createContext(int ID, int parentID, int* in) {
     setPrevContext(in, context);
 
   setStatus(context, STATUS_READY);
+  setCodeSegment(context, 0);
+  setDataSegment(context, (int*) binaryLength);
 
   return context;
 }
@@ -6869,17 +6928,12 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     //print((int*)"current context trap: "); printInteger(getID(currentContext));println();
 
     fromContext = findContext(fromID, usedContexts);
-    fromParentID = getParent(fromContext);
-
-    if(getStatus(fromContext) == STATUS_EXITING) {
-    	usedContexts = deleteContext(fromContext, usedContexts);
-    }
 
     // assert: fromContext must be in usedContexts (created here)
-    if (fromParentID != selfie_ID()) {
+    if (getParent(fromContext) != selfie_ID()) {
 
       // switch to parent which is in charge of handling exceptions
-      toID = fromParentID;
+      toID = getParent(fromContext);
     } else {
       // we are the parent in charge of handling exceptions
       savedStatus = selfie_status();
@@ -6906,8 +6960,8 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         }
 
         toID = schedule();
-
         setStatus(currentContext, STATUS_EXITING);
+    	usedContexts = deleteContext(fromContext, usedContexts);
 
       } else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
@@ -6938,7 +6992,7 @@ int schedule() {
     toId = getID(getNextContext(currentContext));
   }
 
-  print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
+  //print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
 
   //traverseContexts(usedContexts);
 
@@ -7055,8 +7109,8 @@ int boot(int argc, int* argv) {
     repeats = repeats - 1;
   }
 
-  traverseContexts(usedContexts);
-  printInteger(contextCount); println();
+//  traverseContexts(usedContexts);
+//  printInteger(contextCount); println();
 
   // mipsters and hypsters handle page faults
   exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
