@@ -2482,7 +2482,9 @@ int lookForFactor() {
 }
 
 int lookForStatement() {
-  if (symbol == SYM_ASTERISK)
+  if (symbol == SYM_DOLLAR)
+    return 0;
+  else if (symbol == SYM_ASTERISK)
     return 0;
   else if (symbol == SYM_IDENTIFIER)
     return 0;
@@ -2861,9 +2863,7 @@ int gr_call(int* procedure, int isFunctionPtr) {
 
   if (isFunctionPtr == 1) {
     entry = getScopedSymbolTableEntry(procedure, VARIABLE);
-    print(getString(entry));
     entry = getFctPtr(entry);
-    print(getString(entry));
   } else {
     entry = getScopedSymbolTableEntry(procedure, PROCEDURE);
   }
@@ -2998,7 +2998,7 @@ int gr_factor() {
         // reset return register to initial return value
         // for missing return expressions
         emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
-        
+
         }
     }
 
@@ -3600,6 +3600,7 @@ void gr_statement() {
             // reset return register to initial return value
             // for missing return expressions
             emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
+
             if (symbol == SYM_SEMICOLON)
                getSymbol();
             else
