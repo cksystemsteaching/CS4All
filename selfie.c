@@ -2958,7 +2958,7 @@ int gr_factor() {
     if(symbol == SYM_ASTERISK) {
       getSymbol();
 
-    // ++ * "(" expression ")"
+      // ++ * "(" expression ")"
       if (symbol == SYM_LPARENTHESIS) {
         getSymbol();
 
@@ -2971,6 +2971,8 @@ int gr_factor() {
       } else if (symbol == SYM_IDENTIFIER) {
         talloc();
         load_variable(identifier);
+      } else {
+        syntaxErrorUnexpected((int*) "ERR_10");
       }
 
       // dereference
@@ -3566,24 +3568,26 @@ void gr_statement() {
   } else if (symbol == SYM_PLUSPLUS) {
     getSymbol();
 
-      // ++ * (identifier | "(" expression ")")
-      if(symbol == SYM_ASTERISK) {
-        getSymbol();
+    // ++ * (identifier | "(" expression ")")
+    if(symbol == SYM_ASTERISK) {
+      getSymbol();
 
       // ++ * "(" expression ")"
-        if (symbol == SYM_LPARENTHESIS) {
-          getSymbol();
+      if (symbol == SYM_LPARENTHESIS) {
+        getSymbol();
 
-          ltype = gr_expression();
+        ltype = gr_expression();
 
-          talloc();
-          emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
+        talloc();
+        emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
 
-        // ++ * identifier
-        } else if (symbol == SYM_IDENTIFIER) {
-          talloc();
-          load_variable(identifier);
-        }
+      // ++ * identifier
+      } else if (symbol == SYM_IDENTIFIER) {
+        talloc();
+        load_variable(identifier);
+      } else {
+        syntaxErrorUnexpected((int*) "ERR_11");
+      }
 
       // dereference
       emitIFormat(OP_LW, currentTemporary(), previousTemporary(), 0);
@@ -3591,7 +3595,7 @@ void gr_statement() {
       emitIFormat(OP_SW, currentTemporary(), previousTemporary(), 0);
 
       tfree(1);
-    } else { // ++identfier
+    } else { // ++ identfier
       if(symbol != SYM_IDENTIFIER)
         syntaxErrorSymbol(SYM_IDENTIFIER);
 
