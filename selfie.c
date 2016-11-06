@@ -2453,6 +2453,8 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_IDENTIFIER)
     return 0;
+  else if (symbol == SYM_AMPERSAND)
+    return 0;
   else if (symbol == SYM_INTEGER)
     return 0;
   else if (symbol == SYM_CHARACTER)
@@ -2471,6 +2473,8 @@ int lookForStatement() {
   else if (symbol == SYM_PLUSPLUS)
     return 0;
   else if (symbol == SYM_IDENTIFIER)
+    return 0;
+  else if (symbol == SYM_AMPERSAND)
     return 0;
   else if (symbol == SYM_WHILE)
     return 0;
@@ -2870,6 +2874,8 @@ int gr_factor() {
   int type;
 
   int* variableOrProcedureName;
+  int* entry;
+  int addressAsInt;
 
   // assert: n = allocatedTemporaries
 
@@ -3032,6 +3038,30 @@ int gr_factor() {
     getSymbol();
 
     type = INT_T;
+
+  // address pointer ?
+  } else if (symbol == SYM_AMPERSAND) {
+    getSymbol();
+
+    if (symbol == SYM_IDENTIFIER){
+
+      // if (type != INT_T)
+      //   typeWarning(INT_T, type);
+
+      variableOrProcedureName = identifier;
+      entry = getVariable(variableOrProcedureName);
+      entry = getScope(entry) +  getAddress(entry);
+
+      type = INTSTAR_T;
+
+      talloc();
+      emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), entry);
+      // emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
+      type = INTSTAR_T;
+      getSymbol();
+    } else
+      syntaxErrorSymbol(SYM_IDENTIFIER, (int*) "ERR_");
+
 
   // character?
   } else if (symbol == SYM_CHARACTER) {
