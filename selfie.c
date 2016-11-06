@@ -2878,13 +2878,71 @@ int gr_call(int* procedure) {
   return type;
 }
 
+int gr_lvalue() {
+  int  type;
+  int  operator;
+  int* entry;
+
+  if (symbol == SYM_ASTERISK) {
+    getSymbol();
+
+    if (symbol == SYM_IDENTIFIER) {
+      type = load_variable(identifier);
+
+      getSymbol();
+
+    } else if (symbol == SYM_LPARENTHESIS) {
+      getSymbol();
+
+      type = gr_expression();
+
+      if (symbol == SYM_RPARENTHESIS)
+        getSymbol();
+      else
+        syntaxErrorSymbol(SYM_RPARENTHESIS);
+
+    } else if (isIncrementOrDecrement()) {
+      operator = symbol;
+
+      getSymbol();
+
+      if (symbol == SYM_IDENTIFIER) {
+        type = load_variable(identifier);
+
+        if (operator == SYM_PLUSPLUS)
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), WORDSIZE);
+        else
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -WORDSIZE);
+
+        entry = getVariable(identifier);
+
+        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
+        getSymbol();
+
+      } else
+        syntaxErrorUnexpected();
+
+    } else
+      syntaxErrorUnexpected();
+
+  } else if (symbol == SYM_IDENTIFIER) {
+    type = load_variable(identifier);
+
+    getSymbol();
+
+  } else
+    syntaxErrorUnexpected();
+
+  return type;
+}
+
 int gr_factor() {
   int hasCast;
   int cast;
   int type;
-  int hasPrefixOperator;
   int operator;
-  int isExpression;
+  int isDereference;
   int* entry;
 
   int* variableOrProcedureName;
@@ -2934,22 +2992,64 @@ int gr_factor() {
     }
   }
 
-  hasPrefixOperator = 0;
-  isExpression = 0;
+  isDereference = 0;
 
   // increment/decrement?
   if (isIncrementOrDecrement()) {
     operator = symbol;
+
     getSymbol();
 
-    if (isLvalue())
-      hasPrefixOperator = 1;
-    else
-      syntaxErrorMessage((int*) "increment/decrement operator only with lvalues");
-  }
+    if (symbol == SYM_ASTERISK)
+      isDereference = 1;
+
+    type = gr_lvalue();
+
+    if (type == INTSTAR_T) {
+      if (isDereference) {
+        talloc();
+
+        emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+
+        if (operator == SYM_PLUSPLUS)
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        else
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+
+        emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+
+        tfree(1);
+
+        emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
+        type = INT_T;
+
+      } else {
+        if (operator == SYM_PLUSPLUS)
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), WORDSIZE);
+        else
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -WORDSIZE);
+
+        entry = getVariable(identifier);
+
+        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
+      }
+
+    } else {
+      if (operator == SYM_PLUSPLUS)
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      else
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+
+      entry = getVariable(identifier);
+
+      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
+    }
 
   // address operator: "&" identifier
-  if (symbol == SYM_AMPERSAND) {
+  } else if (symbol == SYM_AMPERSAND) {
     getSymbol();
 
     if (symbol == SYM_IDENTIFIER) {
@@ -2963,66 +3063,31 @@ int gr_factor() {
 
   // dereference?
   } else if (symbol == SYM_ASTERISK) {
-    getSymbol();
-
-    // ["*"] identifier
-    if (symbol == SYM_IDENTIFIER) {
-      type = load_variable(identifier);
-
-      getSymbol();
-
-    // * "(" expression ")"
-    } else if (symbol == SYM_LPARENTHESIS) {
-      getSymbol();
-
-      isExpression = 1;
-
-      type = gr_expression();
-
-      if (symbol == SYM_RPARENTHESIS)
-        getSymbol();
-      else
-        syntaxErrorSymbol(SYM_RPARENTHESIS);
-    } else
-      syntaxErrorUnexpected();
-
-    if (type != INTSTAR_T)
-      typeWarning(INTSTAR_T, type);
-
-    // dereference
-    if (hasPrefixOperator) {
-      talloc();
-      emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
-      emitIFormat(OP_LW, previousTemporary(), previousTemporary(), 0);
-      if (operator == SYM_PLUSPLUS)
-        emitIFormat(OP_ADDIU, previousTemporary(), previousTemporary(), 1);
-      else
-        emitIFormat(OP_ADDIU, previousTemporary(), previousTemporary(), -1);
-      emitIFormat(OP_SW, currentTemporary(), previousTemporary(), 0);
-      tfree(1);
-    }
-    else
-      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+    gr_lvalue();
 
     if (isIncrementOrDecrement()) {
-      if (isExpression) {
-        syntaxErrorMessage((int*) "expression is not assignable");
+      talloc();
 
-        getSymbol();
-      } else {
-        load_variable(identifier);
-        if (symbol == SYM_PLUSPLUS)
-          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), WORDSIZE);
-        else
-          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -WORDSIZE);
-        entry = getVariable(identifier);
+      emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
+      emitIFormat(OP_LW, previousTemporary(), previousTemporary(), 0);
 
-        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-        tfree(1);
+      talloc();
 
-        getSymbol();
-      }
-    }
+      emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+
+      if (symbol == SYM_PLUSPLUS)
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      else
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+
+      emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+
+      tfree(2);
+
+      getSymbol();
+
+    } else
+      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
     type = INT_T;
 
@@ -3033,9 +3098,6 @@ int gr_factor() {
     getSymbol();
 
     if (symbol == SYM_LPARENTHESIS) {
-      if (hasPrefixOperator)
-        syntaxErrorMessage((int*) "increment/decrement operator only with lvalues");
-
       getSymbol();
 
       // procedure call: identifier "(" ... ")"
@@ -3052,17 +3114,6 @@ int gr_factor() {
     } else {
       // variable access: identifier
       type = load_variable(variableOrProcedureName);
-
-      if (hasPrefixOperator) {
-        if (operator == SYM_PLUSPLUS)
-          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
-        else
-          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
-
-        entry = getVariable(variableOrProcedureName);
-
-        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-      }
 
       if (isIncrementOrDecrement()) {
         talloc();
@@ -3537,8 +3588,8 @@ void gr_return() {
 void gr_statement() {
   int ltype;
   int rtype;
-  int hasPrefixOperator;
   int operator;
+  int isDereference;
   int* variableOrProcedureName;
   int* entry;
 
@@ -3553,21 +3604,70 @@ void gr_statement() {
       getSymbol();
   }
 
-  hasPrefixOperator = 0;
+  isDereference = 0;
 
-  // increment/decrement?
   if (isIncrementOrDecrement()) {
     operator = symbol;
+
     getSymbol();
 
-    if (isLvalue())
-      hasPrefixOperator = 1;
+    if (symbol == SYM_ASTERISK)
+      isDereference = 1;
+
+    ltype = gr_lvalue();
+
+    if (ltype == INTSTAR_T) {
+      if (isDereference) {
+        talloc();
+
+        emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+
+        if (operator == SYM_PLUSPLUS)
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        else
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+
+        emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+
+        tfree(1);
+
+        emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
+        ltype = INT_T;
+
+      } else {
+        if (operator == SYM_PLUSPLUS)
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -WORDSIZE);
+        else
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), WORDSIZE);
+
+        entry = getVariable(identifier);
+
+        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
+      }
+
+    } else {
+      if (operator == SYM_PLUSPLUS)
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      else
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+
+      entry = getVariable(variableOrProcedureName);
+
+      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
+    }
+
+    if (symbol == SYM_SEMICOLON)
+      getSymbol();
     else
-      syntaxErrorMessage((int*) "increment/decrement operator only with lvalues");
-  }
+      syntaxErrorSymbol(SYM_SEMICOLON);
+
+    tfree(1);
 
   // ["*"]
-  if (symbol == SYM_ASTERISK) {
+  } else if (symbol == SYM_ASTERISK) {
     getSymbol();
 
     // "*" identifier
@@ -3578,6 +3678,24 @@ void gr_statement() {
         typeWarning(INTSTAR_T, ltype);
 
       getSymbol();
+
+      if (isIncrementOrDecrement()) {
+        talloc();
+
+        emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+
+        if (symbol == SYM_PLUSPLUS)
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        else
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+
+        emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+
+        tfree(1);
+
+        getSymbol();
+
+      }
 
       // "*" identifier "="
       if (symbol == SYM_ASSIGN) {
@@ -3593,6 +3711,7 @@ void gr_statement() {
         tfree(2);
 
         numberOfAssignments = numberOfAssignments + 1;
+
       } else {
         syntaxErrorSymbol(SYM_ASSIGN);
 
@@ -3615,6 +3734,24 @@ void gr_statement() {
 
       if (symbol == SYM_RPARENTHESIS) {
         getSymbol();
+
+        if (isIncrementOrDecrement()) {
+          talloc();
+
+          emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+
+          if (symbol == SYM_PLUSPLUS)
+            emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+          else
+            emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+
+          emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+
+          tfree(1);
+
+          getSymbol();
+
+        }
 
         // "*" "(" expression ")" "="
         if (symbol == SYM_ASSIGN) {
@@ -3689,25 +3826,6 @@ void gr_statement() {
         getSymbol();
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
-
-    // preincrement/predecrement
-    } else if (hasPrefixOperator) {
-      load_variable(variableOrProcedureName);
-
-      if (operator == SYM_PLUSPLUS)
-        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
-      else
-        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
-
-      entry = getVariable(variableOrProcedureName);
-
-      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-      tfree(1);
-
-      if (symbol == SYM_SEMICOLON)
-        getSymbol();
-      else
-        syntaxErrorUnexpected();
 
     // postincrement/postdecrement
     } else if (isIncrementOrDecrement()) {
@@ -7279,28 +7397,12 @@ int selfie() {
 
 int main(int argc, int* argv) {
   int  exitCode;
-  int  a;
-  int  b;
-  int  c;
-  int* pointer;
 
   initSelfie(argc, (int*) argv);
 
   initLibrary();
 
   print((int*) "This is RSQ Selfie");
-  println();
-
-  c =  5;
-  a = 10;
-  b = 20;
-
-  c = &a;
-  printInteger(c);
-  println();
-  printInteger((int) &b);
-  println();
-  printInteger((int) &c);
   println();
 
   exitCode = selfie();
