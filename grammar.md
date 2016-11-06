@@ -36,6 +36,7 @@ C\* Grammar:
 
 ```
 cstar            = { type identifier [ "=" [ cast ] [ "-" ] literal ] ";" |
+                   type "(" "*" identifier ")" ";" |
                    ( "void" | type ) identifier procedure } .
 
 type             = "int" [ "*" ] .

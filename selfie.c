@@ -4215,6 +4215,7 @@ void gr_procedure(int* procedure, int type) {
 
     localVariables = 0;
 
+    // must also look for type void for function pointers
     while (or(symbol == SYM_INT, symbol == SYM_VOID)) {
       localVariables = localVariables + 1;
 
@@ -4277,24 +4278,41 @@ void gr_cstar() {
         getSymbol();
     }
 
-    if (symbol == SYM_VOID) {
+    type = gr_type();
+
+    if (type == VOID_T) {
+
       // void identifier ...
       // procedure declaration or definition
-      type = VOID_T;
 
-      getSymbol();
+      //getSymbol();
 
       if (symbol == SYM_IDENTIFIER) {
         variableOrProcedureName = identifier;
 
         getSymbol();
 
-
         gr_procedure(variableOrProcedureName, type);
+      } else if (symbol == SYM_LPARENTHESIS) {
+        getSymbol();
+
+        if (symbol == SYM_ASTERISK) {
+          getSymbol();
+
+          if (symbol == SYM_IDENTIFIER) {
+            createSymbolTableEntry(GLOBAL_TABLE, identifier, lineNumber, FUNCPTR, type, 0, -allocatedMemory);
+
+            getSymbol();
+          } else
+            syntaxErrorSymbol(SYM_IDENTIFIER);
+
+        } else
+          syntaxErrorSymbol(SYM_ASTERISK);
+
       } else
-        syntaxErrorSymbol(SYM_IDENTIFIER);
+        syntaxErrorUnexpected();
+
     } else {
-      type = gr_type();
 
       if (symbol == SYM_IDENTIFIER) {
         variableOrProcedureName = identifier;
@@ -4334,8 +4352,36 @@ void gr_cstar() {
             println();
           }
         }
+
+      } else if (symbol == SYM_LPARENTHESIS) {
+        getSymbol();
+
+        if (symbol == SYM_ASTERISK) {
+          getSymbol();
+
+          if (symbol == SYM_IDENTIFIER) {
+            createSymbolTableEntry(GLOBAL_TABLE, identifier, lineNumber, FUNCPTR, type, 0, -allocatedMemory);
+
+            getSymbol();
+
+            if (symbol == SYM_RPARENTHESIS) {
+              getSymbol();
+
+              if (symbol == SYM_SEMICOLON)
+                getSymbol();
+              else
+                syntaxErrorSymbol(SYM_SEMICOLON);
+            } else
+              syntaxErrorSymbol(SYM_RPARENTHESIS);
+
+          } else
+            syntaxErrorSymbol(SYM_IDENTIFIER);
+
+        } else
+          syntaxErrorSymbol(SYM_ASTERISK);
+
       } else
-        syntaxErrorSymbol(SYM_IDENTIFIER);
+        syntaxErrorUnexpected();
     }
   }
 }

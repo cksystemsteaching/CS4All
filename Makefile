@@ -9,6 +9,9 @@ selfie: selfie.c
 selfie_gdb: selfie.c
 	$(CC) $(CFLAGS) $(DFLAGS) $< -o $@
 
+self_compile: selfie
+	./selfie -c selfie.c
+
 # Consider these targets as targets, not files
 .PHONY : test clean
 
