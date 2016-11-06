@@ -1,4 +1,4 @@
-int (*i);
+int #i;
 
 int double(int x);
 
@@ -20,5 +20,5 @@ int main(int argc, int* argv) {
 int double(int x) {
   int a;
   a = x * 2;
-  return x;
+  return a;
 }

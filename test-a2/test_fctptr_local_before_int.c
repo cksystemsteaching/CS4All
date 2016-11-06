@@ -1,11 +1,11 @@
 int double(int x) {
   int a;
   a = x * 2;
-  return x;
+  return a;
 }
 
 int main(int argc, int* argv) {
-  int (*i);
+  int #i;
   int j;
   initLibrary();
 
@@ -16,6 +16,6 @@ int main(int argc, int* argv) {
   if(j == 4)
     print("OK");
   else
-    print("WRONG")
+    print("WRONG");
   println();
 }

@@ -10,7 +10,7 @@ int main(int argc, int* argv) {
   i = &a;
   *i = 10;
 
-  if(*i == 10)
+  if(a == 10)
     print("OK");
   else
     print("WRONG");
