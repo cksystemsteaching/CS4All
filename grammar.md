@@ -50,9 +50,9 @@ procedure        = "(" [ variable { "," variable } ] ")"
 variable         = type identifier .
 
 statement        = call ";" | while | if | return ";" |
-                   ( [ "*" ] identifier |
-                    "++" [ "*" ] identifier  |
-                    "*" "(" expression ")" ) "=" expression ";" .
+                    ( "++" ["*"] identifier ) | ( "++" "*" "(" expression ")" ) |
+                    ( [ "*" ] identifier | "*" "(" expression ")" )
+                      "=" expression ";" .
 
 call             = identifier "(" [ expression { "," expression } ] ")" .
 
@@ -64,7 +64,7 @@ term             = factor { ( "*" | "/" | "%" ) factor } .
 
 factor           = [ cast ]
                     ( [ "*" ] ( ["++"] identifier | "(" expression ")" ) |
-                    "++" [ "*" ] identifier  |
+                      "++" "*" (identifier | "(" expression ")") |
                       call |
                       literal |
                       string ) .
