@@ -518,6 +518,7 @@ void printType(int type);
 void typeWarning(int expected, int found);
 
 int* getVariable(int* variable);
+void load_address(int* variable);
 int  load_variable(int* variable);
 void load_integer(int value);
 void load_string(int* string);
@@ -527,6 +528,7 @@ void help_procedure_prologue(int localVariables);
 void help_procedure_epilogue(int parameters);
 
 int  gr_call(int* procedure);
+int  gr_lvalue();
 int  gr_factor();
 int  gr_term();
 int  gr_simpleExpression();
@@ -7396,7 +7398,7 @@ int selfie() {
 }
 
 int main(int argc, int* argv) {
-  int  exitCode;
+  int exitCode;
 
   initSelfie(argc, (int*) argv);
 
