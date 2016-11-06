@@ -2998,10 +2998,7 @@ int gr_factor() {
         // reset return register to initial return value
         // for missing return expressions
         emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
-        if (symbol == SYM_SEMICOLON)
-           getSymbol();
-        else
-           syntaxErrorSymbol(SYM_SEMICOLON);
+        
         }
     }
 
