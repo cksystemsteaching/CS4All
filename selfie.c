@@ -3052,7 +3052,7 @@ int gr_factor() {
 
     type = INT_T;
 
-  // address pointer ?
+  // & identifier
   } else if (symbol == SYM_AMPERSAND) {
     getSymbol();
 
