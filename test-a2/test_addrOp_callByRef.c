@@ -14,5 +14,7 @@ int main(int argc, int* argv) {
 
   if(a == 14)
     print("OK");
+  else
+    print("WRONG");
   println();
 }

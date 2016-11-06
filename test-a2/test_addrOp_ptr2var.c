@@ -11,5 +11,7 @@ int main(int argc, int* argv) {
 
   if(*i == 5)
     print("OK");
+  else
+    print("WRONG");
   println();
 }

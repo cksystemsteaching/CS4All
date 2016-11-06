@@ -13,8 +13,12 @@ int main(int argc, int* argv) {
 
   a = 34;
 
-  if(*i == 34)
+  if(*i == 34) {
     if(*j == 34)
       print("OK");
+    else
+      print("WRONG");
+  } else
+    print("WRONG");
   println();
 }

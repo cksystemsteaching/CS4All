@@ -12,5 +12,7 @@ int main(int argc, int* argv) {
 
   if(*i == 10)
     print("OK");
+  else
+    print("WRONG");
   println();
 }

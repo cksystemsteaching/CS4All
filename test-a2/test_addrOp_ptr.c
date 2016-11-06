@@ -11,5 +11,7 @@ int main(int argc, int* argv) {
 
   if(*j == 99)
     print("OK");
+  else
+    print("WRONG");
   println();
 }

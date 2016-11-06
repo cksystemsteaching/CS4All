@@ -12,9 +12,15 @@ int main(int argc, int* argv) {
 
   j = &*(i+1);
 
-  if(*(j-1) == 0)
-    if(*j == 1)
+  if(*(j-1) == 0) {
+    if(*j == 1) {
       if(*(j+1) == 2)
         print("OK");
+      else
+        print("WRONG 3");
+    } else
+      print("WRONG 2");
+  } else
+    print("WRONG 1");
   println();
 }
