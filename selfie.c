@@ -2990,6 +2990,11 @@ int gr_factor() {
         getSymbol();
         type = gr_call(variableOrProcedureName, 1);
 
+        talloc();
+
+        // retrieve return value
+        emitIFormat(OP_ADDIU, REG_V0, currentTemporary(), 0);
+
         // reset return register to initial return value
         // for missing return expressions
         emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
@@ -3722,10 +3727,8 @@ void gr_statement() {
       if (ltype != rtype)
         typeWarning(ltype, rtype);
 
-        print(getString(entry));
-        println();
       emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
-      printInteger(9999999);
+
       tfree(1);
 
       numberOfAssignments = numberOfAssignments + 1;
