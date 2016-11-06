@@ -520,6 +520,7 @@ void typeWarning(int expected, int found);
 int* getVariable(int* variable);
 void incrementCurrTemp(int* variable);
 int  load_variable(int* variable);
+int  load_variable_address(int* variable);
 void load_integer(int value);
 void load_string(int* string);
 
@@ -2668,6 +2669,18 @@ int load_variable(int* variable) {
   return getType(entry);
 }
 
+int load_variable_address(int* variable) {
+  int* entry;
+
+  entry = getVariable(variable);
+
+  talloc();
+
+  emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
+
+  return INTSTAR_T;
+}
+
 void load_integer(int value) {
   // assert: value >= 0 or value == INT_MIN
 
@@ -3045,23 +3058,14 @@ int gr_factor() {
 
     if (symbol == SYM_IDENTIFIER){
 
-      // if (type != INT_T)
-      //   typeWarning(INT_T, type);
+      if (type != INT_T)
+        typeWarning(INT_T, type);
 
-      variableOrProcedureName = identifier;
-      entry = getVariable(variableOrProcedureName);
-      entry = getScope(entry) +  getAddress(entry);
-
-      type = INTSTAR_T;
-
-      talloc();
-      emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), entry);
-      // emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
-      type = INTSTAR_T;
+      type = load_variable_address(identifier);
       getSymbol();
+
     } else
       syntaxErrorSymbol(SYM_IDENTIFIER, (int*) "ERR_");
-
 
   // character?
   } else if (symbol == SYM_CHARACTER) {
