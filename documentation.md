@@ -35,7 +35,7 @@ __Function pointer__
 
 __New possibilities address operator__
 
-1. *(is working)* Call by Reference: Use the address as a parameter with the address operator to change the value with a function
+1) *(is working)* Call by Reference: Use the address as a parameter with the address operator to change the value with a function
 ```C
 int foo(int* x) {
   *x = *x + *x;
@@ -59,7 +59,7 @@ int main(int argc, int* argv) {
 }
 ```
 
-2. *(is working)* Get the address where the pointer is pointing to
+2) *(is working)* Get the address where the pointer is pointing to
 ```C
 int main(int argc, int* argv) {
   int* i;
@@ -80,7 +80,7 @@ int main(int argc, int* argv) {
 }
 ```
 
-3. *(is working)* Get the address of the integer value
+3) *(is working)* Get the address of the integer value
 ```C
 int a;
 
@@ -101,7 +101,7 @@ int main(int argc, int* argv) {
 }
 ```
 
-4. *(is working)* Save the address of the integer value and change the value over the pointer
+4) *(is working)* Save the address of the integer value and change the value over the pointer
 ```C
 int main(int argc, int* argv) {
   int* i;
@@ -123,7 +123,7 @@ int main(int argc, int* argv) {
 }
 ```
 
-5. *(is working)* Save the address of the integer value and change the value over the integer value and access over the two pointers
+5) *(is working)* Save the address of the integer value and change the value over the integer value and access over the two pointers
 ```C
 int main(int argc, int* argv) {
   int* i;
@@ -151,7 +151,7 @@ int main(int argc, int* argv) {
 }
 ```
 
-6. *(is working)* Get the address of the integer value
+6) *(is working)* Get the address of the integer value
 ```C
 int main(int argc, int* argv) {
   int* i;
@@ -172,7 +172,7 @@ int main(int argc, int* argv) {
 }
 ```
 
-7. *(is not working)* Get the address where the next pointer is pointing to
+7) *(is not working)* Get the address where the next pointer is pointing to
 ```C
 int main(int argc, int* argv) {
   int* i;
