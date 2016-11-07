@@ -520,7 +520,7 @@ void typeWarning(int expected, int found);
 int* getVariable(int* variable);
 void incrementCurrTemp(int* variable);
 int  load_variable(int* variable);
-int  load_variable_address(int* variable);
+int  load_address(int* variable);
 void load_integer(int value);
 void load_string(int* string);
 
@@ -2387,6 +2387,8 @@ int isExpression() {
     return 1;
   else if (symbol == SYM_IDENTIFIER)
     return 1;
+  else if (symbol == SYM_AMPERSAND)
+    return 1;
   else if (symbol == SYM_INTEGER)
     return 1;
   else if (symbol == SYM_ASTERISK)
@@ -2669,7 +2671,7 @@ int load_variable(int* variable) {
   return getType(entry);
 }
 
-int load_variable_address(int* variable) {
+int load_address(int* variable) {
   int* entry;
 
   entry = getVariable(variable);
@@ -2881,14 +2883,24 @@ int gr_call(int* procedure) {
   return type;
 }
 
+void load_identifier_address (int* type) {
+  getSymbol();
+
+  if (symbol == SYM_IDENTIFIER){
+
+    *type = load_address(identifier);
+    getSymbol();
+
+  } else
+    syntaxErrorSymbol(SYM_IDENTIFIER, (int*) "ERR_");
+}
+
 int gr_factor() {
   int hasCast;
   int cast;
   int type;
 
   int* variableOrProcedureName;
-  int* entry;
-  int addressAsInt;
 
   // assert: n = allocatedTemporaries
 
@@ -2967,6 +2979,8 @@ int gr_factor() {
         getSymbol();
       else
         syntaxErrorSymbol(SYM_RPARENTHESIS, (int*) "ERR_22");
+    } else if (symbol == SYM_AMPERSAND) {
+      load_identifier_address ( &type);
     } else
       syntaxErrorUnexpected((int*) "ERR_23");
 
@@ -3054,20 +3068,9 @@ int gr_factor() {
 
   // & identifier
   } else if (symbol == SYM_AMPERSAND) {
-    getSymbol();
+    load_identifier_address ( &type);
 
-    if (symbol == SYM_IDENTIFIER){
-
-      if (type != INT_T)
-        typeWarning(INT_T, type);
-
-      type = load_variable_address(identifier);
-      getSymbol();
-
-    } else
-      syntaxErrorSymbol(SYM_IDENTIFIER, (int*) "ERR_");
-
-  // character?
+    // character?
   } else if (symbol == SYM_CHARACTER) {
     talloc();
 
