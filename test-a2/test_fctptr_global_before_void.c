@@ -1,4 +1,4 @@
-void #i;
+void (*i);
 
 void double(int* x) {
   int a;

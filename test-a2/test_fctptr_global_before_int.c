@@ -1,4 +1,4 @@
-int #i;
+int (*i);
 
 int double(int x) {
   int a;

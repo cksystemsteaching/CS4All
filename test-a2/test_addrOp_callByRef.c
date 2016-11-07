@@ -3,7 +3,7 @@ int foo(int* x) {
 }
 
 int main(int argc, int* argv) {
-  int * i;
+  int* i;
   int a;
   initLibrary();
 

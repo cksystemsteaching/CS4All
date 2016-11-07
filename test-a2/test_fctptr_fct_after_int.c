@@ -1,14 +1,16 @@
-int (*i);
-
 int double(int x);
+
+int test(int (*fct), int a) {
+  int x;
+  x = fct(a);
+  return x;
+}
 
 int main(int argc, int* argv) {
   int j;
   initLibrary();
 
-  i = &double;
-
-  j = i(2);
+  j = test(&double, 2);
 
   if(j == 4)
     print("OK");

@@ -1,7 +1,7 @@
 int double(int x);
 
 int main(int argc, int* argv) {
-  int #i;
+  int (*i);
   int j;
   initLibrary();
 
