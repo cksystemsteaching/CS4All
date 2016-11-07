@@ -34,6 +34,7 @@ __Function pointer__
 * only the testcases (test_fctptr_global_before_int.c, test_fctptr_global_before_void.c, test_fctptr_local_before_int.c, test_fctptr_local_before_void.c) work without errors and warnings
 
 __New possibilities address operator__
+
 1. *(is working)* Call by Reference: Use the address as a parameter with the address operator to change the value with a function
 ```C
 int foo(int* x) {
@@ -202,7 +203,8 @@ int main(int argc, int* argv) {
 ```
 
 __New possibilities function pointer__
-1. *(is working)* Global int pointer to a function (function definition before call)
+
+1) *(is working)* Global int pointer to a function (function definition before call)
 ```C
 int (*i);
 
@@ -228,7 +230,7 @@ int main(int argc, int* argv) {
 }
 ```
 
-2. *(is working)* Global void pointer to a function (function definition before call)
+2) *(is working)* Global void pointer to a function (function definition before call)
 ```C
 void (*i);
 
@@ -254,7 +256,7 @@ int main(int argc, int* argv) {
 }
 ```
 
-3. *(is working)* Local int pointer to a function (function definition before call)
+3) *(is working)* Local int pointer to a function (function definition before call)
 ```C
 int double(int x) {
   int a;
@@ -279,7 +281,7 @@ int main(int argc, int* argv) {
 }
 ```
 
-4. *(is working)* Local void pointer to a function (function definition before call)
+4) *(is working)* Local void pointer to a function (function definition before call)
 ```C
 void double(int* x) {
   int a;
@@ -304,7 +306,7 @@ int main(int argc, int* argv) {
 }
 ```
 
-5. *(is not working)* Function as a parameter (function definition after call)
+5) *(is not working)* Function as a parameter (function definition after call)
 ```C
 int double(int x);
 
@@ -334,7 +336,7 @@ int double(int x) {
 }
 ```
 
-6. *(is not working)* Function as a parameter (function definition before call)
+6) *(is not working)* Function as a parameter (function definition before call)
 ```C
 int double(int x) {
   int a;
@@ -362,7 +364,7 @@ int main(int argc, int* argv) {
 }
 ```
 
-7. *(is not working)* Global int pointer to a function (function definition after call)
+7) *(is not working)* Global int pointer to a function (function definition after call)
 ```C
 int (*i);
 
@@ -390,7 +392,7 @@ int double(int x) {
 }
 ```
 
-8. *(is not working)* Global void pointer to a function (function definition after call)
+8) *(is not working)* Global void pointer to a function (function definition after call)
 ```C
 void (*i);
 
@@ -418,7 +420,7 @@ void double(int* x) {
 }
 ```
 
-9. *(is not working)* Local int pointer to a function (function definition after call)
+9) *(is not working)* Local int pointer to a function (function definition after call)
 ```C
 int double(int x);
 
@@ -445,7 +447,7 @@ int double(int x) {
 }
 ```
 
-10. *(is not working)* Local void pointer to a function (function definition after call)
+10) *(is not working)* Local void pointer to a function (function definition after call)
 ```C
 void double(int* x);
 
