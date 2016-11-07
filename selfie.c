@@ -7298,23 +7298,22 @@ int selfie() {
   return 0;
 }
 
-int addrTest(int* addr1);
-int addrTest(int* addr1) {
-  *addr1 = 555;
-  return *addr1;
+int half(int n);
+int tripple(int n);
+
+int half(int n) {
+  return n / 2;
 }
 
-int test(int argu);
-int test(int argu) {
-  return 5+argu;
+int tripple(int n) {
+  return 3*n + 1;
 }
 
 int main(int argc, int* argv) {
   int exitCode;
-  int x1;
-  int x2;
-  int* p1;
-  int (*fctp)(int ar);
+  int nr;
+  int* ptr;
+  int (*fct_ptr)(int nn);
 
   initSelfie(argc, (int*) argv);
 
@@ -7323,27 +7322,30 @@ int main(int argc, int* argv) {
   print((int*) "This is TheSerializables Selfie");
   println();
 
-  x1 = 5;
-  p1 = &x1;
-  x2 = *&x1;
+  nr = 5;
+  ptr = &nr;
 
   println();
-  // printInteger(*p1);
-  // println();
-  // printInteger(x2);
-  // println();
-  //
-  // x1 = 42;
-  // addrTest(&x1);
-  // println();
-  // printInteger(x1);
-  // println();
-
-  fctp = &test;
-
+  print((int*) "If number is even: divide by 2");
   println();
-  printInteger(fctp(42));
+  print((int*) "If number is odd: multiply by 3 and add 1");
   println();
+  print((int*) "Initial Number: ");
+  printInteger(*ptr);
+  println();
+
+  if ((nr % 2) == 0)
+    fct_ptr = &half;
+  else
+    fct_ptr = &tripple;
+
+  nr = fct_ptr(*ptr);
+
+  print((int*) "Result: ");
+  printInteger(*ptr);
+  println();
+  println();
+
 
   exitCode = selfie();
 
