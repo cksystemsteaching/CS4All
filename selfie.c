@@ -540,6 +540,7 @@ void gr_return();
 void gr_statement();
 int  gr_type();
 void gr_variable(int offset);
+void gr_functionPointer(int offset, int type, int scope);
 int  gr_initialization(int type);
 void gr_procedure(int* procedure, int type);
 void gr_cstar();
@@ -4006,29 +4007,59 @@ void gr_variable(int offset) {
 
     getSymbol();
   } else if (symbol == SYM_LPARENTHESIS) {
-    getSymbol();
-
-    if (symbol == SYM_ASTERISK) {
-      getSymbol();
-
-      if (symbol == SYM_IDENTIFIER) {
-        createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, FUNCPTR, type, 0, offset);
-        getSymbol();
-      } else
-        syntaxErrorSymbol(SYM_IDENTIFIER);
-
-    } else
-      syntaxErrorSymbol(SYM_ASTERISK);
-
-    if (symbol == SYM_RPARENTHESIS)
-      getSymbol();
-    else
-      syntaxErrorSymbol(SYM_RPARENTHESIS);
+    // function pointer
+    gr_functionPointer(offset, type, LOCAL_TABLE);
 
   } else {
     syntaxErrorUnexpected();
 
     createSymbolTableEntry(LOCAL_TABLE, (int*) "missing variable name", lineNumber, VARIABLE, type, 0, offset);
+  }
+}
+
+void gr_functionPointer(int offset, int type, int scope) {
+  int ptype;
+
+  getSymbol();
+
+  if (symbol == SYM_ASTERISK) {
+    getSymbol();
+
+    if (symbol == SYM_IDENTIFIER) {
+      createSymbolTableEntry(scope, identifier, lineNumber, FUNCPTR, type, 0, offset);
+      getSymbol();
+    } else
+      syntaxErrorSymbol(SYM_IDENTIFIER);
+
+  } else
+    syntaxErrorSymbol(SYM_ASTERISK);
+
+  if (symbol == SYM_RPARENTHESIS)
+    getSymbol();
+  else
+    syntaxErrorSymbol(SYM_RPARENTHESIS);
+
+  if (symbol == SYM_LPARENTHESIS) {
+    getSymbol();
+
+    if (symbol == SYM_RPARENTHESIS) {
+      getSymbol();
+    } else {
+      ptype = gr_type();
+
+      while (symbol == SYM_COMMA) {
+        getSymbol();
+
+        ptype = gr_type();
+      }
+
+      if (symbol == SYM_RPARENTHESIS)
+        getSymbol();
+      else
+        syntaxErrorSymbol(SYM_RPARENTHESIS);
+
+    }
+
   }
 }
 
@@ -4282,11 +4313,6 @@ void gr_cstar() {
 
     if (type == VOID_T) {
 
-      // void identifier ...
-      // procedure declaration or definition
-
-      //getSymbol();
-
       if (symbol == SYM_IDENTIFIER) {
         variableOrProcedureName = identifier;
 
@@ -4294,20 +4320,12 @@ void gr_cstar() {
 
         gr_procedure(variableOrProcedureName, type);
       } else if (symbol == SYM_LPARENTHESIS) {
-        getSymbol();
+        gr_functionPointer(-allocatedMemory, type, GLOBAL_TABLE);
 
-        if (symbol == SYM_ASTERISK) {
+        if (symbol == SYM_SEMICOLON)
           getSymbol();
-
-          if (symbol == SYM_IDENTIFIER) {
-            createSymbolTableEntry(GLOBAL_TABLE, identifier, lineNumber, FUNCPTR, type, 0, -allocatedMemory);
-
-            getSymbol();
-          } else
-            syntaxErrorSymbol(SYM_IDENTIFIER);
-
-        } else
-          syntaxErrorSymbol(SYM_ASTERISK);
+        else
+          syntaxErrorSymbol(SYM_SEMICOLON);
 
       } else
         syntaxErrorUnexpected();
@@ -4354,31 +4372,12 @@ void gr_cstar() {
         }
 
       } else if (symbol == SYM_LPARENTHESIS) {
-        getSymbol();
+        gr_functionPointer(-allocatedMemory, type, GLOBAL_TABLE);
 
-        if (symbol == SYM_ASTERISK) {
+        if (symbol == SYM_SEMICOLON)
           getSymbol();
-
-          if (symbol == SYM_IDENTIFIER) {
-            createSymbolTableEntry(GLOBAL_TABLE, identifier, lineNumber, FUNCPTR, type, 0, -allocatedMemory);
-
-            getSymbol();
-
-            if (symbol == SYM_RPARENTHESIS) {
-              getSymbol();
-
-              if (symbol == SYM_SEMICOLON)
-                getSymbol();
-              else
-                syntaxErrorSymbol(SYM_SEMICOLON);
-            } else
-              syntaxErrorSymbol(SYM_RPARENTHESIS);
-
-          } else
-            syntaxErrorSymbol(SYM_IDENTIFIER);
-
-        } else
-          syntaxErrorSymbol(SYM_ASTERISK);
+        else
+          syntaxErrorSymbol(SYM_SEMICOLON);
 
       } else
         syntaxErrorUnexpected();
