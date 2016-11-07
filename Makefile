@@ -1,5 +1,5 @@
 # Compiler flags
-CFLAGS := -Wall -m32 -D'main(a,b)=main(a,char**argv)'
+CFLAGS := -w -m32 -D'main(a,b)=main(a,char**argv)'
 
 # Compile selfie.c into selfie executable
 selfie: selfie.c

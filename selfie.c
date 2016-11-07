@@ -152,6 +152,7 @@ int CHAR_EXCLAMATION  = '!';
 int CHAR_PERCENTAGE   = '%';
 int CHAR_SINGLEQUOTE  = 39; // ASCII code 39 = '
 int CHAR_DOUBLEQUOTE  = '"';
+int CHAR_AMPERSAND    = '&';
 
 int SIZEOFINT     = 4; // must be the same as WORDSIZE
 int SIZEOFINTSTAR = 4; // must be the same as WORDSIZE
@@ -317,6 +318,7 @@ int SYM_STRING       = 27; // string
 
 int SYM_INC          = 28; // ++
 int SYM_DEC          = 29; // --
+int SYM_AMPERSAND    = 30; // &
 
 int* SYMBOLS; // strings representing symbols
 
@@ -353,7 +355,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(30 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(31 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -386,6 +388,7 @@ void initScanner () {
 
   *(SYMBOLS + SYM_INC)          = (int) "++";
   *(SYMBOLS + SYM_DEC)          = (int) "--";
+  *(SYMBOLS + SYM_AMPERSAND)    = (int) "&";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -524,6 +527,7 @@ void help_procedure_prologue(int localVariables);
 void help_procedure_epilogue(int parameters);
 
 int  gr_call(int* procedure);
+int  gr_pointerCall(int* procedure);
 int  gr_factor();
 int  gr_term();
 int  gr_simpleExpression();
@@ -2226,6 +2230,11 @@ void getSymbol() {
 
         symbol = SYM_NOTEQ;
 
+      } else if (character == CHAR_AMPERSAND) {
+        getCharacter();
+
+        symbol = SYM_AMPERSAND;
+
       } else if (character == CHAR_PERCENTAGE) {
         getCharacter();
 
@@ -2458,6 +2467,8 @@ int lookForFactor() {
   else if (symbol == SYM_INC)
     return 0;
   else if (symbol == SYM_DEC)
+    return 0;
+  else if (symbol == SYM_AMPERSAND)
     return 0;
   else if (symbol == SYM_EOF)
     return 0;
@@ -2846,6 +2857,71 @@ int gr_call(int* procedure) {
   return type;
 }
 
+int gr_pointerCall(int* procedure) {
+  int numberOfTemporaries;
+  int type;
+
+  // assert: n = allocatedTemporaries
+
+  numberOfTemporaries = allocatedTemporaries;
+
+  save_temporaries();
+
+  // assert: allocatedTemporaries == 0
+
+  if (isExpression()) {
+    gr_expression();
+
+    // TODO: check if types/number of parameters is correct
+
+    // push first parameter onto stack
+    emitIFormat(OP_ADDIU, REG_SP, REG_SP, -WORDSIZE);
+    emitIFormat(OP_SW, REG_SP, currentTemporary(), 0);
+
+    tfree(1);
+
+    while (symbol == SYM_COMMA) {
+      getSymbol();
+
+      gr_expression();
+
+      // push more parameters onto stack
+      emitIFormat(OP_ADDIU, REG_SP, REG_SP, -WORDSIZE);
+      emitIFormat(OP_SW, REG_SP, currentTemporary(), 0);
+
+      tfree(1);
+    }
+
+    if (symbol == SYM_RPARENTHESIS) {
+      getSymbol();
+
+      type = help_call_codegen(procedure, procedure);
+    } else {
+      syntaxErrorSymbol(SYM_RPARENTHESIS);
+
+      type = INT_T;
+    }
+  } else if (symbol == SYM_RPARENTHESIS) {
+    getSymbol();
+
+    type = help_call_codegen(procedure, procedure);
+  } else {
+    syntaxErrorSymbol(SYM_RPARENTHESIS);
+
+    type = INT_T;
+  }
+
+  // assert: allocatedTemporaries == 0
+
+  restore_temporaries(numberOfTemporaries);
+
+  numberOfCalls = numberOfCalls + 1;
+
+  // assert: allocatedTemporaries == n
+
+  return type;
+}
+
 int gr_factor() {
   int hasCast;
   int cast;
@@ -2904,9 +2980,17 @@ int gr_factor() {
 
     // ["*"] identifier
     if (symbol == SYM_IDENTIFIER) {
-      type = load_variable(identifier);
 
-      getSymbol();
+      variableOrProcedureName = getScopedSymbolTableEntry(identifier, VARIABLE);
+      if (variableOrProcedureName == (int*) 0)
+        variableOrProcedureName = getScopedSymbolTableEntry(identifier, PROCEDURE);
+
+      if (getClass(variableOrProcedureName) == VARIABLE) {
+        type = load_variable(identifier);
+
+        getSymbol();
+      } else
+        gr_pointerCall(variableOrProcedureName);
 
     // * "(" expression ")"
     } else if (symbol == SYM_LPARENTHESIS) {
@@ -2928,6 +3012,23 @@ int gr_factor() {
     emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
     type = INT_T;
+
+  // address-of?
+  } else if (symbol == SYM_AMPERSAND) {
+    getSymbol();
+
+    if (symbol == SYM_IDENTIFIER) {
+      variableOrProcedureName = identifier;
+      type = INTSTAR_T;
+
+      getSymbol();
+
+      variableOrProcedureName = getScopedSymbolTableEntry(variableOrProcedureName, VARIABLE);
+
+      talloc();
+      emitIFormat(OP_ADDIU, getScope(variableOrProcedureName), currentTemporary(), getAddress(variableOrProcedureName));
+    } else
+      syntaxErrorUnexpected();
 
   // identifier?
   } else if (symbol == SYM_IDENTIFIER) {
@@ -7209,20 +7310,16 @@ int main(int argc, int* argv) {
   int i;
   int j;
   int k;
-  int f;
-  int temp;
+
+  int* pt1;
+  int* pt2;
+  int* pt3;
 
   initSelfie(argc, (int*) argv);
 
   initLibrary();
 
-  println(); print((int*)"This is the gcc Selfie."); println(); 
-  print((int*)" |\\_/|"); println();
-  print((int*)" (. .)"); println();
-  print((int*)"  =w= (\\ "); println();
-  print((int*)" / ^ \\// "); println();
-  print((int*)"(|| ||)"); println();
-  
+  println(); print((int*)"This is the gcc Selfie."); println(); println();
 
   test = 1;
   // ################################################################
@@ -7233,27 +7330,26 @@ int main(int argc, int* argv) {
 
     i = 1;
     j = 2;
-    k = -13;
-    f = 1;
 
-    i++;
 
-    print((int*)"i (2): ");
-    print(itoa(i,integer_buffer,10,0,0)); println();
+    pt1 = &i;
+    pt2 = &j;
+    pt3 = &k;
 
-    temp = 5 + j++;
-
-    print((int*)"temp (7): ");
-    print(itoa(temp,integer_buffer,10,0,0));println();
-    print((int*)"j (3): ");
-    print(itoa(j,integer_buffer,10,0,0));println();
-
-    temp = -5 + ++k;
-
-    print((int*)"temp (-17): ");
-    print(itoa(temp,integer_buffer,10,0,0));println();
-    print((int*)"k (-12): ");
+    print((int*)"&pt1: ");
+    print(itoa((int) pt1,integer_buffer,10,0,0));println();
+    print((int*)"&pt2: ");
+    print(itoa((int) pt2,integer_buffer,10,0,0));println();
+    print((int*)"&pt3: ");
+    print(itoa((int) pt3,integer_buffer,10,0,0));println();
+    print((int*)"k (-13): ");
     print(itoa(k,integer_buffer,10,0,0));println();
+
+    *pt3 = 123456;
+
+    print((int*)"k (123456): ");
+    print(itoa(k,integer_buffer,10,0,0));println();
+
 
     println(); println(); print((int*) "Test done."); println(); println();
   }

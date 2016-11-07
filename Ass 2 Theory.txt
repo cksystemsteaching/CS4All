@@ -1,0 +1,17 @@
+Basically what function pointer would allow you to do, is that you could save a series of functions in an array and decide with a function what function to call.
+You will end up with nicer looking call up statements instead of a big switch/if then else block
+
+f.e.:
+
+fn_array [0] = fct1;
+fn_array [1] = fct2;
+fn_array [2] = fct3;
+
+void callFct(statement)
+  int idx = decideFct(statement)
+  fn_array[idx]
+
+Also it will allow you to pass functions as an argument to another function. This could be handled with flags or with passing over a function as a pointer
+
+
+In gcc it allows you to basically write object oriented code. 
