@@ -3005,14 +3005,13 @@ int gr_factor() {
         getSymbol();
 
         type = gr_expression();
-
+        
         getSymbol();
 
       } else
         syntaxErrorUnexpected();
 
-      if (type != INTSTAR_T)
-        typeWarning(INTSTAR_T, type);
+      type = INT_T;
 
       talloc();
       emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);

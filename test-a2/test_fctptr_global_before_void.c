@@ -17,6 +17,6 @@ int main(int argc, int* argv) {
   if(j == 4)
     print("OK");
   else
-    print("WRONG")
+    print("WRONG");
   println();
 }
