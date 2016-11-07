@@ -1,5 +1,3 @@
-// Copyright (c) 2015-2016, the Selfie Project authors. All rights reserved.
-// Please see the AUTHORS file for details. Use of this source code is
 // governed by a BSD license that can be found in the LICENSE file.
 //
 // Selfie is a project of the Computational Systems Group at the
@@ -154,6 +152,7 @@ int CHAR_EXCLAMATION  = '!';
 int CHAR_PERCENTAGE   = '%';
 int CHAR_SINGLEQUOTE  = 39; // ASCII code 39 = '
 int CHAR_DOUBLEQUOTE  = '"';
+int CHAR_AMPERSAND    = '&';
 
 int SIZEOFINT     = 4; // must be the same as WORDSIZE
 int SIZEOFINTSTAR = 4; // must be the same as WORDSIZE
@@ -317,6 +316,10 @@ int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
 
+int SYM_INC          = 28; // ++
+int SYM_DEC          = 29; // --
+int SYM_AMPERSAND    = 30; // &
+
 int* SYMBOLS; // strings representing symbols
 
 int maxIdentifierLength = 64; // maximum number of characters in an identifier
@@ -352,7 +355,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(28 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(31 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -382,6 +385,10 @@ void initScanner () {
   *(SYMBOLS + SYM_MOD)          = (int) "%";
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
+
+  *(SYMBOLS + SYM_INC)          = (int) "++";
+  *(SYMBOLS + SYM_DEC)          = (int) "--";
+  *(SYMBOLS + SYM_AMPERSAND)    = (int) "&";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -520,6 +527,7 @@ void help_procedure_prologue(int localVariables);
 void help_procedure_epilogue(int parameters);
 
 int  gr_call(int* procedure);
+int  gr_pointerCall(int* procedure);
 int  gr_factor();
 int  gr_term();
 int  gr_simpleExpression();
@@ -527,6 +535,7 @@ int  gr_expression();
 void gr_while();
 void gr_if();
 void gr_return();
+void gr_increment_decrement(int post, int* variableOrProcedureName);
 void gr_statement();
 int  gr_type();
 void gr_variable(int offset);
@@ -2126,12 +2135,30 @@ void getSymbol() {
       } else if (character == CHAR_PLUS) {
         getCharacter();
 
-        symbol = SYM_PLUS;
+        if (character == CHAR_SPACE) {
+          getCharacter();
+
+          symbol = SYM_PLUS;
+        } else if (character == CHAR_PLUS) {
+          getCharacter();
+
+          symbol = SYM_INC;
+        } else
+          symbol = SYM_PLUS;
 
       } else if (character == CHAR_DASH) {
         getCharacter();
 
-        symbol = SYM_MINUS;
+        if (character == CHAR_SPACE) {
+          getCharacter();
+
+          symbol = SYM_MINUS;
+        } else if (character == CHAR_DASH) {
+          getCharacter();
+
+          symbol = SYM_DEC;
+        } else
+          symbol = SYM_MINUS;
 
       } else if (character == CHAR_ASTERISK) {
         getCharacter();
@@ -2202,6 +2229,11 @@ void getSymbol() {
           syntaxErrorCharacter(CHAR_EQUAL);
 
         symbol = SYM_NOTEQ;
+
+      } else if (character == CHAR_AMPERSAND) {
+        getCharacter();
+
+        symbol = SYM_AMPERSAND;
 
       } else if (character == CHAR_PERCENTAGE) {
         getCharacter();
@@ -2432,6 +2464,12 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_STRING)
     return 0;
+  else if (symbol == SYM_INC)
+    return 0;
+  else if (symbol == SYM_DEC)
+    return 0;
+  else if (symbol == SYM_AMPERSAND)
+    return 0;
   else if (symbol == SYM_EOF)
     return 0;
   else
@@ -2448,6 +2486,10 @@ int lookForStatement() {
   else if (symbol == SYM_IF)
     return 0;
   else if (symbol == SYM_RETURN)
+    return 0;
+  else if (symbol == SYM_INC)
+    return 0;
+  else if (symbol == SYM_DEC)
     return 0;
   else if (symbol == SYM_EOF)
     return 0;
@@ -2815,6 +2857,71 @@ int gr_call(int* procedure) {
   return type;
 }
 
+int gr_pointerCall(int* procedure) {
+  int numberOfTemporaries;
+  int type;
+
+  // assert: n = allocatedTemporaries
+
+  numberOfTemporaries = allocatedTemporaries;
+
+  save_temporaries();
+
+  // assert: allocatedTemporaries == 0
+
+  if (isExpression()) {
+    gr_expression();
+
+    // TODO: check if types/number of parameters is correct
+
+    // push first parameter onto stack
+    emitIFormat(OP_ADDIU, REG_SP, REG_SP, -WORDSIZE);
+    emitIFormat(OP_SW, REG_SP, currentTemporary(), 0);
+
+    tfree(1);
+
+    while (symbol == SYM_COMMA) {
+      getSymbol();
+
+      gr_expression();
+
+      // push more parameters onto stack
+      emitIFormat(OP_ADDIU, REG_SP, REG_SP, -WORDSIZE);
+      emitIFormat(OP_SW, REG_SP, currentTemporary(), 0);
+
+      tfree(1);
+    }
+
+    if (symbol == SYM_RPARENTHESIS) {
+      getSymbol();
+
+      type = help_call_codegen(procedure, procedure);
+    } else {
+      syntaxErrorSymbol(SYM_RPARENTHESIS);
+
+      type = INT_T;
+    }
+  } else if (symbol == SYM_RPARENTHESIS) {
+    getSymbol();
+
+    type = help_call_codegen(procedure, procedure);
+  } else {
+    syntaxErrorSymbol(SYM_RPARENTHESIS);
+
+    type = INT_T;
+  }
+
+  // assert: allocatedTemporaries == 0
+
+  restore_temporaries(numberOfTemporaries);
+
+  numberOfCalls = numberOfCalls + 1;
+
+  // assert: allocatedTemporaries == n
+
+  return type;
+}
+
 int gr_factor() {
   int hasCast;
   int cast;
@@ -2873,9 +2980,17 @@ int gr_factor() {
 
     // ["*"] identifier
     if (symbol == SYM_IDENTIFIER) {
-      type = load_variable(identifier);
 
-      getSymbol();
+      variableOrProcedureName = getScopedSymbolTableEntry(identifier, VARIABLE);
+      if (variableOrProcedureName == (int*) 0)
+        variableOrProcedureName = getScopedSymbolTableEntry(identifier, PROCEDURE);
+
+      if (getClass(variableOrProcedureName) == VARIABLE) {
+        type = load_variable(identifier);
+
+        getSymbol();
+      } else
+        gr_pointerCall(variableOrProcedureName);
 
     // * "(" expression ")"
     } else if (symbol == SYM_LPARENTHESIS) {
@@ -2898,6 +3013,23 @@ int gr_factor() {
 
     type = INT_T;
 
+  // address-of?
+  } else if (symbol == SYM_AMPERSAND) {
+    getSymbol();
+
+    if (symbol == SYM_IDENTIFIER) {
+      variableOrProcedureName = identifier;
+      type = INTSTAR_T;
+
+      getSymbol();
+
+      variableOrProcedureName = getScopedSymbolTableEntry(variableOrProcedureName, VARIABLE);
+
+      talloc();
+      emitIFormat(OP_ADDIU, getScope(variableOrProcedureName), currentTemporary(), getAddress(variableOrProcedureName));
+    } else
+      syntaxErrorUnexpected();
+
   // identifier?
   } else if (symbol == SYM_IDENTIFIER) {
     variableOrProcedureName = identifier;
@@ -2918,6 +3050,14 @@ int gr_factor() {
       // reset return register to initial return value
       // for missing return expressions
       emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
+
+      // identifier++
+    } else if (symbol == SYM_INC) {
+      gr_increment_decrement(1, variableOrProcedureName);
+
+      // identifier--
+    } else if (symbol == SYM_DEC) {
+      gr_increment_decrement(1, variableOrProcedureName);
     } else
       // variable access: identifier
       type = load_variable(variableOrProcedureName);
@@ -2958,6 +3098,14 @@ int gr_factor() {
       getSymbol();
     else
       syntaxErrorSymbol(SYM_RPARENTHESIS);
+
+  // ++identifier
+  } else if (symbol == SYM_INC) {
+    gr_increment_decrement(0, (int*) 0);
+
+  // --identifier
+  } else if (symbol == SYM_DEC) {
+    gr_increment_decrement(0, (int*) 0);
   } else
     syntaxErrorUnexpected();
 
@@ -3374,6 +3522,53 @@ void gr_return() {
   numberOfReturn = numberOfReturn + 1;
 }
 
+void gr_increment_decrement(int post, int* variableOrProcedureName) {
+  int inc;
+  int type;
+  int* entry;
+
+  if (symbol == SYM_INC)
+    inc = 1;
+
+  getSymbol();
+
+  if (post)
+    entry = getVariable(variableOrProcedureName);
+  else {
+    if (symbol == SYM_IDENTIFIER) {
+      entry = getVariable(identifier);
+
+      getSymbol();
+    } else
+      syntaxErrorSymbol(SYM_IDENTIFIER);
+  }
+
+  type = getType(entry);
+
+  if (type != INT_T)
+    typeWarning(type, INT_T);
+
+  talloc();
+  emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
+
+  if (post) {
+    talloc();
+    emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
+  }
+
+  emitIFormat(OP_ADDIU, REG_ZR, nextTemporary(), 1);
+
+  if (inc)
+    emitRFormat(OP_SPECIAL, currentTemporary(), nextTemporary(), currentTemporary(), FCT_ADDU);
+  else
+    emitRFormat(OP_SPECIAL, currentTemporary(), nextTemporary(), currentTemporary(), FCT_SUBU);
+
+  emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
+  if (post)
+    tfree(1);
+}
+
 void gr_statement() {
   int ltype;
   int rtype;
@@ -3514,6 +3709,29 @@ void gr_statement() {
         getSymbol();
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
+
+    // identifier++;
+    } else if (symbol == SYM_INC) {
+      gr_increment_decrement(1, variableOrProcedureName);
+
+      tfree(1);
+
+      if (symbol == SYM_SEMICOLON)
+        getSymbol();
+      else
+        syntaxErrorSymbol(SYM_SEMICOLON);
+
+    // identifier--;
+    } else if (symbol == SYM_DEC) {
+      gr_increment_decrement(1, variableOrProcedureName);
+
+      tfree(1);
+
+      if (symbol == SYM_SEMICOLON)
+        getSymbol();
+      else
+        syntaxErrorSymbol(SYM_SEMICOLON);
+
     } else
       syntaxErrorUnexpected();
   }
@@ -3533,6 +3751,28 @@ void gr_statement() {
       getSymbol();
     else
       syntaxErrorSymbol(SYM_SEMICOLON);
+
+  // ++identifier;
+  } else if (symbol == SYM_INC) {
+    gr_increment_decrement(0, (int*) 0);
+
+    tfree(1);
+
+    if (symbol == SYM_SEMICOLON)
+      getSymbol();
+    else
+        syntaxErrorSymbol(SYM_SEMICOLON);
+
+  // --identifier;
+  } else if (symbol == SYM_DEC) {
+    gr_increment_decrement(0, (int*) 0);
+
+    tfree(1);
+
+    if (symbol == SYM_SEMICOLON)
+      getSymbol();
+    else
+        syntaxErrorSymbol(SYM_SEMICOLON);
   }
 }
 
@@ -7064,9 +7304,58 @@ int selfie() {
 int main(int argc, int* argv) {
   int exitCode;
 
+  // variables for testing:
+  int test;
+
+  int i;
+  int j;
+  int k;
+
+  int* pt1;
+  int* pt2;
+  int* pt3;
+
   initSelfie(argc, (int*) argv);
 
   initLibrary();
+
+  println(); print((int*)"This is the gcc Selfie."); println(); println();
+
+  test = 1;
+  // ################################################################
+  // ###################### TEST ENVIRONMENT ########################
+  // ################################################################
+  if (test) {
+    println(); print((int*)"Executing test..."); println(); println();
+
+    i = 1;
+    j = 2;
+
+
+    pt1 = &i;
+    pt2 = &j;
+    pt3 = &k;
+
+    print((int*)"&pt1: ");
+    print(itoa((int) pt1,integer_buffer,10,0,0));println();
+    print((int*)"&pt2: ");
+    print(itoa((int) pt2,integer_buffer,10,0,0));println();
+    print((int*)"&pt3: ");
+    print(itoa((int) pt3,integer_buffer,10,0,0));println();
+    print((int*)"k (-13): ");
+    print(itoa(k,integer_buffer,10,0,0));println();
+
+    *pt3 = 123456;
+
+    print((int*)"k (123456): ");
+    print(itoa(k,integer_buffer,10,0,0));println();
+
+
+    println(); println(); print((int*) "Test done."); println(); println();
+  }
+  // ################################################################
+  // ################################################################
+  // ################################################################
 
   exitCode = selfie();
 
