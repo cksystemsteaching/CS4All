@@ -2657,14 +2657,33 @@ int* getVariable(int* variable) {
   return entry;
 }
 
-void load_address(int* variable) {
+void load_address(int* identifier) {
   int* entry;
 
-  entry = getVariable(variable);
+  entry = getScopedSymbolTableEntry(identifier, VARIABLE);
 
-  talloc();
+  if (entry == (int*) 0) {
+    entry = getScopedSymbolTableEntry(identifier, PROCEDURE);
 
-  emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
+    if (entry == (int*) 0) {
+      printLineNumber((int*) "error", lineNumber);
+      print(identifier);
+      print((int*) " undeclared");
+      println();
+
+      exit(-1);
+    } else {
+      talloc();
+
+      emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
+
+    }
+  } else {
+    talloc();
+
+    emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
+
+  }
 
 }
 
