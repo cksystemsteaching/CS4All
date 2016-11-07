@@ -1,0 +1,16 @@
+This file briefly describes the way the address-operator & and function pointers are
+tested in assignment2.c. The code itself is also commented.
+
+- In Example A, we apply the address operator & to a local variable and
+  assign its address to a pointer variable. The value of the local variable
+  is then modified through the pointer
+
+- In Example B, an array with function pointers to simple arithmetic functions is created.
+  We then iterate through the array an apply each function via its pointer to some int values as parameters
+
+- In Example C, we imitate the work of a function factory. That is, the factory function is given an
+  int value in [0, 3] as parameter. Based on this choice, a function pointer to the corresponding
+  arithmetic function is returned
+
+- In Example D, we specifiy the sorting done by SelectionSort with a comparator. That is, the sorting
+  function is given a pointer to a comparator function as a parameter. Based on this, the sorting is done.
