@@ -6603,8 +6603,6 @@ int* createContext(int ID, int parentID, int* in) {
     setPrevContext(in, context);
 
   setStatus(context, STATUS_READY);
-  setCodeSegment(context, 0);
-  setDataSegment(context, (int*) binaryLength);
 
   return context;
 }
