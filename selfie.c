@@ -3073,7 +3073,25 @@ int gr_factor() {
   } else if (symbol == SYM_AMPERSAND) {
     getSymbol();
 
-    if (symbol == SYM_IDENTIFIER) {
+    // ["&"]"*"
+    if (symbol == SYM_ASTERISK) {
+      getSymbol();
+
+      if (symbol == SYM_IDENTIFIER) {
+        load_address(identifier);
+
+        getSymbol();
+      } else if (symbol == SYM_LPARENTHESIS) {
+        getSymbol();
+
+        type = gr_expression();
+      } else
+        syntaxErrorUnexpected();
+
+      // dereference
+      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
+    } else if (symbol == SYM_IDENTIFIER) {
       load_address(identifier);
 
       getSymbol();
