@@ -1,0 +1,43 @@
+Ampersand Operator:
+
+    what’s new:
+    
+    Assign address of integer to pointer:
+        int* a, b;
+        int p;
+        a = &p;
+
+
+    Dereference address of integer
+        a = *&b;
+
+
+    Address operator can be used in function arguments
+        int funct(int* x) { return *x; }
+        a = funct(&b);
+
+
+
+
+Function Pointers:
+
+    Syntax is compatible with c.
+
+    what’s new:
+
+    Declare a pointer to a function
+        int (*fct_ptr)(int n);
+
+
+    Assign a function to the pointer
+        fct_ptr = &otherFunction;
+
+
+    Call the function via the pointer
+        int n = 10;
+        fct_ptr(n);
+
+
+Test program:
+    Simple if / else statement that assigns a different function to the function pointer, depending on the initial value.
+
