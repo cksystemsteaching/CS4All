@@ -972,36 +972,36 @@ void initMemory(int megabytes) {
 }
 
 void newSegmentEntry(int* context) {
-	setCodeSegment(context, nextFreeSegment);
-	nextFreeSegment = nextFreeSegment + 1;
+  setCodeSegment(context, nextFreeSegment);
+  nextFreeSegment = nextFreeSegment + 1;
 
-	setDataSegment(context, nextFreeSegment);
-	nextFreeSegment = nextFreeSegment + 1;
+  setDataSegment(context, nextFreeSegment);
+  nextFreeSegment = nextFreeSegment + 1;
 
-	setStackSegment(context, nextFreeSegment);
-	nextFreeSegment = nextFreeSegment + 1;
+  setStackSegment(context, nextFreeSegment);
+  nextFreeSegment = nextFreeSegment + 1;
 
-	if(nextFreeSegment > (pageFrameMemory / segmentSize)) {
-		syntaxErrorMessage((int*) "No more free segments!");
-	}
+  if(nextFreeSegment > (pageFrameMemory / segmentSize)) {
+    syntaxErrorMessage((int*) "No more free segments!");
+  }
 }
 
 int getSegTableEntryAddr(int entry) {
 
-	if(entry > pageFrameMemory / segmentSize) {
-		syntaxErrorMessage((int*) "!!!! Error: Trying to reach segment that is outside of memory!");
-	}
+  if(entry > pageFrameMemory / segmentSize) {
+    syntaxErrorMessage((int*) "!!!! Error: Trying to reach segment that is outside of memory!");
+  }
 
-	return *(segmentTable + SIZEOFINT*2*entry);
+  return *(segmentTable + SIZEOFINT*2*entry);
 }
 
 int getSegTableEntrySize(int entry) {
 
-	if(entry > pageFrameMemory / segmentSize) {
-		syntaxErrorMessage((int*) "!!!! Error: Trying to reach segment that is outside of memory!");
-	}
+  if(entry > pageFrameMemory / segmentSize) {
+    syntaxErrorMessage((int*) "!!!! Error: Trying to reach segment that is outside of memory!");
+  }
 
-	return *(segmentTable + SIZEOFINT*2*entry+SIZEOFINT);
+  return *(segmentTable + SIZEOFINT*2*entry+SIZEOFINT);
 }
 
 
@@ -5128,9 +5128,9 @@ void emitSchedYield() {
 
 void implementSchedYield() { // TODO: should we change method type to int?
 
-	//print((int*) "Now yielding context: "); printInteger(getID(currentContext)); println();
+  //print((int*) "Now yielding context: "); printInteger(getID(currentContext)); println();
 
-	throwException(EXCEPTION_TIMER,0);
+  throwException(EXCEPTION_TIMER,0);
 }
 
 
@@ -6555,7 +6555,7 @@ int* allocateContext(int ID, int parentID) {
 
   if (freeContexts == (int*) 0) {
     context = malloc(7 * SIZEOFINTSTAR + 7 * SIZEOFINT);
-  	newSegmentEntry(context);
+    newSegmentEntry(context);
 
   }
   else {
@@ -6959,7 +6959,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         toID = schedule();
         setStatus(currentContext, STATUS_EXITING);
-    	usedContexts = deleteContext(fromContext, usedContexts);
+      usedContexts = deleteContext(fromContext, usedContexts);
 
       } else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
