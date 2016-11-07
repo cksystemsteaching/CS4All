@@ -1,7 +1,7 @@
 
-// enabled: true
+// enabled: false
 // expected: 42
-// assemblyOk: 42
+// assemblyOk:
 // assemblyNg: 66
 int main(int argc, int* argv) {
   int* l; // msg

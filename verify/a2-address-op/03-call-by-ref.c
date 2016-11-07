@@ -1,7 +1,7 @@
 void foo(int* x) {
   *x = *x + *x;
 }
-// enabled: false
+// enabled: true
 // expected: 42
 // assemblyOk: 21
 // assemblyNg: 66
