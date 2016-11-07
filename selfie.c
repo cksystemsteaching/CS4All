@@ -427,7 +427,7 @@ int reportUndefinedProcedures();
 // |  0 | next    | pointer to next entry
 // |  1 | string  | identifier string, string literal
 // |  2 | line#   | source line number
-// |  3 | class   | VARIABLE, PROCEDURE, STRING
+// |  3 | class   | VARIABLE, PROCEDURE, STRING, FCTPTR
 // |  4 | type    | INT_T, INTSTAR_T, VOID_T
 // |  5 | value   | VARIABLE: initial value
 // |  6 | address | VARIABLE: offset, PROCEDURE: address, STRING: offset
@@ -458,6 +458,7 @@ void setScope(int* entry, int scope)        { *(entry + 7) = scope; }
 int VARIABLE  = 1;
 int PROCEDURE = 2;
 int STRING    = 3;
+int FCTPTR    = 4;
 
 // types
 int INT_T     = 1;
@@ -2307,6 +2308,9 @@ int* getScopedSymbolTableEntry(int* string, int class) {
   else if (class == PROCEDURE)
     // library procedures override declared or defined procedures
     entry = searchSymbolTable(library_symbol_table, string, PROCEDURE);
+  else if (class == FCTPTR) {
+    entry = searchSymbolTable(local_symbol_table, string, FCTPTR);
+  }
   else
     entry = (int*) 0;
 
@@ -2632,12 +2636,22 @@ int* getVariable(int* variable) {
   entry = getScopedSymbolTableEntry(variable, VARIABLE);
 
   if (entry == (int*) 0) {
-    printLineNumber((int*) "error", lineNumber);
-    print(variable);
-    print((int*) " undeclared");
-    println();
 
-    exit(-1);
+    entry = getScopedSymbolTableEntry(variable, FCTPTR);
+
+    if (entry == (int*) 0) {
+
+      entry = getScopedSymbolTableEntry(variable, PROCEDURE);
+
+      if (entry == (int*) 0) {
+        printLineNumber((int*) "error", lineNumber);
+        print(variable);
+        print((int*) " undeclared");
+        println();
+
+        exit(-1);
+      }
+    }
   }
 
   return entry;
@@ -2672,7 +2686,10 @@ int load_address(int* variable) {
 
   emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
 
-  return INTSTAR_T;
+  if (getClass(entry) == FCTPTR)
+    return getType(entry);
+  else
+    return INTSTAR_T;
 }
 
 void load_integer(int value) {
@@ -2816,6 +2833,11 @@ int gr_call(int* procedure) {
 
   entry = getScopedSymbolTableEntry(procedure, PROCEDURE);
 
+  // in case we call from a fct pointer
+  if (entry == (int*) 0) {
+    entry = getScopedSymbolTableEntry(procedure, FCTPTR);
+  }
+
   numberOfTemporaries = allocatedTemporaries;
 
   save_temporaries();
@@ -2939,8 +2961,8 @@ int gr_factor() {
         getSymbol();
 
         type = load_address(identifier);
-        if(type != INTSTAR_T)
-          typeWarning(INTSTAR_T, type);
+        // if(type != INTSTAR_T)
+        //   typeWarning(INTSTAR_T, type);
     }
 
   // dereference?
@@ -3526,6 +3548,7 @@ void gr_statement() {
   int rtype;
   int* variableOrProcedureName;
   int* entry;
+  int* entry2;
 
   // assert: allocatedTemporaries == 0;
 
@@ -3641,6 +3664,17 @@ void gr_statement() {
 
       getSymbol();
 
+      if (getClass(entry) == FCTPTR) {
+
+        if (symbol == SYM_AMPERSAND) {
+          getSymbol();
+
+          entry2 = getVariable(identifier);
+
+          setAddress(entry, getAddress(entry2));
+        }
+      }
+
       rtype = gr_expression();
 
       if (ltype != rtype)
@@ -3733,6 +3767,41 @@ void gr_variable(int offset) {
     createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset);
 
     getSymbol();
+
+  } else if (symbol == SYM_LPARENTHESIS) {
+    getSymbol();
+
+    if (symbol == SYM_ASTERISK) {
+      getSymbol();
+    }
+    if (symbol == SYM_IDENTIFIER) {
+
+      createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, FCTPTR, type, 0, 0);
+
+      getSymbol();
+    }
+    if (symbol == SYM_RPARENTHESIS) {
+      getSymbol();
+    }
+    if (symbol == SYM_LPARENTHESIS) {
+      getSymbol();
+    }
+
+    while (symbol != SYM_RPARENTHESIS) {
+
+      type = gr_type();
+
+      if (symbol == SYM_IDENTIFIER) {
+        getSymbol();
+      }
+      if (symbol == SYM_COMMA) {
+        getSymbol();
+      }
+    }
+    if (symbol == SYM_RPARENTHESIS) {
+      getSymbol();
+    }
+
   } else {
     syntaxErrorSymbol(SYM_IDENTIFIER);
 
@@ -7235,11 +7304,17 @@ int addrTest(int* addr1) {
   return *addr1;
 }
 
+int test(int argu);
+int test(int argu) {
+  return 5+argu;
+}
+
 int main(int argc, int* argv) {
   int exitCode;
   int x1;
   int x2;
   int* p1;
+  int (*fctp)(int ar);
 
   initSelfie(argc, (int*) argv);
 
@@ -7253,18 +7328,22 @@ int main(int argc, int* argv) {
   x2 = *&x1;
 
   println();
-  printInteger(*p1);
-  println();
-  printInteger(x2);
-  println();
+  // printInteger(*p1);
+  // println();
+  // printInteger(x2);
+  // println();
+  //
+  // x1 = 42;
+  // addrTest(&x1);
+  // println();
+  // printInteger(x1);
+  // println();
 
-  x1 = 42;
-  addrTest(&x1);
-  println();
-  printInteger(x1);
-  println();
+  fctp = &test;
 
-
+  println();
+  printInteger(fctp(42));
+  println();
 
   exitCode = selfie();
 
