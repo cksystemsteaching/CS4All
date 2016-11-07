@@ -3059,7 +3059,6 @@ int gr_factor() {
       if (symbol == SYM_IDENTIFIER) {
 
         type = load_variable(identifier);
-        printInteger(type);
 
         getSymbol();
       } else {
@@ -7282,13 +7281,8 @@ int selfie() {
   return 0;
 }
 
-//void bla(int* blabla){
-//  (*blabla)(99999);
-//}
-
 int main(int argc, int* argv) {
   int exitCode;
-//  int* a;
 
   initSelfie(argc, (int*) argv);
 
@@ -7296,12 +7290,6 @@ int main(int argc, int* argv) {
 
   print((int *)"This is the Starc Mipsdustries Selfie");
   println();
-
-//  a = &printInteger;
-//  bla(a);
-  //printInteger(&load_variable);
-  //println();
-  //printInteger(a);
 
   exitCode = selfie();
 

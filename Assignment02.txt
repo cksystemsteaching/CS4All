@@ -1,0 +1,40 @@
+Part 1: (Ampersand)
+
+Syntax like in normal c
+
+new possibilities:
+
+	standard case:
+		-assign addresses of variables and pointers:
+			int a = 3;
+			int b = 5;
+	
+			a = &b; // a gets address of b ( a = 5 because a points to the address where b points to)
+
+	special case:
+		-*&identifier -> works with variables and pointers (useless because it does the same as identifier)
+		- ++ operator incompatible with & operator in selfie
+
+Part 2: (function pointers)
+
+Syntax:
+using normal pointers as function pointers
+example:
+  int* fctPtr;
+  int helper;
+  fctPtr = &doIt;
+
+  helper = $fctPtr(9999);
+
+  int doIt(int number){
+  	 int a;
+ 	 a = number;
+ 	 return a;
+
+  }
+
+new possibilities:
+	-call function with pointer and save value in variable
+	-call function with pointer 
+	->both possible global and local
+	-function pointers as arguments do not work 
