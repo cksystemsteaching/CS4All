@@ -3818,6 +3818,26 @@ int gr_type() {
   return type;
 }
 
+void consumeFunPtrArgs() {
+  int depth;
+
+  getSymbol();
+
+  if (symbol == SYM_LPARENTHESIS) {
+    depth = 1;
+    while(depth > 0) {
+      getSymbol();
+
+      if (symbol == SYM_LPARENTHESIS) {
+        ++depth;
+      } else if (symbol == SYM_RPARENTHESIS) {
+        depth = depth - 1;
+      }
+    }
+    getSymbol();
+  }
+}
+
 void gr_variable(int offset) {
   int type;
   int isFunPtr;
@@ -3846,10 +3866,7 @@ void gr_variable(int offset) {
 
     // funPtr declaration end: (* ident >)< ...
     if (and(symbol == SYM_RPARENTHESIS, isFunPtr == FUNPTR_YES)) {
-      // consume funPtr argument declaration
-      while (and(symbol != SYM_SEMICOLON, symbol != SYM_COMMA)  ) {
-        getSymbol();
-      }
+      consumeFunPtrArgs();
     }
   } else {
     syntaxErrorSymbol(SYM_IDENTIFIER, (int*) "ERR_70");
@@ -4162,10 +4179,7 @@ void gr_cstar() {
             if (isFunPtr == FUNPTR_NO)
               syntaxErrorUnexpected((int*) "ERR_87");
 
-            // consume funPtr argument declaration
-            while (symbol != SYM_SEMICOLON) {
-              getSymbol();
-            }
+            consumeFunPtrArgs();
             getSymbol();
             initialValue = 0;
           } else {

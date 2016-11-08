@@ -1,4 +1,4 @@
-int (* foo)(int); // msg
+int (* gfp)(int); // msg
 
 // enabled: true
 // expected: 42

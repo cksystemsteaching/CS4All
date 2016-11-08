@@ -3,7 +3,7 @@
 // assemblyOk: 42
 // assemblyNg: 66
 int main(int argc, int* argv) {
-  int (* foo)(int); // msg
+  int (* lfp)(int); // msg
   return 42;
 }
 

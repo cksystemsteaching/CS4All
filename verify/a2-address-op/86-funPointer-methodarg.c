@@ -1,14 +1,15 @@
-int (* gfp)(int); // msg
-
-int inc(int x) { // msg
+int test(int x,int (* fp)(int)) { // msg
   return ++x; // msg
 } // msg
+
+int inc(int x) {
+  return ++x;
+}
 
 // enabled: true
 // expected: 42
 // assemblyOk: 41
 // assemblyNg: 66
 int main(int argc, int* argv) {
-  gfp = &inc; // msg
-  return gfp(41); // msg
+  return test(41,&inc); // msg
 }
