@@ -7345,57 +7345,6 @@ int selfie() {
   return 0;
 }
 
-void testPrePostfix() {
-  int i;
-  i = 0;
-
-  print((int*)"Startwert (0): ");
-  printInteger(i);
-  println();
-
-  print((int*)"nach prefix ++ (1): ");
-  printInteger(++i);
-  println();
-
-  print((int*)"nach prefix -- (0): ");
-  printInteger(--i);
-  println();
-
-  print((int*)"postfix ++ (0): ");
-  printInteger(i++);
-  println();
-
-  print((int*)"nach dem postix ++ (1): ");
-  printInteger(i);
-  println();
-
-  print((int*)"postfix -- (1): ");
-  printInteger(i--);
-  println();
-
-  print((int*)"nach dem postix -- (0): ");
-  printInteger(i);
-  println();
-
-  ++i;
-  print((int*)"prefix ++ nicht in statement (1): ");
-  printInteger(i);
-  println();
-  i++;
-  print((int*)"postfix ++ nicht in statement (2): ");
-  printInteger(i);
-  println();
-  --i;
-  print((int*)"prefix -- nicht in statement (1): ");
-  printInteger(i);
-  println();
-  i--;
-  print((int*)"prostfix -- nicht in statement (0): ");
-  printInteger(i);
-  println();
-
-}
-
 int testAmpersandTwo(int var);
 int testAmpersandTwo(int var){
   var = var * 2;
@@ -7441,11 +7390,7 @@ int main(int argc, int* argv) {
   println();
 
 
-  //testPrePostfix();
   testAmpersand();
-
-
-
 
   if (exitCode == USAGE) {
     print(selfieName);
