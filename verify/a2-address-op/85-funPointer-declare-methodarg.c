@@ -1,6 +1,6 @@
-int test(int x,int (* fp)(int)) { // msg
-  return ++x; // msg
-} // msg
+int m(int x,int (* fp)(int)) { // msg
+  return ++x;
+}
 
 // enabled: true
 // expected: 42

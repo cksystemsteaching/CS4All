@@ -1,4 +1,4 @@
-int test(int x,int (* fp)(int)) { // msg
+int m(int x,int (* fp)(int)) { // msg
   return ++x; // msg
 } // msg
 
@@ -11,5 +11,5 @@ int inc(int x) {
 // assemblyOk: 41
 // assemblyNg: 66
 int main(int argc, int* argv) {
-  return test(41,&inc); // msg
+  return m(41,&inc); // msg
 }

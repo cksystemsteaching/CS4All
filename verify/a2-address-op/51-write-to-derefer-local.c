@@ -8,7 +8,7 @@ int main(int argc, int* argv) {
   int* p; // msg
   int** pp; // msg
   p = &l; // msg
-  pp = &p;
+  pp = &p; // msg
   **pp = 42; //msg
   return l; // msg
 }

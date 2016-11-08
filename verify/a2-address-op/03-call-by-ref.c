@@ -1,4 +1,4 @@
-void foo(int* x) {
+void m(int* x) { //msg
   *x = *x + *x;
 }
 // enabled: true
@@ -8,6 +8,6 @@ void foo(int* x) {
 int main(int argc, int* argv) {
   int l; // msg
   l = 21; //msg
-  foo(&l);
+  m(&l); // msg
   return l; // msg
 }

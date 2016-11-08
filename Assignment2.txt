@@ -1,0 +1,48 @@
+For our supported Syntax please look at the picture VERIFY.PNG
+
+Blue section "- a2-address-op" includes all tests for Assignment 2.
+One Test per line: filename.c [gcc] [testedFeature] := expectation Status
+
+Explanation:
+
+- filename.c: you can look into the test file itself: verify/a2-address-op/filename.c
+- [gcc]: if it is gray, this test is gcc compliant (red if gcc complains)
+- [testFeature]: a compact extract of filename.c (harder to read but enough to grasp the feature)
+- expectation: the testfiles main method will return a value and check it against this expectation (gcc and selfie)
+- Status: gren OK means the test was successful
+
+In case of a disabled test: a gray line with "disabled" at its end.
+
+===
+
+Address operator:
+
+2 Tests are disabled, because we did not implement them:
+- &*(x) (or &*x), because we could not figure a real use case
+  Also it means lots of grammar restructuring in order to support it properly.
+- &&x and **p: can be handy in real world but we decided to skip it.
+
+Additionally to our use cases, we already needed the "&" address operator within selfie:
+
+void load_identifier_address (int* type) {
+  if (symbol == SYM_IDENTIFIER){
+    *type = load_address(identifier);
+    getSymbol();
+  } else
+    syntaxErrorSymbol(SYM_IDENTIFIER, (int*) "ERR_19");
+}
+
+This enabled us to reuse this method.
+Normally type is returned, but in this case it would not work because type will be only assigned in case of SYM_IDENTIFIER.
+
+===
+
+We implemented global, local and method argument function pointer declaration.
+It is GCC compliant.
+
+It is possible to invoke them without an additional proprietary selfie oparator (also gcc compliant).
+
+@see tests 81-86
+
+Method signatures are only based on the unique procedure name.
+=> missmatched method signatures will not be properly dealt with.

@@ -3168,9 +3168,9 @@ int gr_factor() {
     if (symbol == SYM_RPARENTHESIS)
       getSymbol();
     else
-      syntaxErrorSymbol(SYM_RPARENTHESIS, (int*) "ERR_30");
+      syntaxErrorSymbol(SYM_RPARENTHESIS, (int*) "ERR_29");
   } else
-    syntaxErrorUnexpected((int*) "ERR_31");
+    syntaxErrorUnexpected((int*) "ERR_30");
 
   // assert: allocatedTemporaries == n + 1
 
@@ -3202,7 +3202,7 @@ int gr_term() {
     // assert: allocatedTemporaries == n + 2
 
     if (ltype != rtype)
-      typeWarning(ltype, rtype, (int*) "ERR_32");
+      typeWarning(ltype, rtype, (int*) "ERR_31");
 
     if (operatorSymbol == SYM_ASTERISK) {
       emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
@@ -3260,7 +3260,7 @@ int gr_simpleExpression() {
 
   if (sign) {
     if (ltype != INT_T) {
-      typeWarning(INT_T, ltype, (int*) "ERR_33");
+      typeWarning(INT_T, ltype, (int*) "ERR_32");
 
       ltype = INT_T;
     }
@@ -3284,13 +3284,13 @@ int gr_simpleExpression() {
           // pointer arithmetic: factor of 2^2 of integer operand
           emitLeftShiftBy(2);
       } else if (rtype == INTSTAR_T)
-        typeWarning(ltype, rtype, (int*) "ERR_34");
+        typeWarning(ltype, rtype, (int*) "ERR_33");
 
       emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
 
     } else if (operatorSymbol == SYM_MINUS) {
       if (ltype != rtype)
-        typeWarning(ltype, rtype, (int*) "ERR_35");
+        typeWarning(ltype, rtype, (int*) "ERR_34");
 
       emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SUBU);
     }
@@ -3325,7 +3325,7 @@ int gr_expression() {
     // assert: allocatedTemporaries == n + 2
 
     if (ltype != rtype)
-      typeWarning(ltype, rtype, (int*) "ERR_36");
+      typeWarning(ltype, rtype, (int*) "ERR_35");
 
     if (operatorSymbol == SYM_EQUALITY) {
       // subtract, if result = 0 then 1, else 0
@@ -3429,7 +3429,7 @@ void gr_while() {
           if (symbol == SYM_RBRACE)
             getSymbol();
           else {
-            syntaxErrorSymbol(SYM_RBRACE, (int*) "ERR_37");
+            syntaxErrorSymbol(SYM_RBRACE, (int*) "ERR_36");
 
             exit(-1);
           }
@@ -3438,11 +3438,11 @@ void gr_while() {
         else
           gr_statement();
       } else
-        syntaxErrorSymbol(SYM_RPARENTHESIS, (int*) "ERR_38");
+        syntaxErrorSymbol(SYM_RPARENTHESIS, (int*) "ERR_37");
     } else
-      syntaxErrorSymbol(SYM_LPARENTHESIS, (int*) "ERR_39");
+      syntaxErrorSymbol(SYM_LPARENTHESIS, (int*) "ERR_38");
   } else
-    syntaxErrorSymbol(SYM_WHILE, (int*) "ERR_40");
+    syntaxErrorSymbol(SYM_WHILE, (int*) "ERR_39");
 
   // unconditional branch to beginning of while
   emitIFormat(OP_BEQ, REG_ZR, REG_ZR, (brBackToWhile - binaryLength - WORDSIZE) / WORDSIZE);
@@ -3492,7 +3492,7 @@ void gr_if() {
           if (symbol == SYM_RBRACE)
             getSymbol();
           else {
-            syntaxErrorSymbol(SYM_RBRACE, (int*) "ERR_41");
+            syntaxErrorSymbol(SYM_RBRACE, (int*) "ERR_40");
 
             exit(-1);
           }
@@ -3522,7 +3522,7 @@ void gr_if() {
             if (symbol == SYM_RBRACE)
               getSymbol();
             else {
-              syntaxErrorSymbol(SYM_RBRACE, (int*) "ERR_42");
+              syntaxErrorSymbol(SYM_RBRACE, (int*) "ERR_41");
 
               exit(-1);
             }
@@ -3537,11 +3537,11 @@ void gr_if() {
           // if the "if" case was not true, we branch here
           fixup_relative(brForwardToElseOrEnd);
       } else
-        syntaxErrorSymbol(SYM_RPARENTHESIS, (int*) "ERR_43");
+        syntaxErrorSymbol(SYM_RPARENTHESIS, (int*) "ERR_42");
     } else
-      syntaxErrorSymbol(SYM_LPARENTHESIS, (int*) "ERR_44");
+      syntaxErrorSymbol(SYM_LPARENTHESIS, (int*) "ERR_43");
   } else
-    syntaxErrorSymbol(SYM_IF, (int*) "ERR_45");
+    syntaxErrorSymbol(SYM_IF, (int*) "ERR_44");
 
   // assert: allocatedTemporaries == 0
 
@@ -3556,21 +3556,21 @@ void gr_return() {
   if (symbol == SYM_RETURN)
     getSymbol();
   else
-    syntaxErrorSymbol(SYM_RETURN, (int*) "ERR_46");
+    syntaxErrorSymbol(SYM_RETURN, (int*) "ERR_45");
 
   // optional: expression
   if (symbol != SYM_SEMICOLON) {
     type = gr_expression();
 
     if (type != returnType)
-      typeWarning(returnType, type, (int*) "ERR_47");
+      typeWarning(returnType, type, (int*) "ERR_46");
 
     // save value of expression in return register
     emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), REG_V0, FCT_ADDU);
 
     tfree(1);
   } else if (returnType != VOID_T)
-    typeWarning(returnType, VOID_T, (int*) "ERR_48");
+    typeWarning(returnType, VOID_T, (int*) "ERR_47");
 
   // unconditional branch to procedure epilogue
   // maintain fixup chain for later fixup
@@ -3594,7 +3594,7 @@ void gr_statement() {
   // assert: allocatedTemporaries == 0;
 
   while (lookForStatement()) {
-    syntaxErrorUnexpected((int*) "ERR_49");
+    syntaxErrorUnexpected((int*) "ERR_48");
 
     if (symbol == SYM_EOF)
       exit(-1);
@@ -3611,7 +3611,7 @@ void gr_statement() {
       ltype = load_variable(identifier);
 
       if (ltype != INTSTAR_T)
-        typeWarning(INTSTAR_T, ltype, (int*) "ERR_50");
+        typeWarning(INTSTAR_T, ltype, (int*) "ERR_49");
 
       getSymbol();
 
@@ -3622,7 +3622,7 @@ void gr_statement() {
         rtype = gr_expression();
 
         if (rtype != INT_T)
-          typeWarning(INT_T, rtype, (int*) "ERR_51");
+          typeWarning(INT_T, rtype, (int*) "ERR_50");
 
         emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
 
@@ -3630,7 +3630,7 @@ void gr_statement() {
 
         numberOfAssignments = numberOfAssignments + 1;
       } else {
-        syntaxErrorSymbol(SYM_ASSIGN, (int*) "ERR_52");
+        syntaxErrorSymbol(SYM_ASSIGN, (int*) "ERR_51");
 
         tfree(1);
       }
@@ -3638,7 +3638,7 @@ void gr_statement() {
       if (symbol == SYM_SEMICOLON)
         getSymbol();
       else
-        syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_53");
+        syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_52");
 
     // * "(" expression ")"
     } else if (symbol == SYM_LPARENTHESIS) {
@@ -3647,7 +3647,7 @@ void gr_statement() {
       ltype = gr_expression();
 
       if (ltype != INTSTAR_T)
-        typeWarning(INTSTAR_T, ltype, (int*) "ERR_54");
+        typeWarning(INTSTAR_T, ltype, (int*) "ERR_53");
 
       if (symbol == SYM_RPARENTHESIS) {
         getSymbol();
@@ -3659,7 +3659,7 @@ void gr_statement() {
           rtype = gr_expression();
 
           if (rtype != INT_T)
-            typeWarning(INT_T, rtype, (int*) "ERR_55");
+            typeWarning(INT_T, rtype, (int*) "ERR_54");
 
           emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
 
@@ -3667,7 +3667,7 @@ void gr_statement() {
 
           numberOfAssignments = numberOfAssignments + 1;
         } else {
-          syntaxErrorSymbol(SYM_ASSIGN, (int*) "ERR_56");
+          syntaxErrorSymbol(SYM_ASSIGN, (int*) "ERR_55");
 
           tfree(1);
         }
@@ -3675,11 +3675,11 @@ void gr_statement() {
         if (symbol == SYM_SEMICOLON)
           getSymbol();
         else
-          syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_57");
+          syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_56");
       } else
-        syntaxErrorSymbol(SYM_RPARENTHESIS, (int*) "ERR_58");
+        syntaxErrorSymbol(SYM_RPARENTHESIS, (int*) "ERR_57");
     } else
-      syntaxErrorSymbol(SYM_LPARENTHESIS, (int*) "ERR_59");
+      syntaxErrorSymbol(SYM_LPARENTHESIS, (int*) "ERR_58");
 
   // ++ [*] (identifier | "(" expression ")")
   } else if (symbol == SYM_PLUSPLUS) {
@@ -3703,7 +3703,7 @@ void gr_statement() {
         talloc();
         load_variable(identifier);
       } else {
-        syntaxErrorUnexpected((int*) "ERR_60");
+        syntaxErrorUnexpected((int*) "ERR_59");
       }
 
       // dereference
@@ -3714,7 +3714,7 @@ void gr_statement() {
       tfree(1);
     } else { // ++ identfier
       if(symbol != SYM_IDENTIFIER)
-        syntaxErrorSymbol(SYM_IDENTIFIER, (int*) "ERR_61");
+        syntaxErrorSymbol(SYM_IDENTIFIER, (int*) "ERR_60");
 
       load_variable(identifier);
       incrementCurrTemp(identifier);
@@ -3725,7 +3725,7 @@ void gr_statement() {
     getSymbol();
 
     if (symbol != SYM_SEMICOLON)
-      syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_62");
+      syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_61");
 
     getSymbol();
 
@@ -3748,7 +3748,7 @@ void gr_statement() {
       if (symbol == SYM_SEMICOLON)
         getSymbol();
       else
-        syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_64");
+        syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_62");
 
     // identifier = expression
     } else if (symbol == SYM_ASSIGN) {
@@ -3765,7 +3765,7 @@ void gr_statement() {
       }
 
       if (ltype != rtype)
-        typeWarning(ltype, rtype, (int*) "ERR_65");
+        typeWarning(ltype, rtype, (int*) "ERR_63");
 
       emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
 
@@ -3776,9 +3776,9 @@ void gr_statement() {
       if (symbol == SYM_SEMICOLON)
         getSymbol();
       else
-        syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_66");
+        syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_64");
     } else
-      syntaxErrorUnexpected((int*) "ERR_67");
+      syntaxErrorUnexpected((int*) "ERR_65");
   }
   // while statement?
   else if (symbol == SYM_WHILE) {
@@ -3795,7 +3795,7 @@ void gr_statement() {
     if (symbol == SYM_SEMICOLON)
       getSymbol();
     else
-      syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_68");
+      syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_66");
   }
 }
 
@@ -3813,7 +3813,7 @@ int gr_type() {
       getSymbol();
     }
   } else
-    syntaxErrorSymbol(SYM_INT, (int*) "ERR_69");
+    syntaxErrorSymbol(SYM_INT, (int*) "ERR_67");
 
   return type;
 }
@@ -3853,7 +3853,7 @@ void gr_variable(int offset) {
     if (symbol == SYM_ASTERISK)
       getSymbol();
     else
-      syntaxErrorSymbol(SYM_ASTERISK, (int*) "ERR_86");
+      syntaxErrorSymbol(SYM_ASTERISK, (int*) "ERR_68");
   } else {
     isFunPtr = FUNPTR_NO;
   }
@@ -3869,7 +3869,7 @@ void gr_variable(int offset) {
       consumeFunPtrArgs();
     }
   } else {
-    syntaxErrorSymbol(SYM_IDENTIFIER, (int*) "ERR_70");
+    syntaxErrorSymbol(SYM_IDENTIFIER, (int*) "ERR_69");
 
     createSymbolTableEntry(LOCAL_TABLE, (int*) "missing variable name", lineNumber, VARIABLE, type, isFunPtr, 0, offset);
   }
@@ -3899,7 +3899,7 @@ int gr_initialization(int type) {
       if (symbol == SYM_RPARENTHESIS)
         getSymbol();
       else
-        syntaxErrorSymbol(SYM_RPARENTHESIS, (int*) "ERR_71");
+        syntaxErrorSymbol(SYM_RPARENTHESIS, (int*) "ERR_70");
     }
 
     // optional: -
@@ -3931,20 +3931,20 @@ int gr_initialization(int type) {
       if (sign)
         initialValue = -initialValue;
     } else
-      syntaxErrorUnexpected((int*) "ERR_72");
+      syntaxErrorUnexpected((int*) "ERR_71");
 
     if (symbol == SYM_SEMICOLON)
       getSymbol();
     else
-      syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_73");
+      syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_72");
   } else
-    syntaxErrorSymbol(SYM_ASSIGN, (int*) "ERR_74");
+    syntaxErrorSymbol(SYM_ASSIGN, (int*) "ERR_73");
 
   if (hasCast) {
     if (type != cast)
-      typeWarning(type, cast, (int*) "ERR_75");
+      typeWarning(type, cast, (int*) "ERR_74");
   } else if (type != INT_T)
-    typeWarning(type, INT_T, (int*) "ERR_76");
+    typeWarning(type, INT_T, (int*) "ERR_75");
 
   return initialValue;
 }
@@ -3994,11 +3994,11 @@ void gr_procedure(int* procedure, int type) {
       if (symbol == SYM_RPARENTHESIS)
         getSymbol();
       else
-        syntaxErrorSymbol(SYM_RPARENTHESIS, (int*) "ERR_77");
+        syntaxErrorSymbol(SYM_RPARENTHESIS, (int*) "ERR_76");
     } else
       getSymbol();
   } else
-    syntaxErrorSymbol(SYM_LPARENTHESIS, (int*) "ERR_78");
+    syntaxErrorSymbol(SYM_LPARENTHESIS, (int*) "ERR_77");
 
   entry = searchSymbolTable(global_symbol_table, procedure, PROCEDURE);
 
@@ -4010,7 +4010,7 @@ void gr_procedure(int* procedure, int type) {
     else if (getType(entry) != type)
       // procedure already called, declared, or even defined
       // check return type but otherwise ignore
-      typeWarning(getType(entry), type, (int*) "ERR_79");
+      typeWarning(getType(entry), type, (int*) "ERR_78");
 
     getSymbol();
 
@@ -4040,7 +4040,7 @@ void gr_procedure(int* procedure, int type) {
         setLineNumber(entry, lineNumber);
 
         if (getType(entry) != type)
-          typeWarning(getType(entry), type, (int*) "ERR_80");
+          typeWarning(getType(entry), type, (int*) "ERR_79");
 
         setType(entry, type);
         setAddress(entry, binaryLength);
@@ -4066,7 +4066,7 @@ void gr_procedure(int* procedure, int type) {
       if (symbol == SYM_SEMICOLON)
         getSymbol();
       else
-        syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_81");
+        syntaxErrorSymbol(SYM_SEMICOLON, (int*) "ERR_80");
     }
 
     help_procedure_prologue(localVariables);
@@ -4084,7 +4084,7 @@ void gr_procedure(int* procedure, int type) {
     if (symbol == SYM_RBRACE)
       getSymbol();
     else {
-      syntaxErrorSymbol(SYM_RBRACE, (int*) "ERR_82");
+      syntaxErrorSymbol(SYM_RBRACE, (int*) "ERR_81");
 
       exit(-1);
     }
@@ -4096,7 +4096,7 @@ void gr_procedure(int* procedure, int type) {
     help_procedure_epilogue(numberOfParameters);
 
   } else
-    syntaxErrorUnexpected((int*) "ERR_83");
+    syntaxErrorUnexpected((int*) "ERR_82");
 
   local_symbol_table = (int*) 0;
 
@@ -4113,7 +4113,7 @@ void gr_cstar() {
 
   while (symbol != SYM_EOF) {
     while (lookForType()) {
-      syntaxErrorUnexpected((int*) "ERR_84");
+      syntaxErrorUnexpected((int*) "ERR_83");
 
       if (symbol == SYM_EOF)
         exit(-1);
@@ -4136,7 +4136,7 @@ void gr_cstar() {
 
         gr_procedure(variableOrProcedureName, type);
       } else
-        syntaxErrorSymbol(SYM_IDENTIFIER, (int*) "ERR_85");
+        syntaxErrorSymbol(SYM_IDENTIFIER, (int*) "ERR_84");
 
     } else {
       type = gr_type();
@@ -4150,7 +4150,7 @@ void gr_cstar() {
         if (symbol == SYM_ASTERISK)
           getSymbol();
         else
-          syntaxErrorSymbol(SYM_ASTERISK, (int*) "ERR_86");
+          syntaxErrorSymbol(SYM_ASTERISK, (int*) "ERR_85");
       } else {
         isFunPtr = FUNPTR_NO;
       }
@@ -4177,7 +4177,7 @@ void gr_cstar() {
           // funPtr declaration end: (* ident >)< ...
           } else if (symbol == SYM_RPARENTHESIS) {
             if (isFunPtr == FUNPTR_NO)
-              syntaxErrorUnexpected((int*) "ERR_87");
+              syntaxErrorUnexpected((int*) "ERR_86");
 
             consumeFunPtrArgs();
             getSymbol();
@@ -4204,7 +4204,7 @@ void gr_cstar() {
           }
         }
       } else
-        syntaxErrorSymbol(SYM_IDENTIFIER, (int*) "ERR_88");
+        syntaxErrorSymbol(SYM_IDENTIFIER, (int*) "ERR_87");
     }
   }
 }
@@ -4639,7 +4639,7 @@ void storeBinary(int baddr, int instruction) {
 
 void emitInstruction(int instruction) {
   if (binaryLength >= maxBinaryLength) {
-    syntaxErrorMessage((int*) "exceeded maximum binary length", (int*) "ERR_89");
+    syntaxErrorMessage((int*) "exceeded maximum binary length", (int*) "ERR_88");
 
     exit(-1);
   } else {
