@@ -129,6 +129,9 @@ int roundUp(int n, int m);
 
 int* zalloc(int size);
 
+int and(int a, int b);
+int or(int a, int b);
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 // emulate stdbool.h without using include or #define
@@ -1779,6 +1782,20 @@ int* zalloc(int size) {
   }
 
   return memory;
+}
+
+int and(int a, int b) {
+  if (a) {
+    if(b) return true;
+    else return false;
+  }
+  else return false;
+}
+
+int or(int a, int b) {
+  if (a) return true;
+  if (b) return true;
+  else return false;
 }
 
 // *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~
@@ -3803,18 +3820,41 @@ int gr_type() {
 
 void gr_variable(int offset) {
   int type;
+  int isFunPtr;
 
   type = gr_type();
 
+  // ( * funcPtr
+  if (symbol == SYM_LPARENTHESIS) {
+    isFunPtr = FUNPTR_YES;
+    type = INTSTAR_T;
+    getSymbol();
+
+    if (symbol == SYM_ASTERISK)
+      getSymbol();
+    else
+      syntaxErrorSymbol(SYM_ASTERISK, (int*) "ERR_86");
+  } else {
+    isFunPtr = FUNPTR_NO;
+  }
+
   if (symbol == SYM_IDENTIFIER) {
     // TODO: check if identifier has already been declared
-    createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, FUNPTR_NO, 0, offset);
+    createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, isFunPtr, 0, offset);
 
     getSymbol();
+
+    // funPtr declaration end: (* ident >)< ...
+    if (and(symbol == SYM_RPARENTHESIS, isFunPtr == FUNPTR_YES)) {
+      // consume funPtr argument declaration
+      while (and(symbol != SYM_SEMICOLON, symbol != SYM_COMMA)  ) {
+        getSymbol();
+      }
+    }
   } else {
     syntaxErrorSymbol(SYM_IDENTIFIER, (int*) "ERR_70");
 
-    createSymbolTableEntry(LOCAL_TABLE, (int*) "missing variable name", lineNumber, VARIABLE, type, FUNPTR_NO, 0, offset);
+    createSymbolTableEntry(LOCAL_TABLE, (int*) "missing variable name", lineNumber, VARIABLE, type, isFunPtr, 0, offset);
   }
 }
 
@@ -4116,9 +4156,10 @@ void gr_cstar() {
             getSymbol();
 
             initialValue = 0;
+
+          // funPtr declaration end: (* ident >)< ...
           } else if (symbol == SYM_RPARENTHESIS) {
-            // funPtr declaration end: (* ident >)< ...
-            if (isFunPtr == false)
+            if (isFunPtr == FUNPTR_NO)
               syntaxErrorUnexpected((int*) "ERR_87");
 
             // consume funPtr argument declaration
