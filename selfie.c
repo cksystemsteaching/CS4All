@@ -952,7 +952,7 @@ int WORDSIZE = 4; // must be the same as SIZEOFINT and SIZEOFINTSTAR
 
 int PAGESIZE = 4096; // we use standard 4KB pages
 int PAGEBITS = 12;   // 2^12 == 4096
-
+int SEGMENTCOUNT = 4; 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
 int pageFrameMemory = 0; // size of memory for frames in bytes
@@ -1181,11 +1181,9 @@ int  getPC(int* context)          { return        *(context + 3); }
 int* getRegs(int* context)        { return (int*) *(context + 4); }
 int  getRegHi(int* context)       { return        *(context + 5); }
 int  getRegLo(int* context)       { return        *(context + 6); }
-int* getPT(int* context)          { return (int*) *(context+7); 	}
-int* getSTCode(int* context)      { return (int*) *(context + 8); }
-int* getSTStack(int* context)     { return (int*) *(context +9); 	}
-int  getBreak(int* context)       { return        *(context + 10); }
-int  getParent(int* context)      { return        *(context + 11); }
+int* getST(int* context)          { return (int*) *(context+7); 	}
+int  getBreak(int* context)       { return        *(context + 8); }
+int  getParent(int* context)      { return        *(context + 9); }
 
 
 void setNextContext(int* context, int* next) { *context       = (int) next; }
@@ -1195,11 +1193,9 @@ void setPC(int* context, int pc)             { *(context + 3) = pc; }
 void setRegs(int* context, int* regs)        { *(context + 4) = (int) regs; }
 void setRegHi(int* context, int reg_hi)      { *(context + 5) = reg_hi; }
 void setRegLo(int* context, int reg_lo)      { *(context + 6) = reg_lo; }
-void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
-void setSTCode(int* context, int* st)            { *(context + 8) = (int) st; }
-void setSTStack(int* context, int* st)            { *(context + 9) = (int) st; }
-void setBreak(int* context, int brk)         { *(context + 10) = brk; }
-void setParent(int* context, int id)         { *(context + 11) = id; }
+void setST(int* context, int* pt)            { *(context + 7) = (int) pt; }
+void setBreak(int* context, int brk)         { *(context + 8) = brk; }
+void setParent(int* context, int id)         { *(context + 9) = id; }
 
 
 // -----------------------------------------------------------------
@@ -6510,22 +6506,25 @@ int createID(int seed) {
 
 int* allocateContext(int ID, int parentID) {
   int* context;
-
+  int* segTable;
+  int pageCount;
 
   if (freeContexts == (int*) 0)
     context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
   else {
     context = freeContexts;
-
     freeContexts = getNextContext(freeContexts);
   }
 
-  setNextContext(context, (int*) 0);
+    setNextContext(context, (int*) 0);
   setPrevContext(context, (int*) 0);
 
   setID(context, ID);
-
   setPC(context, 0);
+
+  
+  segTable=malloc(SEGMENTCOUNT * SIZEOFINTSTAR + SEGMENTCOUNT * SIZEOFINT));
+  
 
   // allocate zeroed memory for general purpose registers
   // TODO: reuse memory
@@ -6533,16 +6532,22 @@ int* allocateContext(int ID, int parentID) {
 
   setRegHi(context, 0);
   setRegLo(context, 0);
+  
+  
+  *segTable=(int) zalloc((VIRTUALMEMORYSIZE * WORDSIZE) / (PAGESIZE * SEGMENTCOUNT));
+
+  pageCount=0;
+   //zalloc a page table for each segment in segment table
+  while(pageCount<SEGMENTCOUNT){
+    *(segTable+pageCount) =(int) zalloc((VIRTUALMEMORYSIZE * WORDSIZE) / (PAGESIZE * SEGMENTCOUNT));
+     pageCount=pageCount+1;
+  }
+  
 
 
 
-	// only allocate if not first 
-	if(stCode == (int*) 0){
-		stCode = zalloc(maxBinaryLength / PAGESIZE * WORDSIZE);
-	}
-
-	setSTCode(context, stCode);
-
+  setST(context,segTable);
+  
   // allocate zeroed memory for page table
   // TODO: save and reuse memory for page table
 	setPT(context, zalloc((VIRTUALMEMORYSIZE-maxBinaryLength) / PAGESIZE * WORDSIZE));
