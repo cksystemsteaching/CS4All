@@ -129,6 +129,9 @@ int roundUp(int n, int m);
 
 int* zalloc(int size);
 
+int or(int a, int b);
+int and(int a, int b);
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int CHAR_EOF          = -1; // end of file
@@ -152,6 +155,7 @@ int CHAR_LT           = '<';
 int CHAR_GT           = '>';
 int CHAR_EXCLAMATION  = '!';
 int CHAR_PERCENTAGE   = '%';
+int CHAR_AMPERSAND    = '&';
 int CHAR_SINGLEQUOTE  = 39; // ASCII code 39 = '
 int CHAR_DOUBLEQUOTE  = '"';
 
@@ -316,6 +320,9 @@ int SYM_NOTEQ        = 24; // !=
 int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
+int SYM_PLUSPLUS     = 28; // ++
+int SYM_MINUSMINUS   = 29; // --
+int SYM_AMPERSAND    = 30; // &
 
 int* SYMBOLS; // strings representing symbols
 
@@ -352,7 +359,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(28 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(31 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -382,6 +389,9 @@ void initScanner () {
   *(SYMBOLS + SYM_MOD)          = (int) "%";
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
+  *(SYMBOLS + SYM_PLUSPLUS)     = (int) "++";
+  *(SYMBOLS + SYM_MINUSMINUS)   = (int) "--";
+  *(SYMBOLS + SYM_AMPERSAND)    = (int) "&";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -420,7 +430,7 @@ int reportUndefinedProcedures();
 // |  0 | next    | pointer to next entry
 // |  1 | string  | identifier string, string literal
 // |  2 | line#   | source line number
-// |  3 | class   | VARIABLE, PROCEDURE, STRING
+// |  3 | class   | VARIABLE, PROCEDURE, STRING, FCTPTR
 // |  4 | type    | INT_T, INTSTAR_T, VOID_T
 // |  5 | value   | VARIABLE: initial value
 // |  6 | address | VARIABLE: offset, PROCEDURE: address, STRING: offset
@@ -451,6 +461,7 @@ void setScope(int* entry, int scope)        { *(entry + 7) = scope; }
 int VARIABLE  = 1;
 int PROCEDURE = 2;
 int STRING    = 3;
+int FCTPTR    = 4;
 
 // types
 int INT_T     = 1;
@@ -512,6 +523,7 @@ void typeWarning(int expected, int found);
 
 int* getVariable(int* variable);
 int  load_variable(int* variable);
+int  load_address(int* variable);
 void load_integer(int value);
 void load_string(int* string);
 
@@ -1757,6 +1769,21 @@ int* zalloc(int size) {
   return memory;
 }
 
+int or(int a, int b) {
+  if(a)
+    return 1;
+  if(b)
+    return 1;
+  return 0;
+}
+
+int and(int a, int b) {
+  if(a)
+    if(b)
+      return 1;
+  return 0;
+}
+
 // *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~
 // -----------------------------------------------------------------
 // ---------------------    C O M P I L E R    ---------------------
@@ -2126,12 +2153,22 @@ void getSymbol() {
       } else if (character == CHAR_PLUS) {
         getCharacter();
 
-        symbol = SYM_PLUS;
+        if (character == CHAR_PLUS) {
+          getCharacter();
+
+          symbol = SYM_PLUSPLUS;
+        } else
+          symbol = SYM_PLUS;
 
       } else if (character == CHAR_DASH) {
         getCharacter();
 
-        symbol = SYM_MINUS;
+        if (character == CHAR_PLUS) {
+          getCharacter();
+
+          symbol = SYM_MINUSMINUS;
+        } else
+          symbol = SYM_MINUS;
 
       } else if (character == CHAR_ASTERISK) {
         getCharacter();
@@ -2208,6 +2245,10 @@ void getSymbol() {
 
         symbol = SYM_MOD;
 
+      } else if (character == CHAR_AMPERSAND) {
+        getCharacter();
+
+        symbol = SYM_AMPERSAND;
       } else {
         printLineNumber((int*) "error", lineNumber);
         print((int*) "found unknown character ");
@@ -2251,6 +2292,8 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
       numberOfProcedures = numberOfProcedures + 1;
     else if (class == STRING)
       numberOfStrings = numberOfStrings + 1;
+    else if (class == FCTPTR)
+      numberOfGlobalVariables = numberOfGlobalVariables + 1;
   } else if (whichTable == LOCAL_TABLE) {
     setScope(newEntry, REG_FP);
     setNextEntry(newEntry, local_symbol_table);
@@ -2285,6 +2328,8 @@ int* getScopedSymbolTableEntry(int* string, int class) {
   else if (class == PROCEDURE)
     // library procedures override declared or defined procedures
     entry = searchSymbolTable(library_symbol_table, string, PROCEDURE);
+  else if (class == FCTPTR)
+    entry = searchSymbolTable(local_symbol_table, string, FCTPTR);
   else
     entry = (int*) 0;
 
@@ -2369,6 +2414,8 @@ int isExpression() {
     return 1;
   else if (symbol == SYM_CHARACTER)
     return 1;
+  else if (symbol == SYM_AMPERSAND)
+    return 1;
   else
     return 0;
 }
@@ -2433,6 +2480,12 @@ int lookForFactor() {
   else if (symbol == SYM_STRING)
     return 0;
   else if (symbol == SYM_EOF)
+    return 0;
+  else if (symbol == SYM_PLUSPLUS)
+    return 0;
+  else if (symbol == SYM_MINUSMINUS)
+    return 0;
+  else if (symbol == SYM_AMPERSAND)
     return 0;
   else
     return 1;
@@ -2592,12 +2645,20 @@ int* getVariable(int* variable) {
   entry = getScopedSymbolTableEntry(variable, VARIABLE);
 
   if (entry == (int*) 0) {
-    printLineNumber((int*) "error", lineNumber);
-    print(variable);
-    print((int*) " undeclared");
-    println();
+    entry = getScopedSymbolTableEntry(variable, PROCEDURE);
 
-    exit(-1);
+    if (entry == (int*) 0) {
+      entry = getScopedSymbolTableEntry(variable, FCTPTR);
+
+      if (entry == (int*) 0) {
+        printLineNumber((int*) "error", lineNumber);
+        print(variable);
+        print((int*) " undeclared");
+        println();
+
+        exit(-1);
+      }
+    }
   }
 
   return entry;
@@ -2613,6 +2674,18 @@ int load_variable(int* variable) {
   emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
 
   return getType(entry);
+}
+
+int load_address(int* variable) {
+  int* entry;
+
+  entry = getVariable(variable);
+
+  talloc();
+
+  emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
+
+  return INTSTAR_T;
 }
 
 void load_integer(int value) {
@@ -2756,6 +2829,9 @@ int gr_call(int* procedure) {
 
   entry = getScopedSymbolTableEntry(procedure, PROCEDURE);
 
+  if(entry == (int*) 0)
+    entry = getScopedSymbolTableEntry(procedure, FCTPTR);
+
   numberOfTemporaries = allocatedTemporaries;
 
   save_temporaries();
@@ -2821,6 +2897,7 @@ int gr_factor() {
   int type;
 
   int* variableOrProcedureName;
+  int* entry;
 
   // assert: n = allocatedTemporaries
 
@@ -2867,8 +2944,100 @@ int gr_factor() {
     }
   }
 
+  // ["&"] ...
+  if (symbol == SYM_AMPERSAND) {
+    getSymbol();
+
+    // ["&"] "*"
+    if (symbol == SYM_ASTERISK) {
+      getSymbol();
+
+      // ["&"] "*" identifier
+      if (symbol == SYM_IDENTIFIER) {
+        type = load_address(identifier);
+
+        getSymbol();
+
+        //dereference
+        emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
+      // ["&"] "*" "(" expression ")"
+      } else if (symbol == SYM_LPARENTHESIS) {
+        getSymbol();
+
+        type = gr_expression();
+
+        emitIFormat(OP_ADDIU, getScope(entry), currentTemporary(), getAddress(entry));
+        emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
+        getSymbol();
+      } else {
+        syntaxErrorUnexpected();
+      }
+
+      //dereference
+      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
+    // ["&"] identifier
+    } else if (symbol == SYM_IDENTIFIER) {
+      type = load_address(identifier);
+
+      getSymbol();
+    }
+
+    type = INTSTAR_T;
+
+  // prefix increment
+  } else if (symbol == SYM_PLUSPLUS) {
+    getSymbol();
+
+    if (symbol == SYM_ASTERISK) {
+      getSymbol();
+      if (symbol == SYM_IDENTIFIER) {
+        talloc();
+        emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+        emitIFormat(OP_ADDIU, currentTemporary(), previousTemporary(), 0);
+        tfree(1);
+      }
+    } else if (symbol == SYM_IDENTIFIER) {
+      entry = getVariable(identifier);
+      talloc();
+      emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+      type = getType(entry);
+    }
+    getSymbol();
+
+  // prefix decrement
+  } else if (symbol == SYM_MINUSMINUS) {
+    getSymbol();
+
+    if (symbol == SYM_ASTERISK) {
+      getSymbol();
+      if (symbol == SYM_IDENTIFIER) {
+        talloc();
+        emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+        emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+        emitIFormat(OP_ADDIU, currentTemporary(), previousTemporary(), 0);
+        tfree(1);
+      }
+    } else if (symbol == SYM_IDENTIFIER) {
+      entry = getVariable(identifier);
+
+      talloc();
+      emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
+      type = getType(entry);
+    }
+    getSymbol();
   // dereference?
-  if (symbol == SYM_ASTERISK) {
+  } else if (symbol == SYM_ASTERISK) {
     getSymbol();
 
     // ["*"] identifier
@@ -2918,7 +3087,33 @@ int gr_factor() {
       // reset return register to initial return value
       // for missing return expressions
       emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
-    } else
+    } else if (symbol == SYM_PLUSPLUS){
+       getSymbol();
+
+       entry = getVariable(identifier);
+       talloc();
+       emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
+       talloc();
+       emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 1);
+       emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+       tfree(1);
+
+       type = getType(entry);
+
+     } else if (symbol == SYM_MINUSMINUS){
+       getSymbol();
+
+       entry = getVariable(identifier);
+       talloc();
+       emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
+       talloc();
+       emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), -1);
+       emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+       tfree(1);
+
+       type = getType(entry);
+
+     } else
       // variable access: identifier
       type = load_variable(variableOrProcedureName);
 
@@ -3379,6 +3574,7 @@ void gr_statement() {
   int rtype;
   int* variableOrProcedureName;
   int* entry;
+  int* fctPtrTarget;
 
   // assert: allocatedTemporaries == 0;
 
@@ -3499,14 +3695,31 @@ void gr_statement() {
 
       getSymbol();
 
-      rtype = gr_expression();
+      if (getClass(entry) == VARIABLE) {
+        rtype = gr_expression();
 
-      if (ltype != rtype)
-        typeWarning(ltype, rtype);
+        if (ltype != rtype)
+          typeWarning(ltype, rtype);
 
-      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
 
-      tfree(1);
+        tfree(1);
+
+      } else if (getClass(entry) == FCTPTR) {
+
+        if (symbol == SYM_AMPERSAND) {
+          getSymbol();
+
+          if (symbol == SYM_IDENTIFIER) {
+            fctPtrTarget = searchSymbolTable(global_symbol_table, identifier, PROCEDURE);
+            setAddress(entry, getAddress(fctPtrTarget));
+
+            getSymbol();
+          } else
+            syntaxErrorSymbol(SYM_IDENTIFIER);
+        } else
+          syntaxErrorSymbol(SYM_AMPERSAND);
+      }
 
       numberOfAssignments = numberOfAssignments + 1;
 
@@ -3558,13 +3771,41 @@ int gr_type() {
 void gr_variable(int offset) {
   int type;
 
-  type = gr_type();
+  if (symbol == SYM_VOID) {
+    type = VOID_T;
+    getSymbol();
 
+  } else
+    type = gr_type();
+
+  // type identifier
   if (symbol == SYM_IDENTIFIER) {
     // TODO: check if identifier has already been declared
     createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset);
-
     getSymbol();
+
+  // ( void | type ) "(" "*" identifier ")"
+  } else if (symbol == SYM_LPARENTHESIS) {
+    getSymbol();
+
+    if (symbol == SYM_ASTERISK) {
+      getSymbol();
+
+      if (symbol == SYM_IDENTIFIER) {
+        createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, FCTPTR, type, 0, offset);
+
+        getSymbol();
+      } else
+        syntaxErrorSymbol(SYM_IDENTIFIER);
+
+    } else
+      syntaxErrorSymbol(SYM_ASTERISK);
+
+    if (symbol == SYM_RPARENTHESIS)
+      getSymbol();
+    else
+      syntaxErrorSymbol(SYM_RPARENTHESIS);
+
   } else {
     syntaxErrorSymbol(SYM_IDENTIFIER);
 
@@ -3755,7 +3996,7 @@ void gr_procedure(int* procedure, int type) {
 
     localVariables = 0;
 
-    while (symbol == SYM_INT) {
+    while (or(symbol == SYM_INT, symbol == SYM_VOID)) {
       localVariables = localVariables + 1;
 
       gr_variable(-localVariables * WORDSIZE);
@@ -3831,6 +4072,30 @@ void gr_cstar() {
 
 
         gr_procedure(variableOrProcedureName, type);
+      } else if (symbol == SYM_LPARENTHESIS) {
+        getSymbol();
+
+        if (symbol == SYM_ASTERISK) {
+          getSymbol();
+
+          if (symbol == SYM_IDENTIFIER) {
+            createSymbolTableEntry(GLOBAL_TABLE, identifier, lineNumber, FCTPTR, type, 0, -allocatedMemory);
+
+            getSymbol();
+
+            if (symbol == SYM_RPARENTHESIS) {
+              getSymbol();
+
+              if (symbol == SYM_SEMICOLON)
+                getSymbol();
+              else
+                syntaxErrorSymbol(SYM_SEMICOLON);
+            } else
+              syntaxErrorSymbol(SYM_RPARENTHESIS);
+          } else
+            syntaxErrorSymbol(SYM_IDENTIFIER);
+        } else
+          syntaxErrorSymbol(SYM_ASTERISK);
       } else
         syntaxErrorSymbol(SYM_IDENTIFIER);
     } else {
@@ -3874,6 +4139,32 @@ void gr_cstar() {
             println();
           }
         }
+      } else if (symbol == SYM_LPARENTHESIS) {
+        getSymbol();
+
+        if (symbol == SYM_ASTERISK) {
+          getSymbol();
+
+          if (symbol == SYM_IDENTIFIER) {
+            createSymbolTableEntry(GLOBAL_TABLE, identifier, lineNumber, FCTPTR, type, 0, -allocatedMemory);
+
+            getSymbol();
+
+            if (symbol == SYM_RPARENTHESIS) {
+              getSymbol();
+
+              if (symbol == SYM_SEMICOLON)
+                getSymbol();
+              else
+                syntaxErrorSymbol(SYM_SEMICOLON);
+            } else
+              syntaxErrorSymbol(SYM_RPARENTHESIS);
+
+          } else
+            syntaxErrorSymbol(SYM_IDENTIFIER);
+
+        } else
+          syntaxErrorSymbol(SYM_ASTERISK);
       } else
         syntaxErrorSymbol(SYM_IDENTIFIER);
     }
@@ -7068,6 +7359,11 @@ int main(int argc, int* argv) {
 
   initLibrary();
 
+  print((int*) "This is Paam Selfie");
+  println();
+
+
+
   exitCode = selfie();
 
   if (exitCode == USAGE) {
@@ -7079,3 +7375,4 @@ int main(int argc, int* argv) {
   } else
     return exitCode;
 }
+

@@ -10,7 +10,7 @@ C\* is a small Turing-complete subset of C that includes dereferencing (the `*` 
 
 C\* Keywords: `int`, `while`, `if`, `else`, `return`, `void`
 
-C\* Symbols: `;`, `+`, `-`, `*`, `/`, `%`, `==`, `=`, `(`, `)`, `{`, `}`, `,`, `<`, `<=`, `>`, `>=`, `!=`, integer, identifier, character, string
+C\* Symbols: `;`, `+`, `-`, `*`, `/`, `%`, `==`, `=`, `(`, `)`, `{`, `}`, `,`, `<`, `<=`, `>`, `>=`, `!=`, `++`, `--`, `&`, integer, identifier, character, string
 
 with:
 
@@ -36,7 +36,8 @@ C\* Grammar:
 
 ```
 cstar            = { type identifier [ "=" [ cast ] [ "-" ] literal ] ";" |
-                   ( "void" | type ) identifier procedure } .
+                    ( type | void ) "(" "*" identifier ")" ";" |
+                    ( "void" | type ) identifier procedure } .
 
 type             = "int" [ "*" ] .
 
@@ -47,11 +48,14 @@ literal          = integer | character .
 procedure        = "(" [ variable { "," variable } ] ")"
                     ( ";" | "{" { variable ";" } { statement } "}" ) .
 
-variable         = type identifier .
+variable         = type identifier | ( type | void ) "(" "*" identifier ")" .
 
 statement        = call ";" | while | if | return ";" |
-                   ( [ "*" ] identifier | "*" "(" expression ")" )
-                     "=" expression ";" .
+                    [ "++" | "--" ] [ "*" ] identifier ";" |
+                    [ "*" ] identifier [ "++" | "--" ] ";" |
+                    ( "++" | "--" ) "*" "(" expression ")" ";" |
+                    "*" "(" expression ")" ( "++" | "--" ) ";" |
+                    ( [ "*" ] identifier | "*" "(" expression ")" ) "=" expression ";" .
 
 call             = identifier "(" [ expression { "," expression } ] ")" .
 
@@ -62,10 +66,11 @@ simpleExpression = [ "-" ] term { ( "+" | "-" ) term } .
 term             = factor { ( "*" | "/" | "%" ) factor } .
 
 factor           = [ cast ]
-                    ( [ "*" ] ( identifier | "(" expression ")" ) |
-                      call |
-                      literal |
-                      string ) .
+                    ( [ "++" | "--" ] [ "*" ] ( identifier |  "(" expression ")" ) |
+                    ( [ "&" ] [ "*" ] ( identifier |  "(" expression ")" [ "++" | "--" ] ) |
+                    call |
+                    literal |
+                    string ) .
 
 while            = "while" "(" expression ")"
                              ( statement |
