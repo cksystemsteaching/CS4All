@@ -1,0 +1,20 @@
+﻿& operator:
+
+We implemented the & operator with its common C syntax. The & operator returns the memory address of a variable/function. These addresses returned by the address-of operator are pointers, because they "point" to the variable in memory.
+
+Example:
+
+int i;
+
+int* ptr;
+
+ptr = &i;  // use & operator to get a pointer to i, assign that to p
+
+*ptr = 9; // use * operator to "dereference" p, meaning 9 is assigned to i
+
+
+Function pointer:
+
+We implemented function pointer with a syntax similar to C. Instead of e.g. "int (*pointer)(int, int)" we just write "int (*pointer)". Both local and global pointers to function are working.
+
+Examples: see test cases

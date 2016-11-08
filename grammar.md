@@ -10,7 +10,7 @@ C\* is a small Turing-complete subset of C that includes dereferencing (the `*` 
 
 C\* Keywords: `int`, `while`, `if`, `else`, `return`, `void`
 
-C\* Symbols: `;`, `+`, `-`, `*`, `/`, `%`, `==`, `=`, `(`, `)`, `{`, `}`, `,`, `<`, `<=`, `>`, `>=`, `!=`, integer, identifier, character, string
+C\* Symbols: `;`, `+`, `-`, `*`, `/`, `%`, `==`, `=`, `(`, `)`, `{`, `}`, `,`, `<`, `<=`, `>`, `>=`, `!=`, `++`, `--`, `&`, integer, identifier, character, string
 
 with:
 
@@ -35,7 +35,7 @@ letter = "a" | ... | "z" | "A" | ... | "Z" .
 C\* Grammar:
 
 ```
-cstar            = { type identifier [ "=" [ cast ] [ "-" ] literal ] ";" |
+cstar            = { type ( identifier | "(" "*" identifier ")" ) [ "=" [ cast ] [ "-" ] literal ] ";" |
                    ( "void" | type ) identifier procedure } .
 
 type             = "int" [ "*" ] .
@@ -44,12 +44,14 @@ cast             = "(" type ")" .
 
 literal          = integer | character .
 
+lvalue           = [ "*" ] ( [ "++" | "--" ] identifier [ "++" | "--" ] | "(" expression ")" ) .
+
 procedure        = "(" [ variable { "," variable } ] ")"
                     ( ";" | "{" { variable ";" } { statement } "}" ) .
 
-variable         = type identifier .
+variable         = type ( identifier | "(" "*" identifier ")" ) .
 
-statement        = call ";" | while | if | return ";" |
+statement        = call ";" | while | if | return ";" | ( "++" | "--" ) lvalue ";" | lvalue ( "++" | "--" ) ";" |
                    ( [ "*" ] identifier | "*" "(" expression ")" )
                      "=" expression ";" .
 
@@ -62,7 +64,7 @@ simpleExpression = [ "-" ] term { ( "+" | "-" ) term } .
 term             = factor { ( "*" | "/" | "%" ) factor } .
 
 factor           = [ cast ]
-                    ( [ "*" ] ( identifier | "(" expression ")" ) |
+                    ( [ ("++" | "--") | "&" ] lvalue [ "++" | "--" ] ) |
                       call |
                       literal |
                       string ) .
