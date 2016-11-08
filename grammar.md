@@ -10,7 +10,7 @@ C\* is a small Turing-complete subset of C that includes dereferencing (the `*` 
 
 C\* Keywords: `int`, `while`, `if`, `else`, `return`, `void`
 
-C\* Symbols: `;`, `+`, `-`, `*`, `/`, `%`, `==`, `=`, `(`, `)`, `{`, `}`, `,`, `<`, `<=`, `>`, `>=`, `!=`, integer, identifier, character, string
+C\* Symbols: `;`, `+`, `-`, `*`, `/`, `%`, `==`, `=`, `(`, `)`, `{`, `}`, `,`, `<`, `<=`, `>`, `>=`, `!=`, `++`,`--`,`&`, integer, identifier, character, string
 
 with:
 
@@ -47,10 +47,13 @@ literal          = integer | character .
 procedure        = "(" [ variable { "," variable } ] ")"
                     ( ";" | "{" { variable ";" } { statement } "}" ) .
 
-variable         = type identifier .
+
+
+variable         = type ( identifier | "(" "*" identifier ")" "(" [ variable { variable } ] ")" ) .
+
 
 statement        = call ";" | while | if | return ";" |
-                   ( [ "*" ] identifier | "*" "(" expression ")" )
+                ["*"] ["++"|"--"] identifier | ["*"] identifier ["++"|"--"] | "*" "(" expression ")"
                      "=" expression ";" .
 
 call             = identifier "(" [ expression { "," expression } ] ")" .
@@ -61,11 +64,13 @@ simpleExpression = [ "-" ] term { ( "+" | "-" ) term } .
 
 term             = factor { ( "*" | "/" | "%" ) factor } .
 
+
+
 factor           = [ cast ]
-                    ( [ "*" ] ( identifier | "(" expression ")" ) |
-                      call |
-                      literal |
-                      string ) .
+                    ( [ [ "&" ] "*" ] [ "&" ] identifier | [ "*" ] "(" expression ")" ) |
+                       ["++" | "--" ] identifier | identifier ["++" | "--"] |                  
+                       call | literal | string ) .
+
 
 while            = "while" "(" expression ")"
                              ( statement |
