@@ -427,7 +427,7 @@ int reportUndefinedProcedures();
 // |  0 | next    | pointer to next entry
 // |  1 | string  | identifier string, string literal
 // |  2 | line#   | source line number
-// |  3 | class   | VARIABLE, PROCEDURE, STRING
+// |  3 | class   | VARIABLE, PROCEDURE, STRING, FPTR
 // |  4 | type    | INT_T, INTSTAR_T, VOID_T
 // |  5 | value   | VARIABLE: initial value
 // |  6 | address | VARIABLE: offset, PROCEDURE: address, STRING: offset
@@ -458,6 +458,7 @@ void setScope(int* entry, int scope)        { *(entry + 7) = scope; }
 int VARIABLE  = 1;
 int PROCEDURE = 2;
 int STRING    = 3;
+int FPTR      = 4;
 
 // types
 int INT_T     = 1;
@@ -802,7 +803,7 @@ void selfie_load();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int maxBinaryLength = 131072; // 128KB
+int maxBinaryLength = 262144; // 256KB
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -2271,6 +2272,8 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
 
     if (class == VARIABLE)
       numberOfGlobalVariables = numberOfGlobalVariables + 1;
+    else if (class == FPTR)
+      numberOfGlobalVariables = numberOfGlobalVariables + 1;
     else if (class == PROCEDURE)
       numberOfProcedures = numberOfProcedures + 1;
     else if (class == STRING)
@@ -2306,6 +2309,8 @@ int* getScopedSymbolTableEntry(int* string, int class) {
   if (class == VARIABLE)
     // local variables override global variables
     entry = searchSymbolTable(local_symbol_table, string, VARIABLE);
+  else if (class == FPTR)
+    entry = searchSymbolTable(local_symbol_table, string, FPTR);
   else if (class == PROCEDURE)
     // library procedures override declared or defined procedures
     entry = searchSymbolTable(library_symbol_table, string, PROCEDURE);
@@ -2646,12 +2651,16 @@ int* getVariable(int* variable) {
   entry = getScopedSymbolTableEntry(variable, VARIABLE);
 
   if (entry == (int*) 0) {
-    printLineNumber((int*) "error", lineNumber);
-    print(variable);
-    print((int*) " undeclared");
-    println();
+    entry = getScopedSymbolTableEntry(variable, FPTR);
+    if (entry == (int*) 0) {
+      printLineNumber((int*) "error", lineNumber);
+      print(variable);
+      print((int*) " undeclared");
+      println();
 
-    exit(-1);
+      exit(-1);
+    }
+
   }
 
   return entry;
@@ -2839,6 +2848,9 @@ int gr_call(int* procedure) {
   // assert: n = allocatedTemporaries
 
   entry = getScopedSymbolTableEntry(procedure, PROCEDURE);
+
+  if(entry == (int*) 0)
+    entry = getScopedSymbolTableEntry(procedure, FPTR);
 
   numberOfTemporaries = allocatedTemporaries;
 
@@ -3631,6 +3643,7 @@ void gr_statement() {
   int isDereference;
   int* variableOrProcedureName;
   int* entry;
+  int* fptrEntry;
 
   // assert: allocatedTemporaries == 0;
 
@@ -3850,6 +3863,21 @@ void gr_statement() {
 
       getSymbol();
 
+      if (symbol == SYM_AMPERSAND) {
+        if (getClass(entry) == FPTR) {
+          getSymbol();
+          load_address(identifier);
+
+          fptrEntry = getScopedSymbolTableEntry(identifier, PROCEDURE);
+
+          if (entry != (int*) 0)
+            setAddress(entry, getAddress(fptrEntry));
+
+          getSymbol();
+        }
+
+      } else {
+
       rtype = gr_expression();
 
       if (ltype != rtype)
@@ -3858,6 +3886,8 @@ void gr_statement() {
       emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
 
       tfree(1);
+
+    }
 
       numberOfAssignments = numberOfAssignments + 1;
 
@@ -3931,15 +3961,38 @@ int gr_type() {
 void gr_variable(int offset) {
   int type;
 
-  type = gr_type();
+  if (symbol == SYM_VOID) {
+    type = VOID_T;
+    getSymbol();
+  }
+  else
+    type = gr_type();
 
   if (symbol == SYM_IDENTIFIER) {
     // TODO: check if identifier has already been declared
     createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset);
 
     getSymbol();
+  } else if (symbol == SYM_LPARENTHESIS) {
+    getSymbol();
+    if (symbol == SYM_ASTERISK) {
+      getSymbol();
+      if (symbol == SYM_IDENTIFIER) {
+        createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, FPTR, type, 0, offset);
+
+        getSymbol();
+      } else
+      syntaxErrorSymbol(SYM_IDENTIFIER);
+    } else
+    syntaxErrorSymbol(SYM_ASTERISK);
+
+    if (symbol == SYM_RPARENTHESIS) {
+      getSymbol();
+    } else
+      syntaxErrorSymbol(SYM_RPARENTHESIS);
+
   } else {
-    syntaxErrorSymbol(SYM_IDENTIFIER);
+    syntaxErrorUnexpected();
 
     createSymbolTableEntry(LOCAL_TABLE, (int*) "missing variable name", lineNumber, VARIABLE, type, 0, offset);
   }
@@ -4247,8 +4300,30 @@ void gr_cstar() {
             println();
           }
         }
+      } else if (symbol == SYM_LPARENTHESIS) {
+        getSymbol();
+        if (symbol == SYM_ASTERISK) {
+          getSymbol();
+          if (symbol == SYM_IDENTIFIER) {
+            createSymbolTableEntry(GLOBAL_TABLE, identifier, lineNumber, FPTR, type, 0, -allocatedMemory);
+
+            getSymbol();
+          } else
+          syntaxErrorSymbol(SYM_IDENTIFIER);
+        } else
+        syntaxErrorSymbol(SYM_ASTERISK);
+
+        if(symbol == SYM_RPARENTHESIS) {
+          getSymbol();
+        } else
+          syntaxErrorSymbol(SYM_RPARENTHESIS);
+
+        if (symbol == SYM_SEMICOLON)
+            getSymbol();
+        else
+            syntaxErrorSymbol(SYM_SEMICOLON);
       } else
-        syntaxErrorSymbol(SYM_IDENTIFIER);
+        syntaxErrorUnexpected();
     }
   }
 }
