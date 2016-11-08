@@ -3863,8 +3863,8 @@ void gr_statement() {
 
       getSymbol();
 
-      if (symbol == SYM_AMPERSAND) {
-        if (getClass(entry) == FPTR) {
+      if (getClass(entry) == FPTR) {
+        if (symbol == SYM_AMPERSAND) {
           getSymbol();
           load_address(identifier);
 
@@ -3874,6 +3874,10 @@ void gr_statement() {
             setAddress(entry, getAddress(fptrEntry));
 
           getSymbol();
+
+          emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
+          tfree(1);
         }
 
       } else {
@@ -3887,7 +3891,7 @@ void gr_statement() {
 
       tfree(1);
 
-    }
+      }
 
       numberOfAssignments = numberOfAssignments + 1;
 
