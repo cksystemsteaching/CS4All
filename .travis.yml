@@ -10,7 +10,7 @@ addons:
   apt:
     packages:
     - gcc-multilib
-install: travis_wait 60 mvn install
+install: travis_wait mvn install
 script: make test
 notifications:
   email: false
