@@ -36,6 +36,7 @@ C\* Grammar:
 
 ```
 cstar            = { type identifier [ "=" [ cast ] [ "-" ] literal ] ";" |
+                     type "(" "*" identifier ")" "(" [ variable { "," variable } ] ")" ";" |
                    ( "void" | type ) identifier procedure } .
 
 type             = "int" [ "*" ] .
@@ -47,7 +48,8 @@ literal          = integer | character .
 procedure        = "(" [ variable { "," variable } ] ")"
                     ( ";" | "{" { variable ";" } { statement } "}" ) .
 
-variable         = type identifier .
+variable         = ( type identifier |
+                     type "(" "*" identifier ")" "(" [ variable { "," variable } ] ")" ) .
 
 statement        = call ";" | while | if | return ";" |
                     ( "++" ["*"] identifier ) | ( "++" "*" "(" expression ")" ) |
