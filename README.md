@@ -81,3 +81,7 @@ This assignment deals with cooperative multitasking of _n_ processes in mipster 
 -----------
 [Lecture 3](https://myfiles.sbg.ac.at/index.php/s/sDpx7HPjbGitXwA)
 -----------
+
+-----------
+[Lecture 4](https://myfiles.sbg.ac.at/index.php/s/j7xW8qDRTxnd7pO)
+-----------
