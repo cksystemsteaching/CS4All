@@ -1,12 +1,3 @@
-Assignment 0: Your Team!
-------------------------
-* "This is PAAMs Selfie" is printed before doing anything else
-
-Assignment 1: Revisiting Compilers
-----------------------------------
-* prefix/postfix increment and decrement are implemented
-* all provided test cases (test-a1) are working without errors and warnings.
-
 Assignment 2: Addresses
 ----------------------------------
 __Address operator__
@@ -31,6 +22,7 @@ __Function pointer__
 * our function pointers only work if the function is already defined
 * it is not possible to use the function pointers if the function is defined later
 * it is also not possible to use the function as a function parameter
+* in principle our version of function pointers is compatible with gcc, however it isn't a good style without the types
 * only the testcases (test_fctptr_global_before_int.c, test_fctptr_global_before_void.c, test_fctptr_local_before_int.c, test_fctptr_local_before_void.c) work without errors and warnings
 
 __New possibilities address operator__
@@ -473,3 +465,4 @@ void double(int* x) {
   *x = *x * 2;
 }
 ```
+
