@@ -10,7 +10,7 @@ C\* is a small Turing-complete subset of C that includes dereferencing (the `*` 
 
 C\* Keywords: `int`, `while`, `if`, `else`, `return`, `void`
 
-C\* Symbols: `;`, `+`, `-`, `*`, `/`, `%`, `==`, `=`, `(`, `)`, `{`, `}`, `,`, `<`, `<=`, `>`, `>=`, `!=`, integer, identifier, character, string
+C\* Symbols: `;`, `+`, `-`, `*`, `/`, `%`, `==`, `=`, `(`, `)`, `{`, `}`, `,`, `<`, `<=`, `>`, `>=`, `!=`, `++`, `&`, integer, identifier, character, string
 
 with:
 
@@ -36,6 +36,7 @@ C\* Grammar:
 
 ```
 cstar            = { type identifier [ "=" [ cast ] [ "-" ] literal ] ";" |
+                     type "(" "*" identifier ")" "(" [ variable { "," variable } ] ")" ";" |
                    ( "void" | type ) identifier procedure } .
 
 type             = "int" [ "*" ] .
@@ -47,11 +48,13 @@ literal          = integer | character .
 procedure        = "(" [ variable { "," variable } ] ")"
                     ( ";" | "{" { variable ";" } { statement } "}" ) .
 
-variable         = type identifier .
+variable         = ( type identifier |
+                     type "(" "*" identifier ")" "(" [ variable { "," variable } ] ")" ) .
 
 statement        = call ";" | while | if | return ";" |
-                   ( [ "*" ] identifier | "*" "(" expression ")" )
-                     "=" expression ";" .
+                    ( "++" ["*"] identifier ) | ( "++" "*" "(" expression ")" ) |
+                    ( [ "*" ] identifier | "*" "(" expression ")" )
+                      "=" expression ";" .
 
 call             = identifier "(" [ expression { "," expression } ] ")" .
 
@@ -62,7 +65,9 @@ simpleExpression = [ "-" ] term { ( "+" | "-" ) term } .
 term             = factor { ( "*" | "/" | "%" ) factor } .
 
 factor           = [ cast ]
-                    ( [ "*" ] ( identifier | "(" expression ")" ) |
+                    ( [ "*" ] ( ["++"] identifier | "(" expression ")" ) |
+                      "++" "*" (identifier | "(" expression ")") |
+                      "&" identifier |
                       call |
                       literal |
                       string ) .
