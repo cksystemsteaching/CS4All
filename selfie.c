@@ -3080,6 +3080,9 @@ int gr_factor() {
       if (symbol == SYM_IDENTIFIER) {
         load_address(identifier);
 
+        // dereference
+        emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
         getSymbol();
       } else if (symbol == SYM_LPARENTHESIS) {
         getSymbol();
@@ -3087,9 +3090,6 @@ int gr_factor() {
         type = gr_expression();
       } else
         syntaxErrorUnexpected();
-
-      // dereference
-      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
     } else if (symbol == SYM_IDENTIFIER) {
       load_address(identifier);
