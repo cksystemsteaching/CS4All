@@ -356,7 +356,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner() {
-  SYMBOLS = malloc(30 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(31 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -427,7 +427,7 @@ int reportUndefinedProcedures();
 // |  0 | next    | pointer to next entry
 // |  1 | string  | identifier string, string literal
 // |  2 | line#   | source line number
-// |  3 | class   | VARIABLE, PROCEDURE, STRING
+// |  3 | class   | VARIABLE, PROCEDURE, STRING, FCTPTR
 // |  4 | type    | INT_T, INTSTAR_T, VOID_T
 // |  5 | value   | VARIABLE: initial value
 // |  6 | address | VARIABLE: offset, PROCEDURE: address, STRING: offset
@@ -490,6 +490,7 @@ void setScope(int* entry, int scope)        {
 int VARIABLE  = 1;
 int PROCEDURE = 2;
 int STRING    = 3;
+int FCTPTR    = 4;
 
 // types
 int INT_T     = 1;
@@ -832,8 +833,8 @@ void selfie_load();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int maxBinaryLength = 131072; // 128KB
-
+//int maxBinaryLength = 131072; // 128KB
+int maxBinaryLength = 259072;
 // ------------------------ GLOBAL VARIABLES -----------------------
 
 int* binary = (int*) 0; // binary of emitted instructions
@@ -2289,16 +2290,13 @@ void getSymbol() {
           syntaxErrorCharacter(CHAR_EQUAL);
 
         symbol = SYM_NOTEQ;
-
+      } else if(character == CHAR_AMPERSAND){
+        getCharacter();
+        symbol = SYM_AMPERSAND;
       } else if (character == CHAR_PERCENTAGE) {
         getCharacter();
 
         symbol = SYM_MOD;
-
-      } else if (character == CHAR_AMPERSAND) {
-        getCharacter();
-
-        symbol = SYM_AMPERSAND;
 
       } else {
         printLineNumber((int*) "error", lineNumber);
@@ -2377,6 +2375,8 @@ int* getScopedSymbolTableEntry(int* string, int class) {
   else if (class == PROCEDURE)
     // library procedures override declared or defined procedures
     entry = searchSymbolTable(library_symbol_table, string, PROCEDURE);
+  else if (class == FCTPTR)
+    entry = searchSymbolTable(local_symbol_table, string, FCTPTR);
   else
     entry = (int*) 0;
 
@@ -2465,6 +2465,8 @@ int isExpression() {
     return 1;
   else if (symbol == SYM_MINUSMINUS)
     return 1;
+  else if (symbol == SYM_AMPERSAND)
+    return 1;
   else
     return 0;
 }
@@ -2534,6 +2536,8 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_MINUSMINUS)
     return 0;
+  else if (symbol == SYM_AMPERSAND)
+    return 0;
   else
     return 1;
 }
@@ -2554,6 +2558,8 @@ int lookForStatement() {
   else if (symbol == SYM_PLUSPLUS)
     return 0;
   else if (symbol == SYM_MINUSMINUS)
+    return 0;
+  else if (symbol == SYM_AMPERSAND)
     return 0;
   else
     return 1;
@@ -2690,18 +2696,30 @@ void typeWarning(int expected, int found) {
   println();
 }
 
+
+
 int* getVariable(int* variable) {
   int* entry;
 
   entry = getScopedSymbolTableEntry(variable, VARIABLE);
 
   if (entry == (int*) 0) {
-    printLineNumber((int*) "error", lineNumber);
-    print(variable);
-    print((int*) " undeclared");
-    println();
 
-    exit(-1);
+    entry = getScopedSymbolTableEntry(variable, FCTPTR);
+
+    if (entry == (int*) 0) {
+
+      entry = getScopedSymbolTableEntry(variable, PROCEDURE);
+
+      if (entry == (int*) 0) {
+        printLineNumber((int*) "error", lineNumber);
+        print(variable);
+        print((int*) " undeclared");
+        println();
+
+        exit(-1);
+      }
+    }
   }
 
   return entry;
@@ -2860,6 +2878,10 @@ int gr_call(int* procedure) {
 
   entry = getScopedSymbolTableEntry(procedure, PROCEDURE);
 
+  if (entry == (int*) 0) {
+    entry = getScopedSymbolTableEntry(procedure, FCTPTR);
+  }
+
   numberOfTemporaries = allocatedTemporaries;
 
   save_temporaries();
@@ -2919,10 +2941,12 @@ int gr_call(int* procedure) {
   return type;
 }
 
+
 int gr_factor() {
   int hasCast;
   int cast;
   int type;
+  int* ampersandEmit;
 
   int* variableOrProcedureName;
 
@@ -2970,9 +2994,24 @@ int gr_factor() {
       return type;
     }
   }
+  if(symbol == SYM_AMPERSAND){
+    getSymbol();
 
+    if (symbol == SYM_ASTERISK) {
+      getSymbol();
+    }
+
+    if(symbol == SYM_IDENTIFIER) {
+        getSymbol();
+
+        type =  INTSTAR_T;
+        ampersandEmit = getVariable(identifier);
+        talloc();
+        emitIFormat(OP_ADDIU, getScope(ampersandEmit), currentTemporary(), getAddress(ampersandEmit));
+    }
+  }
   // dereference?
-  if (symbol == SYM_ASTERISK) {
+  else if (symbol == SYM_ASTERISK) {
     getSymbol();
 
     // ["*"] identifier
@@ -2981,8 +3020,8 @@ int gr_factor() {
 
       getSymbol();
 
-      // * "(" expression ")"
-    } else if (symbol == SYM_LPARENTHESIS) {
+
+    }else if (symbol == SYM_LPARENTHESIS) {
       getSymbol();
 
       type = gr_expression();
@@ -3029,7 +3068,7 @@ int gr_factor() {
       type = load_variable(variableOrProcedureName);
       emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
       emitIFormat(OP_SW, getScope(getVariable(variableOrProcedureName)), currentTemporary(), getAddress(getVariable(variableOrProcedureName)));
-      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+      //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
 
       //--
     } else if (symbol == SYM_MINUSMINUS) {
@@ -3038,7 +3077,7 @@ int gr_factor() {
       type = load_variable(variableOrProcedureName);
       emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
       emitIFormat(OP_SW, getScope(getVariable(variableOrProcedureName)), currentTemporary(), getAddress(getVariable(variableOrProcedureName)));
-      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
 
       // variable access: identifier
     } else
@@ -3545,6 +3584,8 @@ void gr_statement() {
   int rtype;
   int* variableOrProcedureName;
   int* entry;
+  int* variable;
+
 
   // assert: allocatedTemporaries == 0;
 
@@ -3672,6 +3713,17 @@ void gr_statement() {
 
       getSymbol();
 
+      if (getClass(entry) == FCTPTR) {
+
+        if (symbol == SYM_AMPERSAND) {
+          getSymbol();
+
+          variable = getVariable(identifier);
+
+          setAddress(entry, getAddress(variable));
+        }
+      }
+
       rtype = gr_expression();
 
       if (ltype != rtype)
@@ -3687,17 +3739,16 @@ void gr_statement() {
         getSymbol();
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
-        //++
-    } else if (symbol == SYM_PLUSPLUS){
+      //++
+    } else if (symbol == SYM_PLUSPLUS) {
       gr_expression();
       getSymbol();
       //--
-    }else if(symbol == SYM_MINUSMINUS){
+    } else if (symbol == SYM_MINUSMINUS) {
       gr_expression();
       getSymbol();
 
-    }
-    else
+    } else
       syntaxErrorUnexpected();
   }
   // while statement?
@@ -3762,6 +3813,41 @@ void gr_variable(int offset) {
     createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset);
 
     getSymbol();
+
+  } else if (symbol == SYM_LPARENTHESIS) {
+    getSymbol();
+
+    if (symbol == SYM_ASTERISK) {
+      getSymbol();
+    }
+    if (symbol == SYM_IDENTIFIER) {
+
+      createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, FCTPTR, type, 0, 0);
+
+      getSymbol();
+    }
+    if (symbol == SYM_RPARENTHESIS) {
+      getSymbol();
+    }
+    if (symbol == SYM_LPARENTHESIS) {
+      getSymbol();
+    }
+
+    while (symbol != SYM_RPARENTHESIS) {
+
+      type = gr_type();
+
+      if (symbol == SYM_IDENTIFIER) {
+        getSymbol();
+      }
+      if (symbol == SYM_COMMA) {
+        getSymbol();
+      }
+    }
+    if (symbol == SYM_RPARENTHESIS) {
+      getSymbol();
+    }
+
   } else {
     syntaxErrorSymbol(SYM_IDENTIFIER);
 
@@ -7259,10 +7345,92 @@ int selfie() {
   return 0;
 }
 
+void testPrePostfix() {
+  int i;
+  i = 0;
+
+  print((int*)"Startwert (0): ");
+  printInteger(i);
+  println();
+
+  print((int*)"nach prefix ++ (1): ");
+  printInteger(++i);
+  println();
+
+  print((int*)"nach prefix -- (0): ");
+  printInteger(--i);
+  println();
+
+  print((int*)"postfix ++ (0): ");
+  printInteger(i++);
+  println();
+
+  print((int*)"nach dem postix ++ (1): ");
+  printInteger(i);
+  println();
+
+  print((int*)"postfix -- (1): ");
+  printInteger(i--);
+  println();
+
+  print((int*)"nach dem postix -- (0): ");
+  printInteger(i);
+  println();
+
+  ++i;
+  print((int*)"prefix ++ nicht in statement (1): ");
+  printInteger(i);
+  println();
+  i++;
+  print((int*)"postfix ++ nicht in statement (2): ");
+  printInteger(i);
+  println();
+  --i;
+  print((int*)"prefix -- nicht in statement (1): ");
+  printInteger(i);
+  println();
+  i--;
+  print((int*)"prostfix -- nicht in statement (0): ");
+  printInteger(i);
+  println();
+
+}
+
+int testAmpersandTwo(int var);
+int testAmpersandTwo(int var){
+  var = var * 2;
+  return var;
+}
+
+void testAmpersand(){
+  int var1;
+  int* testPointer;
+  int (*funktionTest)(int entry);
+
+  var1 = 5;
+  testPointer = &var1;
+
+  print((int*)"Testvariable print über Pointer: ");
+  println();
+  printInteger(*testPointer);
+  println();
+
+  funktionTest = &testAmpersandTwo;
+
+
+  var1 = funktionTest(*testPointer);
+
+  print((int*) "nach aufruf des FunktionTests(*2): ");
+  printInteger(*testPointer);
+  println();
+}
+
+
+
+
 int main(int argc, int* argv) {
   int exitCode;
-  int testPLUSPLUS;
-  testPLUSPLUS = 0;
+
   initSelfie(argc, (int*) argv);
 
   initLibrary();
@@ -7273,53 +7441,8 @@ int main(int argc, int* argv) {
   println();
 
 
-  //test Ass_1: PLUSPLUS
-  print((int*)"Startwert (0): ");
-  printInteger(testPLUSPLUS);
-  println();
-
-  //----------------------
-
-  // ++testPLUSPLUS;
-  // print((int*)"nach prefix ++ (1): ");
-  // printInteger(testPLUSPLUS);
-  // println();
-  //
-  // --testPLUSPLUS;
-  // print((int*)"nach prefix -- (0): ");
-  // printInteger(testPLUSPLUS);
-  // println();
-  //
-  // testPLUSPLUS++;
-  // print((int*)"testPLUSPLUS++ (1): ");
-  // printInteger(testPLUSPLUS);
-  // println();
-  //----------------------
-
-  print((int*)"nach prefix ++ (1): ");
-  printInteger(++testPLUSPLUS);
-  println();
-
-
-  print((int*)"nach prefix -- (0): ");
-  printInteger(--testPLUSPLUS);
-  println();
-
-  print((int*)"postfix ++ (0): ");
-  printInteger(testPLUSPLUS++);
-  println();
-
-  print((int*)"nach dem postix ++ (1): ");
-  printInteger(testPLUSPLUS);
-  println();
-
-  print((int*)"postfix -- (1): ");
-  printInteger(testPLUSPLUS--);
-  println();
-
-  print((int*)"nach dem postix -- (0): ");
-  printInteger(testPLUSPLUS);
-  println();
+  //testPrePostfix();
+  testAmpersand();
 
 
 
