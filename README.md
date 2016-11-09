@@ -23,6 +23,7 @@ All homework solutions:
 * must compile without warnings with starc and execute with mipster on [travis](https://travis-ci.org/cksystemsteaching/CS4All),
 * must not break any existing selfie functionality, and
 * must be ready for presentation on your machine in class.
+* must include a short `.md` or `.txt` file that explains what was done, why it was done that way, and any problems encountered.
 
 Assignment 0: Your Team!
 ------------------------
@@ -49,6 +50,22 @@ Assignment 2: Addresses
 __Deadline__: November 8, 9am (hard, no extensions)
 
 Implement the address operator (`&`) and function pointers in selfie.
-You do *not* need to implement function pointer types (i.e. in this aspect compatibility with regular `C` is not required).
+You do *not* need to implement function pointer types (i.e. in this aspect compatibility with regular `C` is not required), but doing so will get you bonus points.
 
 What can you do with your new powers? Find interesting ways to show off the new functionality. Be wild! (But document the showcase code.)
+
+Assignment 3: Time sharing
+----------------------------------
+__Deadline__: November 15, 9am
+
+Implement cooperative *and* preemptive multitasking in mipster.
+Put all relevant emulator state into an appropriate data structure such as a linked list.
+Calling `./selfie -l binary.m -m 32 5` should run 5 copies of `binary.m` concurrently.
+Implement two new syscalls:
+* `void yield()`: relinquish the CPU and immediately reschedule
+* `int id()`: return the id of the currrent process
+
+Again, what can you do with your new powers? Write some examples that showcase
+multitasking (be sure to add output). For most non-trivial examples you will
+need some form of IPC - but you are in luck: it is already there for you. Find
+it and use it!
