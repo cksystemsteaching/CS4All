@@ -936,6 +936,10 @@ void storeVirtualMemory(int* table, int vaddr, int data);
 
 void mapAndStoreVirtualMemory(int* table, int vaddr, int data);
 
+// [EIFLES]
+void mapAndStoreSegmentedMemory(int* table, int vaddr, int data);
+int getSegmentOfVirtualAddress(int vaddr);
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_tlb = 0;
@@ -946,10 +950,12 @@ int VIRTUALMEMORYSIZE = 67108864; // 64MB of virtual memory
 
 int WORDSIZE = 4; // must be the same as SIZEOFINT and SIZEOFINTSTAR
 
-// [EIFLES] 
 int PAGESIZE = 4096; // we use standard 4KB pages
-
 int PAGEBITS = 12;   // 2^12 == 4096
+
+// [EIFLES] 
+int SEGMENTSIZE = 4096; // we use standard 4KB pages
+int SEGMENTBITS = 12;   // 2^12 == 4096
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1197,6 +1203,17 @@ void setSGMTT(int* context, int* sgmtt)         { *(context + 10) = (int) sgmtt;
 // ------------------------ SEGMENT TABLE --------------------------
 // -----------------------------------------------------------------
 
+// segment table struct:
+// +---+--------+
+// |seg| size   |  
+// +---+--------+
+// |PT1| MAXPT  | CODE segment of current context (at pos 0) -> points to page table 1 with size MAX_SIZE_PT
+// |PT2| MAXPT  | HEAP segment of current context (at pos 1)
+// |PT3| MAXPT  | STACK segment of current context (at pos 2)
+// |PT4| MAXPT  | currently empty (at pos 3)
+// +---+--------+
+
+// [EIFLES] erster versuch
 
 // we want the address of the code segment of the given context
 //int* getSegAddrOfCode(int* context) { return (int*) *(context + 10); }
@@ -1215,22 +1232,49 @@ void setSGMTT(int* context, int* sgmtt)         { *(context + 10) = (int) sgmtt;
 //void setSegSizeOfHeap(int* context, int sizeOfHeap) { *(context + 11)           = (int) sizeOfHeap; }
 //void setSegSizeOfStack(int* context, int sizeOfStack) { *(context + 12)           = (int) sizeOfStack; }
 
-int* getSegAddrOfCode(int* context) { return (int*) *(context + 0); }
-int* getSegAddrOfHeap(int* context) { return (int*) *(context + 1); }
-int* getSegAddrOfStack(int* context) { return (int*) *(context + 2); }
+// [EIFLES] zweiter versuch
 
-int getSegSizeOfCode(int* context) { return (int*) *(context + 3); }
-int getSegSizeOfHeap(int* context) { return (int*) *(context + 4); }
-int getSegSizeOfStack(int* context) { return (int*) *(context + 5); }
+//int* getSegAddrOfCode(int* context) { return (int*) *(context + 0); }
+//int* getSegAddrOfHeap(int* context) { return (int*) *(context + 1); }
+//int* getSegAddrOfStack(int* context) { return (int*) *(context + 2); }
 
-void setSegAddrOfCode(int* context, int* codeAddress) { *(context + 0) = (int) codeAddress; }
-void setSegAddrOfHeap(int* context, int* heapAddress) { *(context + 1) = (int) heapAddress; }
-void setSegAddrOfStack(int* context, int* stackAddress) { *(context + 2) = (int) stackAddress; }
+//int getSegSizeOfCode(int* context) { return (int*) *(context + 3); }
+//int getSegSizeOfHeap(int* context) { return (int*) *(context + 4); }
+//int getSegSizeOfStack(int* context) { return (int*) *(context + 5); }
 
-void setSegSizeOfCode(int* context, int sizeOfCode) { *(context + 3) = (int) sizeOfCode; }
-void setSegSizeOfHeap(int* context, int sizeOfHeap) { *(context + 4) = (int) sizeOfHeap; }
-void setSegSizeOfStack(int* context, int sizeOfStack) { *(context + 5) = (int) sizeOfStack; }
+//void setSegAddrOfCode(int* context, int* codeAddress) { *(context + 0) = (int) codeAddress; }
+//void setSegAddrOfHeap(int* context, int* heapAddress) { *(context + 1) = (int) heapAddress; }
+//void setSegAddrOfStack(int* context, int* stackAddress) { *(context + 2) = (int) stackAddress; }
 
+//void setSegSizeOfCode(int* context, int sizeOfCode) { *(context + 3) = (int) sizeOfCode; }
+//void setSegSizeOfHeap(int* context, int sizeOfHeap) { *(context + 4) = (int) sizeOfHeap; }
+//void setSegSizeOfStack(int* context, int sizeOfStack) { *(context + 5) = (int) sizeOfStack; }
+
+// [EIFLES] dritter versuch (nach erklaerung von resmerita am 8.11.2016)
+
+// [EIFLES] noch nicht sicher, wie wir da genau drauf zugreifen
+int* getPageTableOfCode(int* context) { return (int*) *(context + 11); }
+int* getPageTableOfHeap(int* context) { return (int*) *(context + 12); }
+int* getPageTableOfStack(int* context) { return (int*) *(context + 13); }
+
+void setPageTableOfCode(int* context, int sizeOfCode) { *(context + 3) = (int) sizeOfCode; }
+void setPageTableOfHeap(int* context, int sizeOfHeap) { *(context + 4) = (int) sizeOfHeap; }
+void setPageTableOfStack(int* context, int sizeOfStack) { *(context + 5) = (int) sizeOfStack; }
+
+// -----------------------------------------------------------------
+// ------------------------ PAGE TABLE -----------------------------
+// -----------------------------------------------------------------
+
+// page table struct:
+// +--------+-----+
+// | PPage# | ... | physical address of page | size ?
+// +--------+-----|
+// |   .    |  .  |
+// |   .    |  .  |
+// |   .    |  .  |
+// +--------+-----+
+// | PPAGE# | ... |
+// +--------+-----+
 
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
@@ -1330,9 +1374,6 @@ int USAGE = 1;
 
 // ***EIFLES***
 int numProcesses = 1;   // number of concurrent processes to be executed
-
-// [EIFLES]
-int segmentationIsUsed = 0; // segmentation is not used by default
 
 int selfie_argc = 0;
 int* selfie_argv = (int*) 0;
@@ -5537,6 +5578,11 @@ int getPageOfVirtualAddress(int vaddr) {
   return vaddr / PAGESIZE;
 }
 
+// [EIFLES]
+int getSegmentOfVirtualAddress(int vaddr) {
+  return vaddr / SEGMENTSIZE;
+}
+
 int isVirtualAddressMapped(int* table, int vaddr) {
   // assert: isValidVirtualAddress(vaddr) == 1
 
@@ -5598,6 +5644,16 @@ void mapAndStoreVirtualMemory(int* table, int vaddr, int data) {
 
   if (isVirtualAddressMapped(table, vaddr) == 0)
     mapPage(table, getPageOfVirtualAddress(vaddr), (int) palloc());
+
+  storeVirtualMemory(table, vaddr, data);
+}
+
+void mapAndStoreSegmentedMemory(int* table, int vaddr, int data) {
+  // assert: isValidVirtualAddress(vaddr) == 1
+
+  if (isVirtualAddressMapped(table, vaddr) == 0){
+    mapSegment(table, getPageOfVirtualAddress(vaddr), (int) palloc());
+  }
 
   storeVirtualMemory(table, vaddr, data);
 }
@@ -6678,6 +6734,12 @@ void mapPage(int* table, int page, int frame) {
   *(table + page) = frame;
 }
 
+// [EIFLES]
+void mapSegment(int* table, int segment, int frame) {
+  // assert: 0 <= page < VIRTUALMEMORYSIZE / PAGESIZE
+  *(table + segment) = frame;
+}
+
 // -----------------------------------------------------------------
 // ---------------------------- KERNEL -----------------------------
 // -----------------------------------------------------------------
@@ -6741,6 +6803,7 @@ void pfree(int* frame) {
   // TODO: implement free list of page frames
 }
 
+// [delete] if up_loadBinaryToSegments is working
 void up_loadBinary(int* table) {
   int vaddr;
 
@@ -6761,7 +6824,7 @@ void up_loadBinaryToSegments(int* segTable) {
   vaddr = 0;
 
   while (vaddr < binaryLength) {
-    mapAndStoreVirtualMemory(segTable, vaddr, loadBinary(vaddr));
+    mapAndStoreSegmentedMemory(segTable, vaddr, loadBinary(vaddr));
 
     vaddr = vaddr + WORDSIZE;
   }
@@ -7096,15 +7159,12 @@ int boot(int argc, int* argv) {
     }
 
 
-    // [EIFLES] just an idea ...
-    //if(segmentationIsUsed){
-    //  up_loadBinaryToSegments(getSGMTT(usedContexts));
-    //}
-    //else{
-    //  up_loadBinary(getPT(usedContexts));
-    //}
+    // up_loadBinary(getPT(usedContexts));
+    // up_loadArguments(getPT(usedContexts), argc, argv);
 
-    up_loadArguments(getPT(usedContexts), argc, argv);
+    // [EIFLES] just an idea ...
+    up_loadBinaryToSegments(getSGMTT(usedContexts));
+    up_loadArguments(getSGMTT(usedContexts), argc, argv);
 
     // propagate page table of initial context to microkernel boot level
     down_mapPageTable(usedContexts);
@@ -7199,13 +7259,6 @@ void setNumProcesses() {
   println();
 }
 
-// [EIFLES] idea to enable or disable segmentation (do not interfere with current paging implementation)
-void enableSegmentation() {
-  segmentationIsUsed = 1;
-  print((int*) "Segmentation has been enabled!");
-  println();
-}
-
 // round robin scheduler
 int runScheduler(int thisID) {
   int *thisContext;
@@ -7283,8 +7336,6 @@ int selfie() {
         setTimeslice();
       else if (stringCompare(option, (int*) "-numprocesses"))
         setNumProcesses();
-      else if (stringCompare(option, (int*) "-segmentation"))
-        enableSegmentation();
       else if (stringCompare(option, (int*) "-o"))
         selfie_output();
       else if (stringCompare(option, (int*) "-s"))
