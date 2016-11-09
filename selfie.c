@@ -1052,8 +1052,8 @@ int reg_hi = 0; // hi register for multiplication/division
 int reg_lo = 0; // lo register for multiplication/division
 
 int* pt = (int*) 0; // page table
-int* stCode =(int*)0;	
-int*	stStack =(int*)0;
+int* st = (int*) 0; // segment table
+
 int brk = 0; // break between code, data, and heap
 
 int trap = 0; // flag for creating a trap
@@ -1248,7 +1248,6 @@ void up_loadArguments(int* table, int argc, int* argv);
 void mapUnmappedPages(int* table);
 
 void down_mapPageTable(int* context);
-void down_mapCodeSegment(int* context);
 
 int runUntilExitWithoutExceptionHandling(int toID);
 int runOrHostUntilExitWithPageFaultHandling(int toID);
@@ -6550,9 +6549,9 @@ int* allocateContext(int ID, int parentID) {
   
   // allocate zeroed memory for page table
   // TODO: save and reuse memory for page table
-	setPT(context, zalloc((VIRTUALMEMORYSIZE-maxBinaryLength) / PAGESIZE * WORDSIZE));
+  //setPT(context, zalloc((VIRTUALMEMORYSIZE-maxBinaryLength) / PAGESIZE * WORDSIZE));
 
-	printInteger(getPT(context));
+  //printInteger(getPT(context));
   // heap starts where it is safe to start
   setBreak(context, maxBinaryLength);
 
@@ -6602,7 +6601,7 @@ void switchContext(int* from, int* to) {
   reg_hi    = getRegHi(to);
   reg_lo    = getRegLo(to);
   pt        = getPT(to);
-	stCode		= getSTCode(to);
+  st		= getST(to);
   brk       = getBreak(to);
 }
 
@@ -6805,7 +6804,6 @@ void down_mapPageTable(int* context) {
 
   while (isPageMapped(getPT(context), page)) {
     selfie_map(getID(context), page, getFrameForPage(getPT(context), page));
-
     page = page + 1;
   }
 
@@ -6819,27 +6817,7 @@ void down_mapPageTable(int* context) {
 }
 
 
-void down_mapCodeSegment(int* context) {
-  int page;
 
-  // assert: context page table is only mapped from beginning up and end down
-
-  page = 0;
-
-  while (isPageMapped(getSTCode(context), page)) {
-    selfie_map(getID(context), page, getFrameForPage(getSTCode(context), page));
-
-    page = page + 1;
-  }
-
-  page = (maxBinaryLength - WORDSIZE) / PAGESIZE;
-
-  while (isPageMapped(getSTCode(context), page)) {
-    selfie_map(getID(context), page, getFrameForPage(getSTCode(context), page));
-
-    page = page - 1;
-  }
-}
 
 
 int runUntilExitWithoutExceptionHandling(int toID) {
@@ -7130,7 +7108,7 @@ int boot(int argc, int* argv) {
 		count = count + 1;
 	}
 
-	down_mapCodeSegment(usedContexts);
+	//down_mapCodeSegment(usedContexts);
 	print((int*)"map segment table after");
 	println();
 
