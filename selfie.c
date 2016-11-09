@@ -5576,11 +5576,20 @@ int isValidVirtualAddress(int vaddr) {
 
 int getPageOfVirtualAddress(int vaddr) {
   return vaddr / PAGESIZE;
+  // [EIFLES] vaddr = seg|vpage|offset = 2bits|12bits|12bits
+  // [EIFLES] to get page, first leftshift by 2 (segment is shifted out) 
+  // [EIFLES] so now it looks like this: vpage|offset|xx (last part generated from leftshift)
+  // [EIFLES] and then rightshift by 12+2=14bits 
+  // [EIFLES] (offset + bits generated from leftshift are shifted out), only vpage left
+  // return rightShift(leftShift(vaddr,2),14);
 }
 
 // [EIFLES]
 int getSegmentOfVirtualAddress(int vaddr) {
-  return vaddr / SEGMENTSIZE;
+  // return vaddr / SEGMENTSIZE;
+  // [EIFLES] vaddr = seg|vpage|offset = 2bits|12bits|12bits
+  // [EIFLES] to get segment, rightshift by 12+12=24bits (vpage and offset shifted out)
+  return rightShift(vaddr,24);
 }
 
 int isVirtualAddressMapped(int* table, int vaddr) {
