@@ -1214,9 +1214,6 @@ void setSGMTT(int* context, int* sgmtt)         { *(context + 10) = (int) sgmtt;
 // |PT4| currently empty (at pos 3)
 // +---+--------+
 
-// [EIFLES] Wenn wir die Page haben möchten, müssen wir über die SGMTT gehen!
-int* getSegment(int* segAddr) {}
-
 // -----------------------------------------------------------------
 // ------------------------ PAGE TABLE -----------------------------
 // -----------------------------------------------------------------
@@ -5440,7 +5437,7 @@ void doMap(int ID, int page, int frame) {
 
       if (parentContext != (int*) 0)
         // assert: 0 <= frame < VIRTUALMEMORYSIZE
-        frame = getFrameForPage(getPT(parentContext), frame / PAGESIZE);
+        frame = getFrameForPage(getPT(parentContext, 0), frame / PAGESIZE);
       else if (debug_map) {
         print(binaryName);
         print((int*) ": selfie_map parent context ");
@@ -5453,7 +5450,7 @@ void doMap(int ID, int page, int frame) {
     }
 
     // on boot level zero frame may be any signed integer
-    mapPage(getPT(mapContext), page, frame);
+    mapPage(getPT(mapContext, 0), page, frame);
 
     if (debug_map) {
       print(binaryName);
@@ -5530,13 +5527,13 @@ int isValidVirtualAddress(int vaddr) {
 }
 
 int getPageOfVirtualAddress(int vaddr) {
-  return vaddr / PAGESIZE;
+  //return vaddr / PAGESIZE;
   // [EIFLES] vaddr = seg|vpage|offset = 2bits|12bits|12bits
   // [EIFLES] to get page, first leftshift by 2 (segment is shifted out) 
   // [EIFLES] so now it looks like this: vpage|offset|xx (last part generated from leftshift)
   // [EIFLES] and then rightshift by 12+2=14bits 
   // [EIFLES] (offset + bits generated from leftshift are shifted out), only vpage left
-  // return rightShift(leftShift(vaddr,2),14);
+  return rightShift(leftShift(vaddr,2),14);
 }
 
 // [EIFLES]
@@ -5608,16 +5605,6 @@ void mapAndStoreVirtualMemory(int* table, int vaddr, int data) {
 
   if (isVirtualAddressMapped(table, vaddr) == 0)
     mapPage(table, getPageOfVirtualAddress(vaddr), (int) palloc());
-
-  storeVirtualMemory(table, vaddr, data);
-}
-
-void mapAndStoreSegmentedMemory(int* table, int vaddr, int data) {
-  // assert: isValidVirtualAddress(vaddr) == 1
-
-  if (isVirtualAddressMapped(table, vaddr) == 0){
-    mapSegment(table, getPageOfVirtualAddress(vaddr), (int) palloc());
-  }
 
   storeVirtualMemory(table, vaddr, data);
 }
@@ -6611,14 +6598,21 @@ int* allocateContext(int ID, int parentID) {
   setRegLo(context, 0);
 
   // [EIFLES] Create SegTable here; How big does that thingy have to be?!
-  setSGMTT(context, zalloc(2048)); 
+  // 2^(12*4) = 2^48 different page addresses possible (because a single PT can have 2^12 different page addresses;)
+  // 12 bits per page table
+  // we have 4 different 4 tables since we have 4 different segments (code, heap, stack and empty segment)
+  // 2^48 = 6 bytes
+  setSGMTT(context, zalloc(6));
 
   // allocate zeroed memory for page table
   // TODO: save and reuse memory for page table
   //setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
 
-  // [EIFLES] replace setPT call, page table can be smaller in our approach!
-  setPT();
+  // [EIFLES] create code / stack / heap / empty page tables
+  setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE), 0);
+  setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE), 1);
+  setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE), 2);
+  setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE), 3);
 
   // heap starts where it is safe to start
   setBreak(context, maxBinaryLength);
@@ -6670,7 +6664,7 @@ void switchContext(int* from, int* to) {
   registers = getRegs(to);
   reg_hi    = getRegHi(to);
   reg_lo    = getRegLo(to);
-  pt        = getPT(to);
+  pt        = getPT(to, 0);
   brk       = getBreak(to);
 }
 
@@ -6769,14 +6763,14 @@ void pfree(int* frame) {
   // TODO: implement free list of page frames
 }
 
-void up_loadBinary(int* table) {
+void up_loadBinary(int* pageTable) {
   int vaddr;
 
   // binaries start at lowest virtual address
   vaddr = 0;
 
   while (vaddr < binaryLength) {
-    mapAndStoreSegmentedMemory(segTable, vaddr, loadBinary(vaddr));
+    mapAndStoreVirtualMemory(pageTable, vaddr, loadBinary(vaddr));
 
     vaddr = vaddr + WORDSIZE;
   }
@@ -6877,16 +6871,16 @@ void down_mapPageTable(int* context) {
 
   page = 0;
 
-  while (isPageMapped(getPT(context), page)) {
-    selfie_map(getID(context), page, getFrameForPage(getPT(context), page));
+  while (isPageMapped(getPT(context, 0), page)) {
+    selfie_map(getID(context), page, getFrameForPage(getPT(context, 0), page));
 
     page = page + 1;
   }
 
   page = (VIRTUALMEMORYSIZE - WORDSIZE) / PAGESIZE;
 
-  while (isPageMapped(getPT(context), page)) {
-    selfie_map(getID(context), page, getFrameForPage(getPT(context), page));
+  while (isPageMapped(getPT(context, 0), page)) {
+    selfie_map(getID(context), page, getFrameForPage(getPT(context, 0), page));
 
     page = page - 1;
   }
@@ -6975,7 +6969,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         frame = (int) palloc();
 
         // TODO: use this table to unmap and reuse frames
-        mapPage(getPT(fromContext), exceptionParameter, frame);
+        mapPage(getPT(fromContext, 0), exceptionParameter, frame);
 
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
@@ -7051,12 +7045,12 @@ int bootminmob(int argc, int* argv, int machine) {
       // create duplicate of the initial context on our boot level
       usedContexts = createContext(initID, MIPSTER_ID, (int*) 0);
       // upload binary only once for all contexts
-      up_loadBinary(getPT(usedContexts));
+      up_loadBinary(getPT(usedContexts, 0));
     }
 
 
-    up_loadBinary(getPT(usedContexts));
-    up_loadArguments(getPT(usedContexts), argc, argv);
+    up_loadBinary(getPT(usedContexts, 0));
+    up_loadArguments(getPT(usedContexts, 0), argc, argv);
 
     // [EIFLES] this will have to be extended. I'd rather put it into "up_LoadBinary" (this is what we need to replace anyway)
     //up_loadBinary(getSGMTT(usedContexts));
@@ -7066,7 +7060,7 @@ int bootminmob(int argc, int* argv, int machine) {
       // virtual is like physical memory in initial context up to memory size
       // by mapping unmapped pages (for the heap) to all available page frames
       // CAUTION: consumes memory even when not used
-      mapUnmappedPages(getPT(usedContexts));
+      mapUnmappedPages(getPT(usedContexts, 0));
     }
 
     processIndex = processIndex + 1;
@@ -7130,7 +7124,7 @@ int boot(int argc, int* argv) {
       // create duplicate of the initial context on our boot level
       usedContexts = createContext(nextID, selfie_ID(), (int*) 0);
       // upload binary only once for all contexts
-      up_loadBinary(getPT(usedContexts));
+      up_loadBinary(getPT(usedContexts, 0));
     }
 
 
@@ -7138,8 +7132,8 @@ int boot(int argc, int* argv) {
     // up_loadArguments(getPT(usedContexts), argc, argv);
 
     // [EIFLES] this will have to be extended. I'd rather put it into "up_LoadBinary" (this is what we need to replace anyway)
-    up_loadBinary(getSGMTT(usedContexts));
-    up_loadArguments(getSGMTT(usedContexts), argc, argv);
+    up_loadBinary(getPT(usedContexts, 0));
+    up_loadArguments(getPT(usedContexts, 0), argc, argv);
 
     // propagate page table of initial context to microkernel boot level
     down_mapPageTable(usedContexts);
