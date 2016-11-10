@@ -1171,32 +1171,33 @@ void mapPage(int* table, int page, int frame);
 // | 10| sgmtt 	| pointer to segment table
 // +---+--------+
 
-int* getNextContext(int* context) { return (int*) *context; }
-int* getPrevContext(int* context) { return (int*) *(context + 1); }
-int  getID(int* context)          { return        *(context + 2); }
-int  getPC(int* context)          { return        *(context + 3); }
-int* getRegs(int* context)        { return (int*) *(context + 4); }
-int  getRegHi(int* context)       { return        *(context + 5); }
-int  getRegLo(int* context)       { return        *(context + 6); }
-int* getPT(int* context)          { return (int*) *(context + 7); }
-int  getBreak(int* context)       { return        *(context + 8); }
-int  getParent(int* context)      { return        *(context + 9); }
+int* getNextContext(int* context)     { return (int*) *context; }
+int* getPrevContext(int* context)     { return (int*) *(context + 1); }
+int  getID(int* context)              { return        *(context + 2); }
+int  getPC(int* context)              { return        *(context + 3); }
+int* getRegs(int* context)            { return (int*) *(context + 4); }
+int  getRegHi(int* context)           { return        *(context + 5); }
+int  getRegLo(int* context)           { return        *(context + 6); }
+//int* getPT(int* context)              { return (int*) *(context + 7); }
+int  getBreak(int* context)           { return        *(context + 8); }
+int  getParent(int* context)          { return        *(context + 9); }
 
-// [EIFLES] Retrieve segmenttable
+// [EIFLES] New method for segmented paging
 int* getSGMTT(int* context)       { return (int*) *(context + 10); }
+int* getPT(int* context, int segment) { return (int*) getSGMTT(context) + segment; }
 
-void setNextContext(int* context, int* next) { *context       = (int) next; }
-void setPrevContext(int* context, int* prev) { *(context + 1) = (int) prev; }
-void setID(int* context, int id)             { *(context + 2) = id; }
-void setPC(int* context, int pc)             { *(context + 3) = pc; }
-void setRegs(int* context, int* regs)        { *(context + 4) = (int) regs; }
-void setRegHi(int* context, int reg_hi)      { *(context + 5) = reg_hi; }
-void setRegLo(int* context, int reg_lo)      { *(context + 6) = reg_lo; }
-void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
-void setBreak(int* context, int brk)         { *(context + 8) = brk; }
-void setParent(int* context, int id)         { *(context + 9) = id; }
+void setNextContext(int* context, int* next)  { *context       = (int) next; }
+void setPrevContext(int* context, int* prev)  { *(context + 1) = (int) prev; }
+void setID(int* context, int id)              { *(context + 2) = id; }
+void setPC(int* context, int pc)              { *(context + 3) = pc; }
+void setRegs(int* context, int* regs)         { *(context + 4) = (int) regs; }
+void setRegHi(int* context, int reg_hi)       { *(context + 5) = reg_hi; }
+void setRegLo(int* context, int reg_lo)       { *(context + 6) = reg_lo; }
+//void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
+void setPT(int* context, int* pt, int segment){ *(getSGMTT(context) + segment) = (int) pt; }
+void setBreak(int* context, int brk)          { *(context + 8) = brk; }
+void setParent(int* context, int id)          { *(context + 9) = id; }
 
-// [EIFLES] not sure about SGMTT (segmenttable)
 void setSGMTT(int* context, int* sgmtt)         { *(context + 10) = (int) sgmtt; }
 
 // -----------------------------------------------------------------
@@ -1204,39 +1205,25 @@ void setSGMTT(int* context, int* sgmtt)         { *(context + 10) = (int) sgmtt;
 // -----------------------------------------------------------------
 
 // segment table struct:
-// +---+--------+
-// |seg| size   |  
-// +---+--------+
-// |PT1| MAXPT  | CODE segment of current context (at pos 0) -> points to page table 1 with size MAX_SIZE_PT
-// |PT2| MAXPT  | HEAP segment of current context (at pos 1)
-// |PT3| MAXPT  | STACK segment of current context (at pos 2)
-// |PT4| MAXPT  | currently empty (at pos 3)
+// +---+
+// |seg| 
+// +---+
+// |PT1| CODE segment of current context (at pos 0) -> points to page table 1 with size MAX_SIZE_PT
+// |PT2| HEAP segment of current context (at pos 1)
+// |PT3| STACK segment of current context (at pos 2)
+// |PT4| currently empty (at pos 3)
 // +---+--------+
 
-// [EIFLES] dritter versuch (nach erklaerung von resmerita am 8.11.2016)
-
-// [EIFLES] noch nicht sicher, wie wir da genau drauf zugreifen
 // [EIFLES] Wenn wir die Page haben möchten, müssen wir über die SGMTT gehen!
-//int* getPageTableOfCode(int* context) { return (int*) *(context + 11); }
-//int* getPageTableOfHeap(int* context) { return (int*) *(context + 12); }
-//int* getPageTableOfStack(int* context) { return (int*) *(context + 13); }
-
-int* getPageTableOfCode(int* context) { return getSGMTT(context, (int*) *(context + 11)); } //2. Argument muss angepasst werden!
-int* getPageTableOfHeap(int* context) { return getSGMTT(context, (int*) *(context + 12)); } //2. Argument muss angepasst werden!
-int* getPageTableOfStack(int* context) { return getSGMTT(context, (int*) *(context + 13)); } //2. Argument muss angepasst werden!
-
-
-void setPageTableOfCode(int* context, int sizeOfCode) { *(context + 3) = (int) sizeOfCode; }
-void setPageTableOfHeap(int* context, int sizeOfHeap) { *(context + 4) = (int) sizeOfHeap; }
-void setPageTableOfStack(int* context, int sizeOfStack) { *(context + 5) = (int) sizeOfStack; }
+int* getSegment(int* segAddr) {}
 
 // -----------------------------------------------------------------
 // ------------------------ PAGE TABLE -----------------------------
 // -----------------------------------------------------------------
 
-// page table struct:
+// page table "struct":
 // +--------+-----+
-// | PPage# | ... | physical address of page | size ?
+// | PPage# | ... | physical address of page | data
 // +--------+-----|
 // |   .    |  .  |
 // |   .    |  .  |
