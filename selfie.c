@@ -1182,7 +1182,7 @@ int* getPT(int* context)          { return (int*) *(context + 7); }
 int  getBreak(int* context)       { return        *(context + 8); }
 int  getParent(int* context)      { return        *(context + 9); }
 
-// [EIFLES] not sure if we really need this pointer...
+// [EIFLES] Retrieve segmenttable
 int* getSGMTT(int* context)       { return (int*) *(context + 10); }
 
 void setNextContext(int* context, int* next) { *context       = (int) next; }
