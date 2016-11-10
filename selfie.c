@@ -7033,6 +7033,7 @@ int bootminmob(int argc, int* argv, int machine) {
   // works only with mipsters
   int initID;
   int exitCode;
+  int processIndex;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -7050,20 +7051,42 @@ int bootminmob(int argc, int* argv, int machine) {
   resetInterpreter();
   resetMicrokernel();
 
-  // create initial context on our boot level
-  initID = doCreate(MIPSTER_ID);
+  processIndex = 0;
+  
+  // [EIFLES] in here, we probably have to count how many instances are created within the while loop
+  // [EIFLES] needed to know in how many pieces we have to devide the main memory (segmenttable)
+  while (processIndex < numProcesses) {
+    // create initial context on microkernel boot level
+    initID = doCreate(MIPSTER_ID);
 
-  up_loadBinary(getPT(usedContexts));
+    // [EIFLES] just an idea ...
+    if (usedContexts == (int*) 0) {
+      // create duplicate of the initial context on our boot level
+      usedContexts = createContext(initID, MIPSTER_ID, (int*) 0);
+      // upload binary only once for all contexts
+      up_loadBinary(getPT(usedContexts));
+    }
 
-  up_loadArguments(getPT(usedContexts), argc, argv);
 
-  if (machine == MINSTER)
-    // virtual is like physical memory in initial context up to memory size
-    // by mapping unmapped pages (for the heap) to all available page frames
-    // CAUTION: consumes memory even when not used
-    mapUnmappedPages(getPT(usedContexts));
+    up_loadBinary(getPT(usedContexts));
+    up_loadArguments(getPT(usedContexts), argc, argv);
 
-  exitCode = runUntilExitWithoutExceptionHandling(initID);
+    // [EIFLES] this will have to be extended. I'd rather put it into "up_LoadBinary" (this is what we need to replace anyway)
+    //up_loadBinary(getSGMTT(usedContexts));
+    //up_loadArguments(getSGMTT(usedContexts), argc, argv);
+
+    if (machine == MINSTER) {
+      // virtual is like physical memory in initial context up to memory size
+      // by mapping unmapped pages (for the heap) to all available page frames
+      // CAUTION: consumes memory even when not used
+      mapUnmappedPages(getPT(usedContexts));
+    }
+
+    processIndex = processIndex + 1;
+  }
+
+  //exitCode = runUntilExitWithoutExceptionHandling(initID);
+  exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
 
   print(selfieName);
   print((int*) ": this is selfie's ");
