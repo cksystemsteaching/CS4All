@@ -933,6 +933,8 @@ int isValidVirtualAddress(int vaddr);
 int getPageOfVirtualAddress(int vaddr);
 int isVirtualAddressMapped(int* table, int vaddr);
 
+int* getPageTableOfSegment(int* segTable,int segment);
+
 int* tlb(int* table, int vaddr);
 
 int  loadVirtualMemory(int* table, int vaddr);
@@ -5549,6 +5551,10 @@ void mapAndStoreVirtualMemory(int* table, int vaddr, int data) {
   storeVirtualMemory(table, vaddr, data);
 }
 
+int* getPageTableOfSegment(int* segTable,int segment){
+    return (int*) *(segTable+segment);
+}
+
 // -----------------------------------------------------------------
 // ------------------------- INSTRUCTIONS --------------------------
 // -----------------------------------------------------------------
@@ -6696,6 +6702,8 @@ void pfree(int* frame) {
 
 void up_loadBinary(int* table) {
   int vaddr;
+
+
 
   // binaries start at lowest virtual address
   vaddr = 0;
