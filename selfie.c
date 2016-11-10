@@ -1213,49 +1213,18 @@ void setSGMTT(int* context, int* sgmtt)         { *(context + 10) = (int) sgmtt;
 // |PT4| MAXPT  | currently empty (at pos 3)
 // +---+--------+
 
-// [EIFLES] erster versuch
-
-// we want the address of the code segment of the given context
-//int* getSegAddrOfCode(int* context) { return (int*) *(context + 10); }
-//int* getSegAddrOfHeap(int* context) { return (int*) *(context + 11); }
-//int* getSegAddrOfStack(int* context) { return (int*) *(context + 12); }
-
-//int getSegSizeOfCode(int* context) { return (int*) *(context + 13); }
-//int getSegSizeOfHeap(int* context) { return (int*) *(context + 14); }
-//int getSegSizeOfStack(int* context) { return (int*) *(context + 15); }
-
-//void setSegAddrOfCode(int* context, int* codeAddress) { *(context + 10)           = (int) codeAddress; }
-//void setSegAddrOfHeap(int* context, int* heapAddress) { *(context + 11)       = (int) heapAddress; }
-//void setSegAddrOfStack(int* context, int* stackAddress) { *(context + 12)     = (int) stackAddress; }
-
-//void setSegSizeOfCode(int* context, int sizeOfCode) { *(context + 10)           = (int) sizeOfCode; }
-//void setSegSizeOfHeap(int* context, int sizeOfHeap) { *(context + 11)           = (int) sizeOfHeap; }
-//void setSegSizeOfStack(int* context, int sizeOfStack) { *(context + 12)           = (int) sizeOfStack; }
-
-// [EIFLES] zweiter versuch
-
-//int* getSegAddrOfCode(int* context) { return (int*) *(context + 0); }
-//int* getSegAddrOfHeap(int* context) { return (int*) *(context + 1); }
-//int* getSegAddrOfStack(int* context) { return (int*) *(context + 2); }
-
-//int getSegSizeOfCode(int* context) { return (int*) *(context + 3); }
-//int getSegSizeOfHeap(int* context) { return (int*) *(context + 4); }
-//int getSegSizeOfStack(int* context) { return (int*) *(context + 5); }
-
-//void setSegAddrOfCode(int* context, int* codeAddress) { *(context + 0) = (int) codeAddress; }
-//void setSegAddrOfHeap(int* context, int* heapAddress) { *(context + 1) = (int) heapAddress; }
-//void setSegAddrOfStack(int* context, int* stackAddress) { *(context + 2) = (int) stackAddress; }
-
-//void setSegSizeOfCode(int* context, int sizeOfCode) { *(context + 3) = (int) sizeOfCode; }
-//void setSegSizeOfHeap(int* context, int sizeOfHeap) { *(context + 4) = (int) sizeOfHeap; }
-//void setSegSizeOfStack(int* context, int sizeOfStack) { *(context + 5) = (int) sizeOfStack; }
-
 // [EIFLES] dritter versuch (nach erklaerung von resmerita am 8.11.2016)
 
 // [EIFLES] noch nicht sicher, wie wir da genau drauf zugreifen
-int* getPageTableOfCode(int* context) { return (int*) *(context + 11); }
-int* getPageTableOfHeap(int* context) { return (int*) *(context + 12); }
-int* getPageTableOfStack(int* context) { return (int*) *(context + 13); }
+// [EIFLES] Wenn wir die Page haben möchten, müssen wir über die SGMTT gehen!
+//int* getPageTableOfCode(int* context) { return (int*) *(context + 11); }
+//int* getPageTableOfHeap(int* context) { return (int*) *(context + 12); }
+//int* getPageTableOfStack(int* context) { return (int*) *(context + 13); }
+
+int* getPageTableOfCode(int* context) { return getSGMTT(context, (int*) *(context + 11)); } //2. Argument muss angepasst werden!
+int* getPageTableOfHeap(int* context) { return getSGMTT(context, (int*) *(context + 12)); } //2. Argument muss angepasst werden!
+int* getPageTableOfStack(int* context) { return getSGMTT(context, (int*) *(context + 13)); } //2. Argument muss angepasst werden!
+
 
 void setPageTableOfCode(int* context, int sizeOfCode) { *(context + 3) = (int) sizeOfCode; }
 void setPageTableOfHeap(int* context, int sizeOfHeap) { *(context + 4) = (int) sizeOfHeap; }
@@ -5293,7 +5262,7 @@ int doSwitch(int toID) {
   int* toContext;
 
   fromID = getID(currentContext);
-  // [EIFLES] In here, we have to assign the correct position in the seg.table for the chosen context!
+
   toContext = findContext(toID, usedContexts);
 
   if (toContext != (int*) 0) {
@@ -5473,6 +5442,8 @@ void emitMap() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
+
+// [EIFLES] Is this "downmapping" that he mention? So that only a specified FRAME of the corresponding context is 'visible' to the processor?
 void doMap(int ID, int page, int frame) {
   int* mapContext;
   int* parentContext;
@@ -6702,6 +6673,8 @@ int* findContext(int ID, int* in) {
 }
 
 void switchContext(int* from, int* to) {
+
+  // [EIFLES] TODO: Make sure that the correct sgmt/pt is set in here!!!!
   // save machine state
   setPC(from, pc);
   setRegHi(from, reg_hi);
@@ -7171,7 +7144,7 @@ int boot(int argc, int* argv) {
     // up_loadBinary(getPT(usedContexts));
     // up_loadArguments(getPT(usedContexts), argc, argv);
 
-    // [EIFLES] just an idea ...
+    // [EIFLES] this will have to be extended. I'd rather put it into "up_LoadBinary" (this is what we need to replace anyway)
     up_loadBinaryToSegments(getSGMTT(usedContexts));
     up_loadArguments(getSGMTT(usedContexts), argc, argv);
 
