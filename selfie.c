@@ -1289,9 +1289,6 @@ void pfree(int* frame);
 
 void up_loadBinary(int* table);
 
-// [EIFLES]
-void up_loadBinaryToSegments(int* segTable);
-
 int  up_loadString(int* table, int* s, int SP);
 void up_loadArguments(int* table, int argc, int* argv);
 
@@ -6785,21 +6782,7 @@ void pfree(int* frame) {
   // TODO: implement free list of page frames
 }
 
-// [delete] if up_loadBinaryToSegments is working
 void up_loadBinary(int* table) {
-  int vaddr;
-
-  // binaries start at lowest virtual address
-  vaddr = 0;
-
-  while (vaddr < binaryLength) {
-    mapAndStoreVirtualMemory(table, vaddr, loadBinary(vaddr));
-
-    vaddr = vaddr + WORDSIZE;
-  }
-}
-
-void up_loadBinaryToSegments(int* segTable) {
   int vaddr;
 
   // binaries start at lowest virtual address
@@ -7145,7 +7128,7 @@ int boot(int argc, int* argv) {
     // up_loadArguments(getPT(usedContexts), argc, argv);
 
     // [EIFLES] this will have to be extended. I'd rather put it into "up_LoadBinary" (this is what we need to replace anyway)
-    up_loadBinaryToSegments(getSGMTT(usedContexts));
+    up_loadBinary(getSGMTT(usedContexts));
     up_loadArguments(getSGMTT(usedContexts), argc, argv);
 
     // propagate page table of initial context to microkernel boot level
