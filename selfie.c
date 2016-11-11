@@ -5055,7 +5055,7 @@ void implementMalloc() {
     brk = bump + size;
 
 		printd((int*)"BREAK",brk);
-			printd((int*)"bump",bump);
+		printd((int*)"bump",bump);
 		printd((int*)"size",size);
 
     if (debug_malloc) {
@@ -6310,7 +6310,9 @@ void fetch() {
   // assert: isValidVirtualAddress(pc) == 1
   // assert: isVirtualAddressMapped(pt, pc) == 1
 
-  ir = loadVirtualMemory(loadSegmentFromVirtual(st,pc), pc);
+	// MORTIS
+	// 01 in front of pc because it is used as virtual adress here and for code segment we need 01 in front of vaddr
+  ir = loadVirtualMemory(loadSegmentFromVirtual(st,(leftShift(1,24) + pc)), (leftShift(1,24) + pc));
 	//printInteger((int*)pc);
 	//println();
 	
@@ -6579,6 +6581,7 @@ int* allocateContext(int ID, int parentID) {
    //zalloc a page table for each segment in segment table
   while(pageCount<SEGMENTCOUNT){
     	*(segTable+pageCount) =(int) zalloc((VIRTUALMEMORYSIZE * WORDSIZE) / (PAGESIZE * SEGMENTCOUNT));
+
 		 //printd((int*)"SEGTABLE ADRESS",*(segTable+pageCount));
      pageCount=pageCount+1;
   }
@@ -6764,6 +6767,10 @@ int up_loadString(int* table, int* s, int SP) {
   i = 0;
 
   while (i < bytes) {
+
+		printd("SP BEFORE SHIFT", SP + i);
+		printd("SP AFTER SHIFT ", leftShift(2,24));
+		printd("SP AFTER SHIFT ", (leftShift(2,24) + SP + i));
     mapAndStoreVirtualMemory(table, SP + i, *s);
 
     s = s + 1;
@@ -6796,10 +6803,12 @@ void up_loadArguments(int* table, int argc, int* argv) {
   i_argc  = argc;
 
   while (i_argc > 0) {
+		print("DUMMYSTUFF");
     SP = up_loadString(table, (int*) *argv, SP);
-
+		
+		printd("SP",(i_vargv));
     // store pointer to string in virtual *argv
-    mapAndStoreVirtualMemory(table, i_vargv, SP);
+    mapAndStoreVirtualMemory(table, (leftShift(2,24) + i_vargv), SP);
 
     argv = argv + 1;
 
@@ -6812,16 +6821,17 @@ void up_loadArguments(int* table, int argc, int* argv) {
   SP = SP - WORDSIZE;
 
   // push argc
-  mapAndStoreVirtualMemory(table, SP, argc);
+  mapAndStoreVirtualMemory(table, (leftShift(2,24) + SP), argc);
 
   // allocate memory for one word on the stack
   SP = SP - WORDSIZE;
 
   // push virtual argv
-  mapAndStoreVirtualMemory(table, SP, vargv);
+  mapAndStoreVirtualMemory(table, (leftShift(2,24) + SP), vargv);
+
 
   // store stack pointer at highest virtual address for binary to retrieve
-  mapAndStoreVirtualMemory(table, VIRTUALMEMORYSIZE - WORDSIZE, SP);
+  mapAndStoreVirtualMemory(table, (leftShift(2,24) + (VIRTUALMEMORYSIZE - WORDSIZE)), SP);
 }
 
 void mapUnmappedPages(int* table) {
