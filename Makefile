@@ -58,3 +58,10 @@ assignment2:
 	./selfie -c test_program.c selfie.c -o test_program.m 
 	./selfie -l test_program.m -m 32
 	
+
+# Assignment 2 runnable on Windows
+winAssignment2:
+	make winclean
+	make
+	selfie.exe -c test_program.c selfie.c -o test_program.m 
+	selfie.exe -l test_program.m -m 32
