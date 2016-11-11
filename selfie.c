@@ -937,7 +937,6 @@ void storeVirtualMemory(int* table, int vaddr, int data);
 void mapAndStoreVirtualMemory(int* table, int vaddr, int data);
 
 // [EIFLES]
-void mapAndStoreSegmentedMemory(int* table, int vaddr, int data);
 int getSegmentOfVirtualAddress(int vaddr);
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
@@ -5551,6 +5550,23 @@ int getSegmentOfVirtualAddress(int vaddr) {
   return rightShift(vaddr,24);
 }
 
+// [EILFES]
+int getOffsetOfVirtualAddress(int vaddr) {
+  // [EIFLES] vaddr = seg|vpage|offset = 2bits|12bits|12bits
+  int temp;
+  int offset;
+
+  temp = vaddr;
+  // remove offset of vaddr (offset is 12 bits long)
+  vaddr = rightShift(vaddr, 12);
+  // replace offset of vaddr with 000000000000
+  vaddr = leftShift(vaddr, 12);
+  // only offset will be left
+  offset = temp - vaddr;
+  
+  return offset;
+}
+
 int isVirtualAddressMapped(int* table, int vaddr) {
   // assert: isValidVirtualAddress(vaddr) == 1
 
@@ -5562,15 +5578,29 @@ int* tlb(int* table, int vaddr) {
   int frame;
   int paddr;
 
+  // [EIFLES]
+  int vpage;
+  int offset;
+
   // assert: isValidVirtualAddress(vaddr) == 1
   // assert: isVirtualAddressMapped(table, vaddr) == 1
 
-  page = getPageOfVirtualAddress(vaddr);
+  //page = getPageOfVirtualAddress(vaddr);
+  vpage = getPageOfVirtualAddress(vaddr);
 
-  frame = getFrameForPage(table, page);
+  //frame = getFrameForPage(table, page);
+  frame = getFrameForPage(table, vpage);
 
   // map virtual address to physical address
-  paddr = (vaddr - page * PAGESIZE) + frame;
+  // paddr = (vaddr - page * PAGESIZE) + frame;
+
+  // [EIFLES]
+  offset = getOffsetOfVirtualAddress(vaddr);
+  // physical address (paddr) = 
+  // +-----------------+
+  // | ppage# | offset |
+  // +-----------------+
+  paddr = frame + offset;
 
   if (debug_tlb) {
     print(binaryName);
