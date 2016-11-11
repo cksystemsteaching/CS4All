@@ -1057,7 +1057,9 @@ int reg_lo = 0; // lo register for multiplication/division
 
 int* pt = (int*) 0; // page table
 
-int brk = 0; // break between code, data, and heap
+//int brk = 0; // break between code, data, and heap
+// [EIFLES] BRK needs to be a pointer because it points to the page tables of the heap and stack PTs
+int* brk = (int*) 0;
 
 int trap = 0; // flag for creating a trap
 
@@ -1115,7 +1117,7 @@ void resetInterpreter() {
   // brk = maxBinaryLength;
   // [EIFLES] brk is after the last address of code segment's PT, which is the
   // beginning of the heap's PT.
-  brk = getPT(currentContext, 1);
+  // brk = getPT(currentContext, 1);
 
   trap = 0;
 
@@ -1198,7 +1200,9 @@ void setRegHi(int* context, int reg_hi)       { *(context + 5) = reg_hi; }
 void setRegLo(int* context, int reg_lo)       { *(context + 6) = reg_lo; }
 //void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
 void setPT(int* context, int* pt, int segment){ *(getSGMTT(context) + segment) = (int) pt; }
-void setBreak(int* context, int brk)          { *(context + 8) = brk; }
+//void setBreak(int* context, int brk)          { *(context + 8) = brk; }
+// [EIFLES]
+void setBreak(int* context, int* brk)          { *(context + 8) = (int) brk; }
 void setParent(int* context, int id)          { *(context + 9) = id; }
 
 void setSGMTT(int* context, int* sgmtt)         { *(context + 10) = (int) sgmtt; }
@@ -6618,7 +6622,10 @@ int* allocateContext(int ID, int parentID) {
   setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE), 3);
 
   // heap starts where it is safe to start
-  setBreak(context, maxBinaryLength);
+  //setBreak(context, maxBinaryLength);
+
+  // [EIFLES] brk pointer points to end of code and thus to the start of the heap (heap is encoded with 01 in the vaddr)
+  setBreak(context, getPT(context, 1));
 
   setParent(context, parentID);
 

@@ -57,16 +57,4 @@ assignment2:
 	make
 	./selfie -c test_program.c selfie.c -o test_program.m 
 	./selfie -l test_program.m -m 32
-
-assignment2Test:
-	make clean
-	make
-	./selfie -c test_program.c selfie.c -o test_program.m 
-	./selfie -segmentation -l test_program.m -m 32
-
-# Assignment 2 runnable on Linux
-winAssignment2:
-	make winClean
-	make
-	selfie.exe -c test_program.c selfie.c -o test_program.m 
-	selfie.exe -l test_program.m -m 32
+	
