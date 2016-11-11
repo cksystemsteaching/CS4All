@@ -1112,7 +1112,10 @@ void resetInterpreter() {
 
   pt = (int*) 0;
 
-  brk = maxBinaryLength;
+  // brk = maxBinaryLength;
+  // [EIFLES] brk is after the last address of code segment's PT, which is the
+  // beginning of the heap's PT.
+  brk = getPT(currentContext, 1);
 
   trap = 0;
 
