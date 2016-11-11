@@ -6580,7 +6580,7 @@ int* allocateContext(int ID, int parentID) {
   pageCount=0;
    //zalloc a page table for each segment in segment table
   while(pageCount<SEGMENTCOUNT){
-    	*(segTable+pageCount) =(int) zalloc((VIRTUALMEMORYSIZE * WORDSIZE) / (PAGESIZE * SEGMENTCOUNT));
+    	*(segTable+pageCount) =(int) zalloc((VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
 
 		 //printd((int*)"SEGTABLE ADRESS",*(segTable+pageCount));
      pageCount=pageCount+1;
@@ -6771,7 +6771,7 @@ int up_loadString(int* table, int* s, int SP) {
 		printd("SP BEFORE SHIFT", SP + i);
 		printd("SP AFTER SHIFT ", leftShift(2,24));
 		printd("SP AFTER SHIFT ", (leftShift(2,24) + SP + i));
-    mapAndStoreVirtualMemory(table, SP + i, *s);
+    mapAndStoreVirtualMemory(table, (leftShift(2,24) + SP + i), *s);
 
     s = s + 1;
 
@@ -6788,7 +6788,7 @@ void up_loadArguments(int* table, int argc, int* argv) {
   int i_vargv;
 
   // arguments are pushed onto stack which starts at highest virtual address
-  SP = VIRTUALMEMORYSIZE - WORDSIZE;
+  SP = VIRTUALMEMORYSIZE/4 - WORDSIZE;
 
   // allocate memory for storing stack pointer later
   SP = SP - WORDSIZE;
@@ -6831,7 +6831,7 @@ void up_loadArguments(int* table, int argc, int* argv) {
 
 
   // store stack pointer at highest virtual address for binary to retrieve
-  mapAndStoreVirtualMemory(table, (leftShift(2,24) + (VIRTUALMEMORYSIZE - WORDSIZE)), SP);
+  mapAndStoreVirtualMemory(table, (leftShift(2,24) + (VIRTUALMEMORYSIZE/4 - WORDSIZE)), SP);
 }
 
 void mapUnmappedPages(int* table) {
