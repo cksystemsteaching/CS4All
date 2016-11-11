@@ -7050,7 +7050,7 @@ int bootminmob(int argc, int* argv, int machine) {
 
 
     up_loadBinary(getPT(usedContexts, 0));
-    up_loadArguments(getPT(usedContexts, 0), argc, argv);
+    up_loadArguments(getPT(usedContexts, 2), argc, argv);
 
     // [EIFLES] this will have to be extended. I'd rather put it into "up_LoadBinary" (this is what we need to replace anyway)
     //up_loadBinary(getSGMTT(usedContexts));
@@ -7133,7 +7133,7 @@ int boot(int argc, int* argv) {
 
     // [EIFLES] this will have to be extended. I'd rather put it into "up_LoadBinary" (this is what we need to replace anyway)
     up_loadBinary(getPT(usedContexts, 0));
-    up_loadArguments(getPT(usedContexts, 0), argc, argv);
+    up_loadArguments(getPT(usedContexts, 2), argc, argv);
 
     // propagate page table of initial context to microkernel boot level
     down_mapPageTable(usedContexts);
