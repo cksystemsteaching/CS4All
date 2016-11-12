@@ -5497,7 +5497,10 @@ int getPageOfVirtualAddress(int vaddr) {
 	// shift out segments and offset afterwards
 	// 14 because of the fresh inserted leftshift zeroes
 	// 2bit 12 bit(p) 12 bit(o) -> 12 bit(p) remaining
-	return rightShift(leftShift(vaddr,2),14);
+	int tmp=rightShift(leftShift(vaddr,6),6+13);
+		printInteger(tmp);	
+	println();
+	return rightShift(leftShift(vaddr,6),6+13);
 }
 
 int isVirtualAddressMapped(int* segmentTable, int vaddr) {
@@ -5528,7 +5531,7 @@ int* tlb(int* segmentTable, int vaddr) {
   // map virtual address to physical address
 	// MORTIS
 	//shift vaddr so segment number is away 24 bit remaining
-	vaddr = rightShift(leftShift(vaddr,2),2);
+	vaddr = rightShift(leftShift(vaddr,6),6);
 
   paddr = (vaddr - page * PAGESIZE) + frame;
 
@@ -5569,14 +5572,13 @@ void storeVirtualMemory(int* table, int vaddr, int data) {
 
 
 void mapAndStoreVirtualMemory(int* segmentTable, int vaddr, int data) {
-  // assert: isValidVirtualAddress(vaddr) == 1 
-
-
-	int* pageTable = loadSegmentFromVirtual(segmentTable, vaddr);
+	int* pageTable;
+	pageTable = loadSegmentFromVirtual(segmentTable, vaddr);
 
   if (isVirtualAddressMapped(segmentTable, vaddr) == 0)
     mapPage(pageTable, getPageOfVirtualAddress(vaddr), (int) palloc());
-
+	print("mapPage finished");
+	printInteger(vaddr);
   storeVirtualMemory(segmentTable, vaddr, data);
 }
 
@@ -6119,14 +6121,16 @@ void op_lw() {
     vaddr = *(registers+rs) + signExtend(immediate);
 
 		//add segment id to vaddr, heap or stack
-		if(vaddr>brk){
-			vaddr=leftShift(2,26) + vaddr;
-		}else{
-			vaddr=leftShift(3,26) + vaddr;
-		}
-
+	
     if (isValidVirtualAddress(vaddr)) {
+			if(vaddr>brk){
+				vaddr=leftShift(2,26) + vaddr;
+			}else{
+				vaddr=leftShift(3,26) + vaddr;
+			}
       if (isVirtualAddressMapped(st, vaddr)) {
+
+
         *(registers+rt) = loadVirtualMemory(st, vaddr);
 
         // keep track of number of loads
@@ -6753,12 +6757,14 @@ void up_loadBinary(int* table) {
 
 
   // binaries start at lowest virtual address 01 0000 0000 0000 0000 0000 0000  -  2 bits 12 bits 12 bits
+
 	vaddr = leftShift(1,26);
 
   while (vaddr-leftShift(1,26) < binaryLength) {
-			
+		printInteger(vaddr);	
+		println();
     mapAndStoreVirtualMemory(table, vaddr, loadBinary(vaddr-leftShift(1,26)));
-		printInteger(vaddr);
+		
     vaddr = vaddr + WORDSIZE;
   }
 
