@@ -1,20 +1,15 @@
+int size;
+int* array;
 int main(int argc, int *argv){
 	int a;
-
-	int* array1;
-
+	int b;
+	
 	a=11+42;
-
-
-	array1 = malloc(12);
-
-
-	array1 = 100;
-	a = array1;
-
-	(array1+4) = 5;
-
-	a = (array1+4) ;
+	size=6*4;
+	array = malloc(size);
+	*(array+2)=12345;
+	b=10;
+	a=*(array+2);
 
 	return 0;
 }

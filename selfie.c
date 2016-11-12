@@ -6128,9 +6128,10 @@ void op_lw() {
 		//add segment id to vaddr, heap or stack
 	
     if (isValidVirtualAddress(vaddr)) {
+			println();
 			printd("VADDR op_lw()",vaddr);
-
-			if(*(registers+rt) > brk){
+			printd("with break: ", brk);
+			if(vaddr > brk){
 				vaddr=leftShift(2,26) + vaddr;
 				printd("VADDR op_lw() stack",vaddr);
 			}else{
@@ -6139,7 +6140,6 @@ void op_lw() {
 			}
       if (isVirtualAddressMapped(st, vaddr)) {
 
-				
         *(registers+rt) = loadVirtualMemory(st, vaddr);
 
         // keep track of number of loads
@@ -6237,13 +6237,15 @@ void op_sw() {
     vaddr = *(registers+rs) + signExtend(immediate);
 
     if (isValidVirtualAddress(vaddr)) {
-			printd("VADDR op_sw() register",*(registers+rt));
+			printd("VADDR op_sw() register",vaddr);
 			printd("VADDR op_sw()",vaddr);
-			if(*(registers+rt) > brk){
+			
+			if(vaddr > brk){
 				vaddr=leftShift(2,26) + vaddr;
 				printd("VADDR op_sw() stack",vaddr);
 			}else{
 				vaddr=leftShift(3,26) + vaddr;
+				printBinary(vaddr,32);
 				printd("VADDR op_sw() heap",vaddr);
 			}
 
