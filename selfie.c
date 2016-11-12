@@ -969,7 +969,7 @@ void initMemory(int megabytes) {
   else if (megabytes > 64)
     megabytes = 64;
 
-  pageFrameMemory = megabytes * MEGABYTE;
+  pageFrameMemory = megabytes * MEGABYTE / 4;
 }
 
 // -----------------------------------------------------------------
@@ -6706,7 +6706,7 @@ void mapPage(int* table, int page, int frame) {
 int pavailable() {
   if (freePageFrameMemory > 0)
     return 1;
-  else if (usedPageFrameMemory + MEGABYTE <= pageFrameMemory)
+  else if ((usedPageFrameMemory + (MEGABYTE/4)) <= pageFrameMemory)
     return 1;
   else
     return 0;
@@ -6725,7 +6725,7 @@ int* palloc() {
   // assert: PAGESIZE is a factor of MEGABYTE strictly less than MEGABYTE
 
   if (freePageFrameMemory == 0) {
-    freePageFrameMemory = MEGABYTE;
+    freePageFrameMemory = MEGABYTE/4;
 
     if (usedPageFrameMemory + freePageFrameMemory <= pageFrameMemory) {
       // on boot level zero allocate zeroed memory
@@ -6865,12 +6865,13 @@ void mapUnmappedPages(int* segTable) {
 	int pageCount;
 	int maxPageount;
 	int allocateCount;
-	int oldMaxPageFrameMemory;
 
-	oldMaxPageFrameMemory = pageFrameMemory;
+
 
   // assert: context page table is only mapped from beginning up and end down
-  pageCount=0;
+  pageCount=1;
+
+
    //zalloc a page table for each segment in segment table
   while(pageCount<SEGMENTCOUNT){
   // assert: page table is only mapped from beginning up and end down
@@ -6878,13 +6879,11 @@ void mapUnmappedPages(int* segTable) {
 		page = 0;
 		printd("CURRENT SEGMENT ",pageCount);
 		while (isPageMapped(*(segTable+pageCount), page)){
-
-		printd("ALREADy MAPPED PAGE COUNT ",page);
+			printd("ALREADy MAPPED PAGE COUNT ",page);
 		  page = page + 1;
 		}
 
-		usedPageFrameMemory=page * PAGESIZE;
-		pageFrameMemory = oldMaxPageFrameMemory / 4;
+		usedPageFrameMemory = page * PAGESIZE;
 
 		while (pavailable()) {
 
@@ -6892,12 +6891,13 @@ void mapUnmappedPages(int* segTable) {
 		  mapPage(*(segTable+pageCount), page, (int) palloc());
 
 		  page = page + 1;
-
+			printd("freePageFrameMemory",freePageFrameMemory);
+		
 		}
 
 		pageCount=pageCount+1;
+		//freePageFrameMemory = 0;
 	}
-	pageFrameMemory = oldMaxPageFrameMemory;
 	
 }
 
