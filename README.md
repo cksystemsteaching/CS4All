@@ -10,6 +10,14 @@ printexample.c prints out the numbers from 0 to 9, straightforward way to demons
 Run program like you did in Assignment 1. Everytime sched_yield() occures in code,
 a manual context switch is triggered.
 
+- MINSTER CALL
+
+./selfie -c testfiles/yieldexample.c selfie.c -o sample.m && ./selfie -l sample.m -min 2 
+
+- MIPSTER CALL
+
+TODO
+
 
 # Selfie [![Build Status](https://travis-ci.org/cksystemsteaching/selfie.svg?branch=master)](https://travis-ci.org/cksystemsteaching/selfie)
 
