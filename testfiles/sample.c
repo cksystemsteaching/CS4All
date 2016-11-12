@@ -14,9 +14,12 @@ int main(int argc, int *argv){
 	array2 = malloc(12);
 	array3 = malloc(12);
 
-
 	array1 = 100;
-
 	a = array1;
+
+
+	(array1+4) = 5;
+
+	a = (array1+4) ;
 	return 0;
 }

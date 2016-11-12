@@ -6130,12 +6130,14 @@ void op_lw() {
     if (isValidVirtualAddress(vaddr)) {
 			if(vaddr > brk){
 				vaddr=leftShift(2,26) + vaddr;
+				printd("VADDR op_lw() stack",vaddr);
 			}else{
 				vaddr=leftShift(3,26) + vaddr;
+				printd("VADDR op_lw() heap",vaddr);
 			}
       if (isVirtualAddressMapped(st, vaddr)) {
 
-
+				
         *(registers+rt) = loadVirtualMemory(st, vaddr);
 
         // keep track of number of loads
@@ -6235,8 +6237,10 @@ void op_sw() {
     if (isValidVirtualAddress(vaddr)) {
 			if(vaddr > brk){
 				vaddr=leftShift(2,26) + vaddr;
+				printd("VADDR op_sw() stack",vaddr);
 			}else{
 				vaddr=leftShift(3,26) + vaddr;
+				printd("VADDR op_sw() heap",vaddr);
 			}
       if (isVirtualAddressMapped(st, vaddr)) {
         storeVirtualMemory(st, vaddr, *(registers+rt));
