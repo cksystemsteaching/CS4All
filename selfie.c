@@ -6132,14 +6132,13 @@ void op_lw() {
 		
 			if(vaddr > brk){
 				vaddr=leftShift(2,26) + vaddr;
-				printd("VADDR op_lw() stack",vaddr);
+				//printd("VADDR op_lw() stack",vaddr);
 			}else if(vaddr>maxBinaryLength){
 				vaddr=leftShift(3,26) + vaddr;
-				printd("VADDR op_lw() heap",vaddr);
-				
+				//printd("VADDR op_lw() heap",vaddr);	
 			}else{
 				vaddr=leftShift(1,26) + vaddr;
-				printd("VADDR op_lw() global",vaddr);
+				//printd("VADDR op_lw() global",vaddr);
 			}
       if (isVirtualAddressMapped(st, vaddr)) {
 
@@ -6242,14 +6241,13 @@ void op_sw() {
     if (isValidVirtualAddress(vaddr)) {
 			if(vaddr > brk){
 				vaddr=leftShift(2,26) + vaddr;
-				printd("VADDR op_sw() stack",vaddr);
+			//	printd("VADDR op_sw() stack",vaddr);
 			}else if(vaddr>maxBinaryLength){
 				vaddr=leftShift(3,26) + vaddr;
-				printd("VADDR op_sw() heap",vaddr);
-				
+			//	printd("VADDR op_sw() heap",vaddr);			
 			}else{
 				vaddr=leftShift(1,26) + vaddr;
-				printd("VADDR op_sw() global",vaddr);
+			//	printd("VADDR op_sw() global",vaddr);
 			}
 
       if (isVirtualAddressMapped(st, vaddr)) {
@@ -6879,21 +6877,26 @@ void mapUnmappedPages(int* segTable) {
 	int pageCount;
 	int maxPageount;
 	int allocateCount;
+	int oldFreePageFrameMemory;
 
 
+
+
+	oldFreePageFrameMemory=freePageFrameMemory;
 
   // assert: context page table is only mapped from beginning up and end down
-  pageCount=1;
+  pageCount=0;
 
-
+	freePageFrameMemory=0;
    //zalloc a page table for each segment in segment table
   while(pageCount<SEGMENTCOUNT){
   // assert: page table is only mapped from beginning up and end down
-
+		if(pageCount==1)
+			freePageFrameMemory=oldFreePageFrameMemory;
 		page = 0;
-		printd("CURRENT SEGMENT ",pageCount);
+		//printd("CURRENT SEGMENT ",pageCount);
 		while (isPageMapped(*(segTable+pageCount), page)){
-			printd("ALREADy MAPPED PAGE COUNT ",page);
+		//	printd("ALREADy MAPPED PAGE COUNT ",page);
 		  page = page + 1;
 		}
 
@@ -6901,11 +6904,11 @@ void mapUnmappedPages(int* segTable) {
 
 		while (pavailable()) {
 
-			printd("UNMAPPED MAPPED PAGE COUNT ",page);
+			//printd("UNMAPPED MAPPED PAGE COUNT ",page);
 		  mapPage(*(segTable+pageCount), page, (int) palloc());
 
 		  page = page + 1;
-			printd("freePageFrameMemory",freePageFrameMemory);
+		//	printd("freePageFrameMemory",freePageFrameMemory);
 		
 		}
 

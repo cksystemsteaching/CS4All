@@ -1,11 +1,264 @@
 This is the Morties Selfie
-./selfie: 128012 bytes with 30180 instructions and 7292 bytes of data loaded from selfie.m
+./selfie: 127736 bytes with 30143 instructions and 7164 bytes of data loaded from selfie.m
 ./selfie: this is selfie's minster executing selfie.m with 0MB of physical memory
 HOW MUCH ALLOCATE :  16384
 HOW MUCH ALLOCATE :  16384
 HOW MUCH ALLOCATE :  16384
 HOW MUCH ALLOCATE :  16384
-FINISHED UP LOAD BINARYCURRENT SEGMENT :  1
+FINISHED UP LOAD BINARYCURRENT SEGMENT :  0
+UNMAPPED MAPPED PAGE COUNT :  0
+freePageFrameMemory:  253952
+UNMAPPED MAPPED PAGE COUNT :  1
+freePageFrameMemory:  249856
+UNMAPPED MAPPED PAGE COUNT :  2
+freePageFrameMemory:  245760
+UNMAPPED MAPPED PAGE COUNT :  3
+freePageFrameMemory:  241664
+UNMAPPED MAPPED PAGE COUNT :  4
+freePageFrameMemory:  237568
+UNMAPPED MAPPED PAGE COUNT :  5
+freePageFrameMemory:  233472
+UNMAPPED MAPPED PAGE COUNT :  6
+freePageFrameMemory:  229376
+UNMAPPED MAPPED PAGE COUNT :  7
+freePageFrameMemory:  225280
+UNMAPPED MAPPED PAGE COUNT :  8
+freePageFrameMemory:  221184
+UNMAPPED MAPPED PAGE COUNT :  9
+freePageFrameMemory:  217088
+UNMAPPED MAPPED PAGE COUNT :  10
+freePageFrameMemory:  212992
+UNMAPPED MAPPED PAGE COUNT :  11
+freePageFrameMemory:  208896
+UNMAPPED MAPPED PAGE COUNT :  12
+freePageFrameMemory:  204800
+UNMAPPED MAPPED PAGE COUNT :  13
+freePageFrameMemory:  200704
+UNMAPPED MAPPED PAGE COUNT :  14
+freePageFrameMemory:  196608
+UNMAPPED MAPPED PAGE COUNT :  15
+freePageFrameMemory:  192512
+UNMAPPED MAPPED PAGE COUNT :  16
+freePageFrameMemory:  188416
+UNMAPPED MAPPED PAGE COUNT :  17
+freePageFrameMemory:  184320
+UNMAPPED MAPPED PAGE COUNT :  18
+freePageFrameMemory:  180224
+UNMAPPED MAPPED PAGE COUNT :  19
+freePageFrameMemory:  176128
+UNMAPPED MAPPED PAGE COUNT :  20
+freePageFrameMemory:  172032
+UNMAPPED MAPPED PAGE COUNT :  21
+freePageFrameMemory:  167936
+UNMAPPED MAPPED PAGE COUNT :  22
+freePageFrameMemory:  163840
+UNMAPPED MAPPED PAGE COUNT :  23
+freePageFrameMemory:  159744
+UNMAPPED MAPPED PAGE COUNT :  24
+freePageFrameMemory:  155648
+UNMAPPED MAPPED PAGE COUNT :  25
+freePageFrameMemory:  151552
+UNMAPPED MAPPED PAGE COUNT :  26
+freePageFrameMemory:  147456
+UNMAPPED MAPPED PAGE COUNT :  27
+freePageFrameMemory:  143360
+UNMAPPED MAPPED PAGE COUNT :  28
+freePageFrameMemory:  139264
+UNMAPPED MAPPED PAGE COUNT :  29
+freePageFrameMemory:  135168
+UNMAPPED MAPPED PAGE COUNT :  30
+freePageFrameMemory:  131072
+UNMAPPED MAPPED PAGE COUNT :  31
+freePageFrameMemory:  126976
+UNMAPPED MAPPED PAGE COUNT :  32
+freePageFrameMemory:  122880
+UNMAPPED MAPPED PAGE COUNT :  33
+freePageFrameMemory:  118784
+UNMAPPED MAPPED PAGE COUNT :  34
+freePageFrameMemory:  114688
+UNMAPPED MAPPED PAGE COUNT :  35
+freePageFrameMemory:  110592
+UNMAPPED MAPPED PAGE COUNT :  36
+freePageFrameMemory:  106496
+UNMAPPED MAPPED PAGE COUNT :  37
+freePageFrameMemory:  102400
+UNMAPPED MAPPED PAGE COUNT :  38
+freePageFrameMemory:  98304
+UNMAPPED MAPPED PAGE COUNT :  39
+freePageFrameMemory:  94208
+UNMAPPED MAPPED PAGE COUNT :  40
+freePageFrameMemory:  90112
+UNMAPPED MAPPED PAGE COUNT :  41
+freePageFrameMemory:  86016
+UNMAPPED MAPPED PAGE COUNT :  42
+freePageFrameMemory:  81920
+UNMAPPED MAPPED PAGE COUNT :  43
+freePageFrameMemory:  77824
+UNMAPPED MAPPED PAGE COUNT :  44
+freePageFrameMemory:  73728
+UNMAPPED MAPPED PAGE COUNT :  45
+freePageFrameMemory:  69632
+UNMAPPED MAPPED PAGE COUNT :  46
+freePageFrameMemory:  65536
+UNMAPPED MAPPED PAGE COUNT :  47
+freePageFrameMemory:  61440
+UNMAPPED MAPPED PAGE COUNT :  48
+freePageFrameMemory:  57344
+UNMAPPED MAPPED PAGE COUNT :  49
+freePageFrameMemory:  53248
+UNMAPPED MAPPED PAGE COUNT :  50
+freePageFrameMemory:  49152
+UNMAPPED MAPPED PAGE COUNT :  51
+freePageFrameMemory:  45056
+UNMAPPED MAPPED PAGE COUNT :  52
+freePageFrameMemory:  40960
+UNMAPPED MAPPED PAGE COUNT :  53
+freePageFrameMemory:  36864
+UNMAPPED MAPPED PAGE COUNT :  54
+freePageFrameMemory:  32768
+UNMAPPED MAPPED PAGE COUNT :  55
+freePageFrameMemory:  28672
+UNMAPPED MAPPED PAGE COUNT :  56
+freePageFrameMemory:  24576
+UNMAPPED MAPPED PAGE COUNT :  57
+freePageFrameMemory:  20480
+UNMAPPED MAPPED PAGE COUNT :  58
+freePageFrameMemory:  16384
+UNMAPPED MAPPED PAGE COUNT :  59
+freePageFrameMemory:  12288
+UNMAPPED MAPPED PAGE COUNT :  60
+freePageFrameMemory:  8192
+UNMAPPED MAPPED PAGE COUNT :  61
+freePageFrameMemory:  4096
+UNMAPPED MAPPED PAGE COUNT :  62
+freePageFrameMemory:  0
+UNMAPPED MAPPED PAGE COUNT :  63
+freePageFrameMemory:  253952
+UNMAPPED MAPPED PAGE COUNT :  64
+freePageFrameMemory:  249856
+UNMAPPED MAPPED PAGE COUNT :  65
+freePageFrameMemory:  245760
+UNMAPPED MAPPED PAGE COUNT :  66
+freePageFrameMemory:  241664
+UNMAPPED MAPPED PAGE COUNT :  67
+freePageFrameMemory:  237568
+UNMAPPED MAPPED PAGE COUNT :  68
+freePageFrameMemory:  233472
+UNMAPPED MAPPED PAGE COUNT :  69
+freePageFrameMemory:  229376
+UNMAPPED MAPPED PAGE COUNT :  70
+freePageFrameMemory:  225280
+UNMAPPED MAPPED PAGE COUNT :  71
+freePageFrameMemory:  221184
+UNMAPPED MAPPED PAGE COUNT :  72
+freePageFrameMemory:  217088
+UNMAPPED MAPPED PAGE COUNT :  73
+freePageFrameMemory:  212992
+UNMAPPED MAPPED PAGE COUNT :  74
+freePageFrameMemory:  208896
+UNMAPPED MAPPED PAGE COUNT :  75
+freePageFrameMemory:  204800
+UNMAPPED MAPPED PAGE COUNT :  76
+freePageFrameMemory:  200704
+UNMAPPED MAPPED PAGE COUNT :  77
+freePageFrameMemory:  196608
+UNMAPPED MAPPED PAGE COUNT :  78
+freePageFrameMemory:  192512
+UNMAPPED MAPPED PAGE COUNT :  79
+freePageFrameMemory:  188416
+UNMAPPED MAPPED PAGE COUNT :  80
+freePageFrameMemory:  184320
+UNMAPPED MAPPED PAGE COUNT :  81
+freePageFrameMemory:  180224
+UNMAPPED MAPPED PAGE COUNT :  82
+freePageFrameMemory:  176128
+UNMAPPED MAPPED PAGE COUNT :  83
+freePageFrameMemory:  172032
+UNMAPPED MAPPED PAGE COUNT :  84
+freePageFrameMemory:  167936
+UNMAPPED MAPPED PAGE COUNT :  85
+freePageFrameMemory:  163840
+UNMAPPED MAPPED PAGE COUNT :  86
+freePageFrameMemory:  159744
+UNMAPPED MAPPED PAGE COUNT :  87
+freePageFrameMemory:  155648
+UNMAPPED MAPPED PAGE COUNT :  88
+freePageFrameMemory:  151552
+UNMAPPED MAPPED PAGE COUNT :  89
+freePageFrameMemory:  147456
+UNMAPPED MAPPED PAGE COUNT :  90
+freePageFrameMemory:  143360
+UNMAPPED MAPPED PAGE COUNT :  91
+freePageFrameMemory:  139264
+UNMAPPED MAPPED PAGE COUNT :  92
+freePageFrameMemory:  135168
+UNMAPPED MAPPED PAGE COUNT :  93
+freePageFrameMemory:  131072
+UNMAPPED MAPPED PAGE COUNT :  94
+freePageFrameMemory:  126976
+UNMAPPED MAPPED PAGE COUNT :  95
+freePageFrameMemory:  122880
+UNMAPPED MAPPED PAGE COUNT :  96
+freePageFrameMemory:  118784
+UNMAPPED MAPPED PAGE COUNT :  97
+freePageFrameMemory:  114688
+UNMAPPED MAPPED PAGE COUNT :  98
+freePageFrameMemory:  110592
+UNMAPPED MAPPED PAGE COUNT :  99
+freePageFrameMemory:  106496
+UNMAPPED MAPPED PAGE COUNT :  100
+freePageFrameMemory:  102400
+UNMAPPED MAPPED PAGE COUNT :  101
+freePageFrameMemory:  98304
+UNMAPPED MAPPED PAGE COUNT :  102
+freePageFrameMemory:  94208
+UNMAPPED MAPPED PAGE COUNT :  103
+freePageFrameMemory:  90112
+UNMAPPED MAPPED PAGE COUNT :  104
+freePageFrameMemory:  86016
+UNMAPPED MAPPED PAGE COUNT :  105
+freePageFrameMemory:  81920
+UNMAPPED MAPPED PAGE COUNT :  106
+freePageFrameMemory:  77824
+UNMAPPED MAPPED PAGE COUNT :  107
+freePageFrameMemory:  73728
+UNMAPPED MAPPED PAGE COUNT :  108
+freePageFrameMemory:  69632
+UNMAPPED MAPPED PAGE COUNT :  109
+freePageFrameMemory:  65536
+UNMAPPED MAPPED PAGE COUNT :  110
+freePageFrameMemory:  61440
+UNMAPPED MAPPED PAGE COUNT :  111
+freePageFrameMemory:  57344
+UNMAPPED MAPPED PAGE COUNT :  112
+freePageFrameMemory:  53248
+UNMAPPED MAPPED PAGE COUNT :  113
+freePageFrameMemory:  49152
+UNMAPPED MAPPED PAGE COUNT :  114
+freePageFrameMemory:  45056
+UNMAPPED MAPPED PAGE COUNT :  115
+freePageFrameMemory:  40960
+UNMAPPED MAPPED PAGE COUNT :  116
+freePageFrameMemory:  36864
+UNMAPPED MAPPED PAGE COUNT :  117
+freePageFrameMemory:  32768
+UNMAPPED MAPPED PAGE COUNT :  118
+freePageFrameMemory:  28672
+UNMAPPED MAPPED PAGE COUNT :  119
+freePageFrameMemory:  24576
+UNMAPPED MAPPED PAGE COUNT :  120
+freePageFrameMemory:  20480
+UNMAPPED MAPPED PAGE COUNT :  121
+freePageFrameMemory:  16384
+UNMAPPED MAPPED PAGE COUNT :  122
+freePageFrameMemory:  12288
+UNMAPPED MAPPED PAGE COUNT :  123
+freePageFrameMemory:  8192
+UNMAPPED MAPPED PAGE COUNT :  124
+freePageFrameMemory:  4096
+UNMAPPED MAPPED PAGE COUNT :  125
+freePageFrameMemory:  0
+CURRENT SEGMENT :  1
 ALREADy MAPPED PAGE COUNT :  0
 ALREADy MAPPED PAGE COUNT :  1
 ALREADy MAPPED PAGE COUNT :  2
@@ -730,524 +983,25 @@ UNMAPPED MAPPED PAGE COUNT :  124
 freePageFrameMemory:  4096
 UNMAPPED MAPPED PAGE COUNT :  125
 freePageFrameMemory:  0
-VADDR op_lw() stack:  201326588
-VADDR op_sw() stack:  201326556
-VADDR op_sw() stack:  201326552
-VADDR op_lw() stack:  201326564
-VADDR op_sw() stack:  201326544
-VADDR op_lw() stack:  201326560
-VADDR op_sw() stack:  201326540
-VADDR op_sw() stack:  201326536
-VADDR op_sw() stack:  201326532
-VADDR op_lw() stack:  201326544
-VADDR op_sw() global:  67235300
-VADDR op_lw() stack:  201326540
-VADDR op_sw() global:  67235296
-VADDR op_sw() stack:  201326528
-VADDR op_sw() stack:  201326524
-VADDR op_sw() stack:  201326516
-VADDR op_sw() stack:  201326512
-VADDR op_sw() stack:  201326508
-VADDR op_sw() stack:  201326504
-VADDR op_lw() global:  67235300
-VADDR op_lw() stack:  201326504
-VADDR op_lw() stack:  201326508
-VADDR op_lw() global:  67235296
-VADDR op_lw() stack:  201326584
-VADDR op_lw() stack:  201326512
-VADDR op_lw() stack:  201326516
-VADDR op_sw() stack:  201326520
-VADDR op_sw() stack:  201326516
-VADDR op_sw() stack:  201326512
-VADDR op_lw() global:  67235300
-VADDR op_lw() stack:  201326512
-VADDR op_lw() stack:  201326516
-VADDR op_lw() global:  67235300
-VADDR op_sw() global:  67235300
-VADDR op_lw() global:  67235296
-VADDR op_sw() global:  67235296
-VADDR op_lw() stack:  201326520
-VADDR op_lw() stack:  201326524
-VADDR op_lw() stack:  201326528
-VADDR op_sw() global:  67235292
-VADDR op_lw() stack:  201326532
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326544
-VADDR op_sw() stack:  201326540
-VADDR op_lw() global:  67236776
-VADDR op_sw() stack:  201326532
-VADDR op_lw() stack:  201326532
 BREAK:  131196
 bump:  131072
 size:  124
-VADDR op_sw() global:  67236768
-VADDR op_lw() global:  67236768
-VADDR op_sw() global:  67239936
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67239936
-VADDR op_sw() heap:  201457668
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457668
-VADDR op_sw() heap:  201457672
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457672
-VADDR op_sw() heap:  201457676
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457676
-VADDR op_sw() heap:  201457680
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457680
-VADDR op_sw() heap:  201457684
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457684
-VADDR op_sw() heap:  201457688
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457688
-VADDR op_sw() heap:  201457692
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457692
-VADDR op_sw() heap:  201457696
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457696
-VADDR op_sw() heap:  201457700
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457700
-VADDR op_sw() heap:  201457704
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457704
-VADDR op_sw() heap:  201457708
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457708
-VADDR op_sw() heap:  201457712
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457712
-VADDR op_sw() heap:  201457716
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457716
-VADDR op_sw() heap:  201457720
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457720
-VADDR op_sw() heap:  201457724
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457724
-VADDR op_sw() heap:  201457728
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457728
-VADDR op_sw() heap:  201457732
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457732
-VADDR op_sw() heap:  201457736
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457736
-VADDR op_sw() heap:  201457740
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457740
-VADDR op_sw() heap:  201457744
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457744
-VADDR op_sw() heap:  201457748
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457748
-VADDR op_sw() heap:  201457752
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457752
-VADDR op_sw() heap:  201457756
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457756
-VADDR op_sw() heap:  201457760
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457760
-VADDR op_sw() heap:  201457764
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457764
-VADDR op_sw() heap:  201457768
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457768
-VADDR op_sw() heap:  201457772
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457772
-VADDR op_sw() heap:  201457776
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457776
-VADDR op_sw() heap:  201457780
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326536
-VADDR op_lw() heap:  201457780
-VADDR op_sw() heap:  201457784
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326536
-VADDR op_lw() stack:  201326536
-VADDR op_sw() stack:  201326532
-VADDR op_sw() stack:  201326528
-VADDR op_sw() stack:  201326524
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326532
-VADDR op_lw() heap:  201457784
-VADDR op_lw() stack:  201326524
-VADDR op_lw() stack:  201326528
-VADDR op_sw() global:  67236764
-VADDR op_lw() global:  67236764
-VADDR op_sw() global:  67236760
-VADDR op_sw() stack:  201326532
-VADDR op_sw() stack:  201326528
-VADDR op_sw() stack:  201326524
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326532
-VADDR op_lw() heap:  201457724
-VADDR op_lw() stack:  201326524
-VADDR op_lw() stack:  201326528
-VADDR op_sw() global:  67236756
-VADDR op_lw() global:  67236756
-VADDR op_sw() global:  67236752
-VADDR op_sw() stack:  201326532
-VADDR op_lw() stack:  201326532
 BREAK:  131200
 bump:  131196
 size:  4
-VADDR op_sw() global:  67236744
-VADDR op_lw() global:  67236744
-VADDR op_sw() heap:  201457788
-VADDR op_sw() stack:  201326532
-VADDR op_lw() stack:  201326532
 BREAK:  131236
 bump:  131200
 size:  36
-VADDR op_sw() global:  67236740
-VADDR op_lw() global:  67236748
-VADDR op_sw() stack:  201326532
-VADDR op_lw() stack:  201326532
 BREAK:  131364
 bump:  131236
 size:  128
-VADDR op_sw() global:  67236736
-VADDR op_lw() global:  67236776
-VADDR op_sw() stack:  201326532
-VADDR op_lw() stack:  201326532
 BREAK:  131368
 bump:  131364
 size:  4
-VADDR op_sw() global:  67236732
-VADDR op_lw() global:  67236732
-VADDR op_sw() heap:  201457956
-VADDR op_lw() stack:  201326540
-VADDR op_lw() stack:  201326544
-VADDR op_sw() stack:  201326544
-VADDR op_sw() stack:  201326540
-VADDR op_sw() stack:  201326536
-VADDR op_sw() stack:  201326532
-VADDR op_lw() stack:  201326544
-VADDR op_sw() stack:  201326528
-VADDR op_lw() stack:  201326532
-VADDR op_sw() stack:  201326524
-VADDR op_sw() stack:  201326520
-VADDR op_sw() stack:  201326516
-VADDR op_lw() stack:  201326524
-VADDR op_lw() global:  67236776
-VADDR op_sw() stack:  201326512
-VADDR op_lw() stack:  201326528
-VADDR op_lw() stack:  201326512
-VADDR op_lw() global:  67229704
-VADDR op_sw() stack:  201326508
-VADDR op_lw() global:  67236776
-VADDR op_lw() stack:  201326524
-VADDR op_lw() global:  67236776
-VADDR op_sw() stack:  201326504
-VADDR op_sw() stack:  201326500
-VADDR op_sw() stack:  201326496
-VADDR op_lw() stack:  201326504
-VADDR op_lw() stack:  201326508
-VADDR op_sw() stack:  201326492
-VADDR op_lw() stack:  201326504
-VADDR op_sw() stack:  201326488
-VADDR op_sw() stack:  201326484
-VADDR op_sw() stack:  201326480
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326488
-VADDR op_lw() heap:  201457760
-VADDR op_lw() stack:  201326480
-VADDR op_lw() stack:  201326484
-VADDR op_lw() stack:  201326492
-VADDR op_lw() stack:  201326496
-VADDR op_lw() stack:  201326500
-VADDR op_sw() stack:  201326508
-VADDR op_lw() global:  67236776
-VADDR op_sw() stack:  201326504
-VADDR op_sw() stack:  201326500
-VADDR op_sw() stack:  201326496
-VADDR op_lw() stack:  201326508
-VADDR op_lw() stack:  201326504
-VADDR op_lw() stack:  201326508
-VADDR op_sw() stack:  201326492
-VADDR op_lw() stack:  201326504
-VADDR op_sw() stack:  201326488
-VADDR op_sw() stack:  201326484
-VADDR op_sw() stack:  201326480
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326488
-VADDR op_lw() heap:  201457760
-VADDR op_lw() stack:  201326480
-VADDR op_lw() stack:  201326484
-VADDR op_lw() stack:  201326492
-VADDR op_lw() stack:  201326496
-VADDR op_lw() stack:  201326500
-VADDR op_lw() stack:  201326516
-VADDR op_lw() stack:  201326520
-VADDR op_lw() stack:  201326544
-VADDR op_sw() stack:  201326528
-VADDR op_lw() stack:  201326532
-VADDR op_sw() stack:  201326524
-VADDR op_sw() stack:  201326520
-VADDR op_sw() stack:  201326516
-VADDR op_lw() stack:  201326524
-VADDR op_lw() global:  67236776
-VADDR op_sw() stack:  201326512
-VADDR op_lw() stack:  201326528
-VADDR op_lw() stack:  201326512
-VADDR op_lw() global:  67229704
-VADDR op_sw() stack:  201326508
-VADDR op_lw() global:  67236776
-VADDR op_lw() stack:  201326524
-VADDR op_lw() global:  67236776
-VADDR op_sw() stack:  201326504
-VADDR op_sw() stack:  201326500
-VADDR op_sw() stack:  201326496
-VADDR op_lw() stack:  201326504
-VADDR op_lw() stack:  201326508
-VADDR op_sw() stack:  201326492
-VADDR op_lw() stack:  201326504
-VADDR op_sw() stack:  201326488
-VADDR op_sw() stack:  201326484
-VADDR op_sw() stack:  201326480
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326488
-VADDR op_lw() heap:  201457760
-VADDR op_lw() stack:  201326480
-VADDR op_lw() stack:  201326484
-VADDR op_lw() stack:  201326492
-VADDR op_lw() stack:  201326496
-VADDR op_lw() stack:  201326500
-VADDR op_sw() stack:  201326508
-VADDR op_lw() global:  67236776
-VADDR op_sw() stack:  201326504
-VADDR op_sw() stack:  201326500
-VADDR op_sw() stack:  201326496
-VADDR op_lw() stack:  201326508
-VADDR op_lw() stack:  201326504
-VADDR op_lw() stack:  201326508
-VADDR op_sw() stack:  201326492
-VADDR op_lw() stack:  201326504
-VADDR op_sw() stack:  201326488
-VADDR op_sw() stack:  201326484
-VADDR op_sw() stack:  201326480
-VADDR op_lw() global:  67236768
-VADDR op_lw() stack:  201326488
-VADDR op_lw() heap:  201457760
-VADDR op_lw() stack:  201326480
-VADDR op_lw() stack:  201326484
-VADDR op_lw() stack:  201326492
-VADDR op_lw() stack:  201326496
-VADDR op_lw() stack:  201326500
-VADDR op_lw() stack:  201326516
-VADDR op_lw() stack:  201326520
-VADDR op_sw() stack:  201326528
-VADDR op_sw() stack:  201326524
-VADDR op_sw() stack:  201326520
-VADDR op_lw() global:  67236744
-VADDR op_lw() stack:  201326528
-VADDR op_sw() heap:  201457788
-VADDR op_lw() global:  67236700
-VADDR op_sw() stack:  201326516
-VADDR op_lw() global:  67236744
-VADDR op_sw() stack:  201326512
-VADDR op_sw() stack:  201326508
-VADDR op_lw() stack:  201326508
-VADDR op_lw() stack:  201326512
-VADDR op_lw() stack:  201326516
-VADDR op_lw() global:  67236700
-VADDR op_sw() stack:  201326516
-VADDR op_lw() stack:  201326516
-selfie.m: exiting with exit code -1 and 0.00MB of mallocated memory
-./selfie: this is selfie's minster terminating selfie.m with exit code -1 and 0.50MB of mapped memory
+                                                                                                                                                     selfie.m: exiting with exit code 0 and 0.00MB of mallocated memory
+./selfie: this is selfie's minster terminating selfie.m with exit code 0 and 0.50MB of mapped memory
 ./selfie: profile: total,max(ratio%)@addr,2max(ratio%)@addr,3max(ratio%)@addr
-./selfie: calls: 28,6(21.45%)@0x23D8,5(17.85%)@0xD8,2(7.14%)@0x2438
-./selfie: loops: 30,30(100.00%)@0x1EC,0(0.00%),0(0.00%)
-./selfie: loads: 339,31(9.14%)@0x1EC,30(8.84%)@0x200,6(1.76%)@0x23EC
-./selfie: stores: 160,30(18.76%)@0x260,6(3.75%)@0x23DC,2(1.25%)@0x243C
+./selfie: calls: 1804,596(33.11%)@0x23D8,297(16.47%)@0x2438,149(8.26%)@0x88
+./selfie: loops: 177,147(83.33%)@0x3D78,30(16.94%)@0x1EC,0(0.00%)
+./selfie: loads: 12611,596(4.72%)@0x23EC,297(2.35%)@0x244C,150(1.18%)@0x3D78
+./selfie: stores: 7556,596(7.89%)@0x23DC,297(3.93%)@0x243C,150(1.98%)@0x3D80
