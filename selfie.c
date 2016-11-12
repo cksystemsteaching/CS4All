@@ -6127,7 +6127,7 @@ void op_lw() {
 		//add segment id to vaddr, heap or stack
 	
     if (isValidVirtualAddress(vaddr)) {
-			if(vaddr>brk){
+			if(vaddr > brk){
 				vaddr=leftShift(2,26) + vaddr;
 			}else{
 				vaddr=leftShift(3,26) + vaddr;
@@ -6232,6 +6232,11 @@ void op_sw() {
     vaddr = *(registers+rs) + signExtend(immediate);
 
     if (isValidVirtualAddress(vaddr)) {
+			if(vaddr > brk){
+				vaddr=leftShift(2,26) + vaddr;
+			}else{
+				vaddr=leftShift(3,26) + vaddr;
+			}
       if (isVirtualAddressMapped(st, vaddr)) {
         storeVirtualMemory(st, vaddr, *(registers+rt));
 
