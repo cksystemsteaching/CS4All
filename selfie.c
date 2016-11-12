@@ -6863,10 +6863,13 @@ void mapUnmappedPages(int* segTable) {
   int page;
 
 	int pageCount;
+	int maxPageount;
+	int allocateCount;
+	int oldMaxPageFrameMemory;
 
+	oldMaxPageFrameMemory = pageFrameMemory;
 
   // assert: context page table is only mapped from beginning up and end down
-
   pageCount=0;
    //zalloc a page table for each segment in segment table
   while(pageCount<SEGMENTCOUNT){
@@ -6880,7 +6883,8 @@ void mapUnmappedPages(int* segTable) {
 		  page = page + 1;
 		}
 
-
+		usedPageFrameMemory=page * PAGESIZE;
+		pageFrameMemory = oldMaxPageFrameMemory / 4;
 
 		while (pavailable()) {
 
@@ -6888,10 +6892,13 @@ void mapUnmappedPages(int* segTable) {
 		  mapPage(*(segTable+pageCount), page, (int) palloc());
 
 		  page = page + 1;
+
 		}
 
 		pageCount=pageCount+1;
 	}
+	pageFrameMemory = oldMaxPageFrameMemory;
+	
 }
 
 void down_mapPageTable(int* context) {
