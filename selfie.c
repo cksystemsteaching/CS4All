@@ -1071,7 +1071,7 @@ int mipster = 0; // flag for forcing to use mipster rather than hypster
 
 int interpret = 0; // flag for executing or disassembling code
 
-int debug = 1; // flag for logging code execution
+int debug = 0; // flag for logging code execution
 
 int  calls           = 0;        // total number of executed procedure calls
 int* callsPerAddress = (int*) 0; // number of executed calls of each procedure
@@ -6128,15 +6128,18 @@ void op_lw() {
 		//add segment id to vaddr, heap or stack
 	
     if (isValidVirtualAddress(vaddr)) {
-			println();
-			printd("VADDR op_lw()",vaddr);
-			printd("with break: ", brk);
+	
+		
 			if(vaddr > brk){
 				vaddr=leftShift(2,26) + vaddr;
 				printd("VADDR op_lw() stack",vaddr);
-			}else{
+			}else if(vaddr>maxBinaryLength){
 				vaddr=leftShift(3,26) + vaddr;
 				printd("VADDR op_lw() heap",vaddr);
+				
+			}else{
+				vaddr=leftShift(1,26) + vaddr;
+				printd("VADDR op_lw() global",vaddr);
 			}
       if (isVirtualAddressMapped(st, vaddr)) {
 
@@ -6237,16 +6240,16 @@ void op_sw() {
     vaddr = *(registers+rs) + signExtend(immediate);
 
     if (isValidVirtualAddress(vaddr)) {
-			printd("VADDR op_sw() register",vaddr);
-			printd("VADDR op_sw()",vaddr);
-			
 			if(vaddr > brk){
 				vaddr=leftShift(2,26) + vaddr;
 				printd("VADDR op_sw() stack",vaddr);
-			}else{
+			}else if(vaddr>maxBinaryLength){
 				vaddr=leftShift(3,26) + vaddr;
-				printBinary(vaddr,32);
 				printd("VADDR op_sw() heap",vaddr);
+				
+			}else{
+				vaddr=leftShift(1,26) + vaddr;
+				printd("VADDR op_sw() global",vaddr);
 			}
 
       if (isVirtualAddressMapped(st, vaddr)) {
@@ -6921,7 +6924,7 @@ void down_mapPageTable(int* context) {
 
   // assert: context page table is only mapped from beginning up and end down
 
-  pageCount=0;
+  pageCount=1;
    //zalloc a page table for each segment in segment table
   while(pageCount<SEGMENTCOUNT){
 		printd("END DOWN mAP PAGE TABLE FOR",pageCount);
@@ -6934,7 +6937,7 @@ void down_mapPageTable(int* context) {
 		}
 
 		page = (VIRTUALMEMORYSIZE/4 - maxBinaryLength - WORDSIZE) / PAGESIZE;
-					// MORTIS FIXME
+				
 		while (isPageMapped( *(segTable+pageCount) , page)) {
 		  selfie_map(getID(context), page, getFrameForPage( *(segTable+pageCount) , page));
 
@@ -7024,6 +7027,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 		//printInteger(selfie_ID());
     if (getParent(fromContext) != selfie_ID()){
       // switch to parent which is in charge of handling exceptions
+				
 			toID = getParent(fromContext);
 			
 			
@@ -7041,8 +7045,10 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
+				print("PAGE FAULT   ");
+				printInteger(exceptionParameter);
         frame = (int) palloc();
-
+		print("PALLOC FINISHED");
         // TODO: use this table to unmap and reuse frames
 				// MORTIS FIXME
         mapPage(getST(fromContext), exceptionParameter, frame);
