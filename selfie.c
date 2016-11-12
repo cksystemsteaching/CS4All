@@ -5467,6 +5467,7 @@ void storePhysicalMemory(int* paddr, int data) {
 }
 
 int getFrameForPage(int* table, int page) {
+
   return *(table + page);
 }
 
@@ -5479,7 +5480,7 @@ int isPageMapped(int* table, int page) {
 
 int isValidVirtualAddress(int vaddr) {
 
-	printd((int*)"Valid virtual adress:",vaddr);
+	//printd((int*)"Valid virtual adress:",vaddr);
 
   if (vaddr >= 0)
     if (vaddr < VIRTUALMEMORYSIZE)
@@ -5513,7 +5514,7 @@ int isVirtualAddressMapped(int* segmentTable, int vaddr) {
 int* loadSegmentFromVirtual(int* segmentTable, int vaddr){
 	// MORTIS
 	// right shifting should shift  2 bits 12 bits 12 bits to only remaining 2 bits
-	printd((int*)"now handling segment",( rightShift(vaddr,26)));
+	//printd((int*)"now handling segment",( rightShift(vaddr,26)));
 
 	return (int*) *(segmentTable + rightShift(vaddr,26));
 }
@@ -5529,16 +5530,16 @@ int* tlb(int* segmentTable, int vaddr) {
 
 	//printd((int*)"segment",loadSegmentFromVirtual(segmentTable,vaddr));
   frame = getFrameForPage(loadSegmentFromVirtual(segmentTable,vaddr), page);
-	printd((int*)"frame",frame);
-	printd((int*)"page",page);
+	//printd((int*)"frame",frame);
+	//printd((int*)"page",page);
   // map virtual address to physical address
 	// MORTIS
 	//shift vaddr so segment number is away 24 bit remaining
-	printd((int*)"vaddr before shift in tlb",vaddr);
+	//printd((int*)"vaddr before shift in tlb",vaddr);
 	vaddr = rightShift(leftShift(vaddr,6),6);
-	printd((int*)"vaddr after shift in tlb",vaddr);
+	//printd((int*)"vaddr after shift in tlb",vaddr);
   paddr = (vaddr - page * PAGESIZE) + frame;
-	printd((int*)"paddr in tlb",paddr);
+	//printd((int*)"paddr in tlb",paddr);
   if (debug_tlb) {
     print(binaryName);
     print((int*) ": tlb access:");
@@ -5582,7 +5583,7 @@ void mapAndStoreVirtualMemory(int* segmentTable, int vaddr, int data) {
   if (isVirtualAddressMapped(segmentTable, vaddr) == 0)
     mapPage(pageTable, getPageOfVirtualAddress(vaddr), (int) palloc());
 	
-	printd("VADDR in mapAndStoreVirtualMemory",vaddr);
+	//printd("VADDR in mapAndStoreVirtualMemory",vaddr);
   storeVirtualMemory(segmentTable, vaddr, data);
 }
 
@@ -6332,8 +6333,8 @@ void fetch() {
 
 	// MORTIS
 	// 01 in front of pc because it is used as virtual adress here and for code segment we need 01 in front of vaddr
-	print((int*) "Fetching instruction");
-	println();
+	//print((int*) "Fetching instruction");
+	//println();
 	
   ir = loadVirtualMemory(st, (leftShift(1,26) + pc));
 	//printInteger((int*)pc);
@@ -6603,9 +6604,9 @@ int* allocateContext(int ID, int parentID) {
   pageCount=0;
    //zalloc a page table for each segment in segment table
   while(pageCount<SEGMENTCOUNT){
-    	*(segTable+pageCount) =(int) zalloc((VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
+    	*(segTable+pageCount) =(int) zalloc((VIRTUALMEMORYSIZE / 4 / PAGESIZE * WORDSIZE));
 
-		 //printd((int*)"SEGTABLE ADRESS",*(segTable+pageCount));
+		 printd((int*)"HOW MUCH ALLOCATE ",(VIRTUALMEMORYSIZE / 4 / PAGESIZE * WORDSIZE));
      pageCount=pageCount+1;
   }
   
@@ -6770,8 +6771,8 @@ void up_loadBinary(int* table) {
 	vaddr = leftShift(1,26);
 
   while (vaddr-leftShift(1,26) < binaryLength) {
-		printInteger(vaddr);	
-		println();
+		//printInteger(vaddr);	
+		//println();
     mapAndStoreVirtualMemory(table, vaddr, loadBinary(vaddr-leftShift(1,26)));
 		
     vaddr = vaddr + WORDSIZE;
@@ -6793,8 +6794,8 @@ int up_loadString(int* table, int* s, int SP) {
 
   while (i < bytes) {
 
-		printd("SP BEFORE SHIFT", SP + i);
-		printd("SP AFTER SHIFT ", (leftShift(2,26) + SP + i));
+		//printd("SP BEFORE SHIFT", SP + i);
+		//printd("SP AFTER SHIFT ", (leftShift(2,26) + SP + i));
     mapAndStoreVirtualMemory(table, (leftShift(2,26) + SP + i), *s);
 
     s = s + 1;
@@ -6827,13 +6828,12 @@ void up_loadArguments(int* table, int argc, int* argv) {
   i_argc  = argc;
 
   while (i_argc > 0) {
-		print("DUMMYSTUFF");
     SP = up_loadString(table, (int*) *argv, SP);
 		
-		printd("SP",(i_vargv));
+		//printd("SP",(i_vargv));
     // store pointer to string in virtual *argv
     mapAndStoreVirtualMemory(table, (leftShift(2,26) + i_vargv), SP);
-		printd("AFTER MAP AND STORE",(i_vargv));
+		//printd("AFTER MAP AND STORE",(i_vargv));
 
     argv = argv + 1;
 
@@ -6859,41 +6859,74 @@ void up_loadArguments(int* table, int argc, int* argv) {
   mapAndStoreVirtualMemory(table, (leftShift(2,26) + (VIRTUALMEMORYSIZE - WORDSIZE)), SP);
 }
 
-void mapUnmappedPages(int* table) {
+void mapUnmappedPages(int* segTable) {
   int page;
+
+	int pageCount;
+
+
+  // assert: context page table is only mapped from beginning up and end down
+
+  pageCount=0;
+   //zalloc a page table for each segment in segment table
+  while(pageCount<SEGMENTCOUNT){
   // assert: page table is only mapped from beginning up and end down
 
-  page = 0;
+		page = 0;
+		printd("CURRENT SEGMENT ",pageCount);
+		while (isPageMapped(*(segTable+pageCount), page)){
 
-  while (isPageMapped(table, page))
-    page = page + 1;
+		printd("ALREADy MAPPED PAGE COUNT ",page);
+		  page = page + 1;
+		}
 
-  while (pavailable()) {
-    mapPage(table, page, (int) palloc());
 
-    page = page + 1;
-  }
+
+		while (pavailable()) {
+
+			printd("UNMAPPED MAPPED PAGE COUNT ",page);
+		  mapPage(*(segTable+pageCount), page, (int) palloc());
+
+		  page = page + 1;
+		}
+
+		pageCount=pageCount+1;
+	}
 }
 
 void down_mapPageTable(int* context) {
   int page;
+	int* segTable;
+	int pageCount;
+
+	segTable = getST(context);
 
   // assert: context page table is only mapped from beginning up and end down
 
-  page = 0;
-				// MORTIS FIXME
-  while (isPageMapped(getST(context), page)) {
-    selfie_map(getID(context), page, getFrameForPage(getST(context), page));
-    page = page + 1;
+  pageCount=0;
+   //zalloc a page table for each segment in segment table
+  while(pageCount<SEGMENTCOUNT){
+		printd("END DOWN mAP PAGE TABLE FOR",pageCount);
+		page = 0;
+					// MORTIS FIXME
+		while (isPageMapped( *(segTable+pageCount) , page)) {
+			printd("END PAGE",page);
+		  selfie_map(getID(context), page, getFrameForPage( *(segTable+pageCount) , page));
+		  page = page + 1;
+		}
+
+		page = (VIRTUALMEMORYSIZE/4 - maxBinaryLength - WORDSIZE) / PAGESIZE;
+					// MORTIS FIXME
+		while (isPageMapped( *(segTable+pageCount) , page)) {
+		  selfie_map(getID(context), page, getFrameForPage( *(segTable+pageCount) , page));
+
+		  page = page - 1;
+		}
+
+		pageCount=pageCount+1;
   }
 
-  page = (VIRTUALMEMORYSIZE - maxBinaryLength - WORDSIZE) / PAGESIZE;
-				// MORTIS FIXME
-  while (isPageMapped(getST(context), page)) {
-    selfie_map(getID(context), page, getFrameForPage(getST(context), page));
 
-    page = page - 1;
-  }
 }
 
 
