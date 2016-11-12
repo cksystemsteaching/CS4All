@@ -6608,11 +6608,12 @@ int createID(int seed) {
 
 int* allocateContext(int ID, int parentID) {
   int* context;
+  int segmentedMemorySize;
 
   if (freeContexts == (int*) 0){
     //context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
     // [EIFLES] mallocate memory for context struct
-    context = malloc(7 * SIZEOFINTSTAR + 9 * SIZEOFINT);
+    context = malloc(5 * SIZEOFINTSTAR + 6 * SIZEOFINT);
   }
   else {
     context = freeContexts;
@@ -6641,15 +6642,39 @@ int* allocateContext(int ID, int parentID) {
   // 2^48 = 6 bytes
   setSGMTT(context, zalloc(6));
 
+  //[EIFLES] debug
+  println();
+  print((int*) "DEBUG:");
+  println();
+  print((int*) "SGMTT ADDRESS = ");
+  println();
+  printBinary( *(context + 10), 32);
+  println();
+
   // allocate zeroed memory for page table
   // TODO: save and reuse memory for page table
   //setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
 
+  segmentedMemorySize = VIRTUALMEMORYSIZE / 4;
+
   // [EIFLES] create code / stack / heap / empty page tables
-  setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE), 0);
-  setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE), 1);
-  setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE), 2);
-  setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE), 3);
+  setPT(context, zalloc(segmentedMemorySize / PAGESIZE * WORDSIZE), 0);
+  setPT(context, zalloc(segmentedMemorySize / PAGESIZE * WORDSIZE), 1);
+  setPT(context, zalloc(segmentedMemorySize / PAGESIZE * WORDSIZE), 2);
+  setPT(context, zalloc(segmentedMemorySize / PAGESIZE * WORDSIZE), 3);
+
+  //[EIFLES] debug
+  println();
+  print((int*) "FIRST PTs of segments = ");
+  println();
+  printBinary( *(getSGMTT(context) + 0), 32);
+  println();
+  printBinary( *(getSGMTT(context) + 1), 32);
+  println();
+  printBinary( *(getSGMTT(context) + 2), 32);
+  println();
+  printBinary( *(getSGMTT(context) + 3), 32);
+  println();
 
   // heap starts where it is safe to start
   //setBreak(context, maxBinaryLength);
@@ -6810,10 +6835,17 @@ void up_loadBinary(int* pageTable) {
   vaddr = 0;
 
   while (vaddr < binaryLength) {
+    //println();
+    //print((int*) "up_loadBinary() DEBUG: ");
+    //println();
+    //print((int*) "vaddr = ");
+    //printBinary(vaddr, 32); 
+    //println();
     mapAndStoreVirtualMemory(pageTable, vaddr, loadBinary(vaddr));
 
     vaddr = vaddr + WORDSIZE;
   }
+
 }
 
 int up_loadString(int* table, int* s, int SP) {
@@ -7133,6 +7165,8 @@ int boot(int argc, int* argv) {
   int processIndex;
   int nextID;
 
+  int valueInPage;
+
   print(selfieName);
   print((int*) ": this is selfie's ");
   if (mipster)
@@ -7172,7 +7206,28 @@ int boot(int argc, int* argv) {
     // up_loadArguments(getPT(usedContexts), argc, argv);
 
     // [EIFLES] this will have to be extended. I'd rather put it into "up_LoadBinary" (this is what we need to replace anyway)
+
+    println();
+    print((int*) "DEBUG: before up_loadBinary()");
+    println();
+    print("address of code PT = ");
+    println();
+    printBinary(getPT(usedContexts, 0), 32);
+    println();
+    print("value of code PT before = ");
+    println();
+    valueInPage = *(getPT(usedContexts, 0));
+    printBinary( (int*) valueInPage, 32);
+    println();
+
     up_loadBinary(getPT(usedContexts, 0));
+
+    println();
+    print("value of code PT afer = ");
+    println();
+    printBinary( *(getPT(usedContexts, 0)), 32);
+    println();
+
     up_loadArguments(getPT(usedContexts, 2), argc, argv);
 
     // propagate page table of initial context to microkernel boot level
