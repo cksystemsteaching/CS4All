@@ -1071,7 +1071,7 @@ int mipster = 0; // flag for forcing to use mipster rather than hypster
 
 int interpret = 0; // flag for executing or disassembling code
 
-int debug = 0; // flag for logging code execution
+int debug = 1; // flag for logging code execution
 
 int  calls           = 0;        // total number of executed procedure calls
 int* callsPerAddress = (int*) 0; // number of executed calls of each procedure
@@ -6128,7 +6128,9 @@ void op_lw() {
 		//add segment id to vaddr, heap or stack
 	
     if (isValidVirtualAddress(vaddr)) {
-			if(vaddr > brk){
+			printd("VADDR op_lw()",vaddr);
+
+			if(*(registers+rt) > brk){
 				vaddr=leftShift(2,26) + vaddr;
 				printd("VADDR op_lw() stack",vaddr);
 			}else{
@@ -6235,13 +6237,16 @@ void op_sw() {
     vaddr = *(registers+rs) + signExtend(immediate);
 
     if (isValidVirtualAddress(vaddr)) {
-			if(vaddr > brk){
+			printd("VADDR op_sw() register",*(registers+rt));
+			printd("VADDR op_sw()",vaddr);
+			if(*(registers+rt) > brk){
 				vaddr=leftShift(2,26) + vaddr;
 				printd("VADDR op_sw() stack",vaddr);
 			}else{
 				vaddr=leftShift(3,26) + vaddr;
 				printd("VADDR op_sw() heap",vaddr);
 			}
+
       if (isVirtualAddressMapped(st, vaddr)) {
         storeVirtualMemory(st, vaddr, *(registers+rt));
 
