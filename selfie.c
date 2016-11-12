@@ -4826,7 +4826,7 @@ void implementWrite() {
   size  = *(registers+REG_A2);
   vaddr = *(registers+REG_A1);
   fd    = *(registers+REG_A0);
-
+	
   if (debug_write) {
     print(binaryName);
     print((int*) ": trying to write ");
@@ -4845,6 +4845,7 @@ void implementWrite() {
 
   while (size > 0) {
     if (isValidVirtualAddress(vaddr)) {
+			vaddr=leftShift(3,26) + vaddr;
       if (isVirtualAddressMapped(st, vaddr)) {
         buffer = tlb(st, vaddr);
 
@@ -5054,9 +5055,9 @@ void implementMalloc() {
 
     brk = bump + size;
 
-		printd((int*)"BREAK",brk);
-		printd((int*)"bump",bump);
-		printd((int*)"size",size);
+		//printd((int*)"BREAK",brk);
+		//printd((int*)"bump",bump);
+		//printd((int*)"size",size);
 
     if (debug_malloc) {
       print(binaryName);
@@ -6809,7 +6810,8 @@ int up_loadString(int* table, int* s, int SP) {
 		//printd("SP BEFORE SHIFT", SP + i);
 		//printd("SP AFTER SHIFT ", (leftShift(2,26) + SP + i));
     mapAndStoreVirtualMemory(table, (leftShift(2,26) + SP + i), *s);
-
+		
+	
     s = s + 1;
 
     i = i + WORDSIZE;
@@ -6878,8 +6880,6 @@ void mapUnmappedPages(int* segTable) {
 	int maxPageount;
 	int allocateCount;
 	int oldFreePageFrameMemory;
-
-
 
 
 	oldFreePageFrameMemory=freePageFrameMemory;
@@ -7434,8 +7434,10 @@ int main(int argc, int* argv) {
   initSelfie(argc, (int*) argv);
 
   initLibrary();
-  print((int*) "This is the Morties Selfie");
+  print((int*) "This is the Morties Selfie!!");
   println();
+	
+	
 
   exitCode = selfie();
  
