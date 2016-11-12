@@ -941,7 +941,7 @@ int getSegmentOfVirtualAddress(int vaddr);
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int debug_tlb = 0;
+int debug_tlb = 1;
 
 int MEGABYTE = 1048576;
 
@@ -5574,7 +5574,6 @@ int isVirtualAddressMapped(int* table, int vaddr) {
 }
 
 int* tlb(int* table, int vaddr) {
-  int page;
   int frame;
   int paddr;
 
@@ -5610,7 +5609,7 @@ int* tlb(int* table, int vaddr) {
     printBinary(vaddr, 32);
     println();
     print((int*) " page:  ");
-    printBinary(page * PAGESIZE, 32);
+    printBinary(vpage * PAGESIZE, 32);
     println();
     print((int*) " frame: ");
     printBinary(frame, 32);
@@ -6835,14 +6834,18 @@ void up_loadBinary(int* pageTable) {
   vaddr = 0;
 
   while (vaddr < binaryLength) {
-    //println();
-    //print((int*) "up_loadBinary() DEBUG: ");
-    //println();
-    //print((int*) "vaddr = ");
-    //printBinary(vaddr, 32); 
-    //println();
+    println();
+    print((int*) "up_loadBinary() BEFORE/AFTER writing code: ");
+    println();
+    print((int*) "content at *(binary + baddr / WORDSIZE) = ");
+    printBinary(*(binary + vaddr / WORDSIZE), 32); 
+    println();
+
     mapAndStoreVirtualMemory(pageTable, vaddr, loadBinary(vaddr));
 
+    print((int*) "content at *(binary + baddr / WORDSIZE) = ");
+    printBinary(*(binary - WORDSIZE + vaddr / WORDSIZE), 32); 
+    println();
     vaddr = vaddr + WORDSIZE;
   }
 
