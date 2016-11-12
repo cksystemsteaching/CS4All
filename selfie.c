@@ -5497,10 +5497,12 @@ int getPageOfVirtualAddress(int vaddr) {
 	// shift out segments and offset afterwards
 	// 14 because of the fresh inserted leftshift zeroes
 	// 2bit 12 bit(p) 12 bit(o) -> 12 bit(p) remaining
-	int tmp=rightShift(leftShift(vaddr,6),6+13);
-		printInteger(tmp);	
-	println();
-	return rightShift(leftShift(vaddr,6),6+13);
+	//int tmp=rightShift(leftShift(vaddr,6),6+13);
+	//printd("VADDR IN GETPAGE OF VIRTUAL ADRESS",vaddr);
+	//printd("VADDR IN GETPAGE OF VIRTUAL ADRESS AFTER LEFT SHIFT",leftShift(vaddr,6));
+	//printd("VADDR IN GETPAGE OF VIRTUAL ADRESS AFTER LEFT SHIFT",rightShift(leftShift(vaddr,6),6+13));
+	//return rightShift(leftShift(vaddr,6),6+13);
+	return rightShift(leftShift(vaddr,6),6) / PAGESIZE;
 }
 
 int isVirtualAddressMapped(int* segmentTable, int vaddr) {
@@ -5527,14 +5529,16 @@ int* tlb(int* segmentTable, int vaddr) {
 
 	//printd((int*)"segment",loadSegmentFromVirtual(segmentTable,vaddr));
   frame = getFrameForPage(loadSegmentFromVirtual(segmentTable,vaddr), page);
-	//printd((int*)"frame",frame);
+	printd((int*)"frame",frame);
+	printd((int*)"page",page);
   // map virtual address to physical address
 	// MORTIS
 	//shift vaddr so segment number is away 24 bit remaining
+	printd((int*)"vaddr before shift in tlb",vaddr);
 	vaddr = rightShift(leftShift(vaddr,6),6);
-
+	printd((int*)"vaddr after shift in tlb",vaddr);
   paddr = (vaddr - page * PAGESIZE) + frame;
-
+	printd((int*)"paddr in tlb",paddr);
   if (debug_tlb) {
     print(binaryName);
     print((int*) ": tlb access:");
@@ -5577,8 +5581,8 @@ void mapAndStoreVirtualMemory(int* segmentTable, int vaddr, int data) {
 
   if (isVirtualAddressMapped(segmentTable, vaddr) == 0)
     mapPage(pageTable, getPageOfVirtualAddress(vaddr), (int) palloc());
-	print("mapPage finished");
-	printInteger(vaddr);
+	
+	printd("VADDR in mapAndStoreVirtualMemory",vaddr);
   storeVirtualMemory(segmentTable, vaddr, data);
 }
 
@@ -6785,7 +6789,6 @@ int up_loadString(int* table, int* s, int SP) {
   while (i < bytes) {
 
 		printd("SP BEFORE SHIFT", SP + i);
-		printd("SP AFTER SHIFT ", leftShift(2,26));
 		printd("SP AFTER SHIFT ", (leftShift(2,26) + SP + i));
     mapAndStoreVirtualMemory(table, (leftShift(2,26) + SP + i), *s);
 
@@ -6804,7 +6807,7 @@ void up_loadArguments(int* table, int argc, int* argv) {
   int i_vargv;
 
   // arguments are pushed onto stack which starts at highest virtual address
-  SP = VIRTUALMEMORYSIZE/4 - WORDSIZE;
+  SP = VIRTUALMEMORYSIZE - WORDSIZE;
 
   // allocate memory for storing stack pointer later
   SP = SP - WORDSIZE;
@@ -6825,6 +6828,7 @@ void up_loadArguments(int* table, int argc, int* argv) {
 		printd("SP",(i_vargv));
     // store pointer to string in virtual *argv
     mapAndStoreVirtualMemory(table, (leftShift(2,26) + i_vargv), SP);
+		printd("AFTER MAP AND STORE",(i_vargv));
 
     argv = argv + 1;
 
@@ -6847,7 +6851,7 @@ void up_loadArguments(int* table, int argc, int* argv) {
 
 
   // store stack pointer at highest virtual address for binary to retrieve
-  mapAndStoreVirtualMemory(table, (leftShift(2,26) + (VIRTUALMEMORYSIZE/4 - WORDSIZE)), SP);
+  mapAndStoreVirtualMemory(table, (leftShift(2,26) + (VIRTUALMEMORYSIZE - WORDSIZE)), SP);
 }
 
 void mapUnmappedPages(int* table) {
@@ -7382,7 +7386,7 @@ int main(int argc, int* argv) {
 
 void printd(int* text, int value) {
   print(text);
-	println();
+	print(":  ");
 	printInteger(value);
 	println();
 }

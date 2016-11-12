@@ -1,0 +1,6074 @@
+This is the Morties Selfie
+./selfie: 516 bytes with 128 instructions and 4 bytes of data loaded from sample.m
+./selfie: this is selfie's mipster executing sample.m with 2MB of physical memory
+67108864
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108864
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108864
+vaddr after shift in tlb:  0
+paddr in tlb:  -146722816
+67108868
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108868
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108868
+vaddr after shift in tlb:  4
+paddr in tlb:  -146722812
+67108872
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108872
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108872
+vaddr after shift in tlb:  8
+paddr in tlb:  -146722808
+67108876
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108876
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108876
+vaddr after shift in tlb:  12
+paddr in tlb:  -146722804
+67108880
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108880
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108880
+vaddr after shift in tlb:  16
+paddr in tlb:  -146722800
+67108884
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108884
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108884
+vaddr after shift in tlb:  20
+paddr in tlb:  -146722796
+67108888
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108888
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108888
+vaddr after shift in tlb:  24
+paddr in tlb:  -146722792
+67108892
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108892
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108892
+vaddr after shift in tlb:  28
+paddr in tlb:  -146722788
+67108896
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108896
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108896
+vaddr after shift in tlb:  32
+paddr in tlb:  -146722784
+67108900
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108900
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108900
+vaddr after shift in tlb:  36
+paddr in tlb:  -146722780
+67108904
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108904
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108904
+vaddr after shift in tlb:  40
+paddr in tlb:  -146722776
+67108908
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108908
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108908
+vaddr after shift in tlb:  44
+paddr in tlb:  -146722772
+67108912
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108912
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108912
+vaddr after shift in tlb:  48
+paddr in tlb:  -146722768
+67108916
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108916
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108916
+vaddr after shift in tlb:  52
+paddr in tlb:  -146722764
+67108920
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108920
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108920
+vaddr after shift in tlb:  56
+paddr in tlb:  -146722760
+67108924
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108924
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108924
+vaddr after shift in tlb:  60
+paddr in tlb:  -146722756
+67108928
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108928
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108928
+vaddr after shift in tlb:  64
+paddr in tlb:  -146722752
+67108932
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108932
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108932
+vaddr after shift in tlb:  68
+paddr in tlb:  -146722748
+67108936
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108936
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108936
+vaddr after shift in tlb:  72
+paddr in tlb:  -146722744
+67108940
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108940
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108940
+vaddr after shift in tlb:  76
+paddr in tlb:  -146722740
+67108944
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108944
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108944
+vaddr after shift in tlb:  80
+paddr in tlb:  -146722736
+67108948
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108948
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108948
+vaddr after shift in tlb:  84
+paddr in tlb:  -146722732
+67108952
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108952
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108952
+vaddr after shift in tlb:  88
+paddr in tlb:  -146722728
+67108956
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108956
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108956
+vaddr after shift in tlb:  92
+paddr in tlb:  -146722724
+67108960
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108960
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108960
+vaddr after shift in tlb:  96
+paddr in tlb:  -146722720
+67108964
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108964
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108964
+vaddr after shift in tlb:  100
+paddr in tlb:  -146722716
+67108968
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108968
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108968
+vaddr after shift in tlb:  104
+paddr in tlb:  -146722712
+67108972
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108972
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108972
+vaddr after shift in tlb:  108
+paddr in tlb:  -146722708
+67108976
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108976
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108976
+vaddr after shift in tlb:  112
+paddr in tlb:  -146722704
+67108980
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108980
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108980
+vaddr after shift in tlb:  116
+paddr in tlb:  -146722700
+67108984
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108984
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108984
+vaddr after shift in tlb:  120
+paddr in tlb:  -146722696
+67108988
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108988
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108988
+vaddr after shift in tlb:  124
+paddr in tlb:  -146722692
+67108992
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108992
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108992
+vaddr after shift in tlb:  128
+paddr in tlb:  -146722688
+67108996
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67108996
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108996
+vaddr after shift in tlb:  132
+paddr in tlb:  -146722684
+67109000
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109000
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109000
+vaddr after shift in tlb:  136
+paddr in tlb:  -146722680
+67109004
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109004
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109004
+vaddr after shift in tlb:  140
+paddr in tlb:  -146722676
+67109008
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109008
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109008
+vaddr after shift in tlb:  144
+paddr in tlb:  -146722672
+67109012
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109012
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109012
+vaddr after shift in tlb:  148
+paddr in tlb:  -146722668
+67109016
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109016
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109016
+vaddr after shift in tlb:  152
+paddr in tlb:  -146722664
+67109020
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109020
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109020
+vaddr after shift in tlb:  156
+paddr in tlb:  -146722660
+67109024
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109024
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109024
+vaddr after shift in tlb:  160
+paddr in tlb:  -146722656
+67109028
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109028
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109028
+vaddr after shift in tlb:  164
+paddr in tlb:  -146722652
+67109032
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109032
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109032
+vaddr after shift in tlb:  168
+paddr in tlb:  -146722648
+67109036
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109036
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109036
+vaddr after shift in tlb:  172
+paddr in tlb:  -146722644
+67109040
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109040
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109040
+vaddr after shift in tlb:  176
+paddr in tlb:  -146722640
+67109044
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109044
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109044
+vaddr after shift in tlb:  180
+paddr in tlb:  -146722636
+67109048
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109048
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109048
+vaddr after shift in tlb:  184
+paddr in tlb:  -146722632
+67109052
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109052
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109052
+vaddr after shift in tlb:  188
+paddr in tlb:  -146722628
+67109056
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109056
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109056
+vaddr after shift in tlb:  192
+paddr in tlb:  -146722624
+67109060
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109060
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109060
+vaddr after shift in tlb:  196
+paddr in tlb:  -146722620
+67109064
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109064
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109064
+vaddr after shift in tlb:  200
+paddr in tlb:  -146722616
+67109068
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109068
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109068
+vaddr after shift in tlb:  204
+paddr in tlb:  -146722612
+67109072
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109072
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109072
+vaddr after shift in tlb:  208
+paddr in tlb:  -146722608
+67109076
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109076
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109076
+vaddr after shift in tlb:  212
+paddr in tlb:  -146722604
+67109080
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109080
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109080
+vaddr after shift in tlb:  216
+paddr in tlb:  -146722600
+67109084
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109084
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109084
+vaddr after shift in tlb:  220
+paddr in tlb:  -146722596
+67109088
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109088
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109088
+vaddr after shift in tlb:  224
+paddr in tlb:  -146722592
+67109092
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109092
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109092
+vaddr after shift in tlb:  228
+paddr in tlb:  -146722588
+67109096
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109096
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109096
+vaddr after shift in tlb:  232
+paddr in tlb:  -146722584
+67109100
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109100
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109100
+vaddr after shift in tlb:  236
+paddr in tlb:  -146722580
+67109104
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109104
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109104
+vaddr after shift in tlb:  240
+paddr in tlb:  -146722576
+67109108
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109108
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109108
+vaddr after shift in tlb:  244
+paddr in tlb:  -146722572
+67109112
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109112
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109112
+vaddr after shift in tlb:  248
+paddr in tlb:  -146722568
+67109116
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109116
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109116
+vaddr after shift in tlb:  252
+paddr in tlb:  -146722564
+67109120
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109120
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109120
+vaddr after shift in tlb:  256
+paddr in tlb:  -146722560
+67109124
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109124
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109124
+vaddr after shift in tlb:  260
+paddr in tlb:  -146722556
+67109128
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109128
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109128
+vaddr after shift in tlb:  264
+paddr in tlb:  -146722552
+67109132
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109132
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109132
+vaddr after shift in tlb:  268
+paddr in tlb:  -146722548
+67109136
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109136
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109136
+vaddr after shift in tlb:  272
+paddr in tlb:  -146722544
+67109140
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109140
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109140
+vaddr after shift in tlb:  276
+paddr in tlb:  -146722540
+67109144
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109144
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109144
+vaddr after shift in tlb:  280
+paddr in tlb:  -146722536
+67109148
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109148
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109148
+vaddr after shift in tlb:  284
+paddr in tlb:  -146722532
+67109152
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109152
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109152
+vaddr after shift in tlb:  288
+paddr in tlb:  -146722528
+67109156
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109156
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109156
+vaddr after shift in tlb:  292
+paddr in tlb:  -146722524
+67109160
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109160
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109160
+vaddr after shift in tlb:  296
+paddr in tlb:  -146722520
+67109164
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109164
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109164
+vaddr after shift in tlb:  300
+paddr in tlb:  -146722516
+67109168
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109168
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109168
+vaddr after shift in tlb:  304
+paddr in tlb:  -146722512
+67109172
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109172
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109172
+vaddr after shift in tlb:  308
+paddr in tlb:  -146722508
+67109176
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109176
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109176
+vaddr after shift in tlb:  312
+paddr in tlb:  -146722504
+67109180
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109180
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109180
+vaddr after shift in tlb:  316
+paddr in tlb:  -146722500
+67109184
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109184
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109184
+vaddr after shift in tlb:  320
+paddr in tlb:  -146722496
+67109188
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109188
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109188
+vaddr after shift in tlb:  324
+paddr in tlb:  -146722492
+67109192
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109192
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109192
+vaddr after shift in tlb:  328
+paddr in tlb:  -146722488
+67109196
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109196
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109196
+vaddr after shift in tlb:  332
+paddr in tlb:  -146722484
+67109200
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109200
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109200
+vaddr after shift in tlb:  336
+paddr in tlb:  -146722480
+67109204
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109204
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109204
+vaddr after shift in tlb:  340
+paddr in tlb:  -146722476
+67109208
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109208
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109208
+vaddr after shift in tlb:  344
+paddr in tlb:  -146722472
+67109212
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109212
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109212
+vaddr after shift in tlb:  348
+paddr in tlb:  -146722468
+67109216
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109216
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109216
+vaddr after shift in tlb:  352
+paddr in tlb:  -146722464
+67109220
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109220
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109220
+vaddr after shift in tlb:  356
+paddr in tlb:  -146722460
+67109224
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109224
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109224
+vaddr after shift in tlb:  360
+paddr in tlb:  -146722456
+67109228
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109228
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109228
+vaddr after shift in tlb:  364
+paddr in tlb:  -146722452
+67109232
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109232
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109232
+vaddr after shift in tlb:  368
+paddr in tlb:  -146722448
+67109236
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109236
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109236
+vaddr after shift in tlb:  372
+paddr in tlb:  -146722444
+67109240
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109240
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109240
+vaddr after shift in tlb:  376
+paddr in tlb:  -146722440
+67109244
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109244
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109244
+vaddr after shift in tlb:  380
+paddr in tlb:  -146722436
+67109248
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109248
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109248
+vaddr after shift in tlb:  384
+paddr in tlb:  -146722432
+67109252
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109252
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109252
+vaddr after shift in tlb:  388
+paddr in tlb:  -146722428
+67109256
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109256
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109256
+vaddr after shift in tlb:  392
+paddr in tlb:  -146722424
+67109260
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109260
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109260
+vaddr after shift in tlb:  396
+paddr in tlb:  -146722420
+67109264
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109264
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+67109268
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109268
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109268
+vaddr after shift in tlb:  404
+paddr in tlb:  -146722412
+67109272
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109272
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109272
+vaddr after shift in tlb:  408
+paddr in tlb:  -146722408
+67109276
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109276
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109276
+vaddr after shift in tlb:  412
+paddr in tlb:  -146722404
+67109280
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109280
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109280
+vaddr after shift in tlb:  416
+paddr in tlb:  -146722400
+67109284
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109284
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109284
+vaddr after shift in tlb:  420
+paddr in tlb:  -146722396
+67109288
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109288
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109288
+vaddr after shift in tlb:  424
+paddr in tlb:  -146722392
+67109292
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109292
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109292
+vaddr after shift in tlb:  428
+paddr in tlb:  -146722388
+67109296
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109296
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109296
+vaddr after shift in tlb:  432
+paddr in tlb:  -146722384
+67109300
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109300
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109300
+vaddr after shift in tlb:  436
+paddr in tlb:  -146722380
+67109304
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109304
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109304
+vaddr after shift in tlb:  440
+paddr in tlb:  -146722376
+67109308
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109308
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109308
+vaddr after shift in tlb:  444
+paddr in tlb:  -146722372
+67109312
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109312
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109312
+vaddr after shift in tlb:  448
+paddr in tlb:  -146722368
+67109316
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109316
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109316
+vaddr after shift in tlb:  452
+paddr in tlb:  -146722364
+67109320
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109320
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109320
+vaddr after shift in tlb:  456
+paddr in tlb:  -146722360
+67109324
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109324
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109324
+vaddr after shift in tlb:  460
+paddr in tlb:  -146722356
+67109328
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109328
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109328
+vaddr after shift in tlb:  464
+paddr in tlb:  -146722352
+67109332
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109332
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109332
+vaddr after shift in tlb:  468
+paddr in tlb:  -146722348
+67109336
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109336
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109336
+vaddr after shift in tlb:  472
+paddr in tlb:  -146722344
+67109340
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109340
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109340
+vaddr after shift in tlb:  476
+paddr in tlb:  -146722340
+67109344
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109344
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109344
+vaddr after shift in tlb:  480
+paddr in tlb:  -146722336
+67109348
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109348
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109348
+vaddr after shift in tlb:  484
+paddr in tlb:  -146722332
+67109352
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109352
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109352
+vaddr after shift in tlb:  488
+paddr in tlb:  -146722328
+67109356
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109356
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109356
+vaddr after shift in tlb:  492
+paddr in tlb:  -146722324
+67109360
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109360
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109360
+vaddr after shift in tlb:  496
+paddr in tlb:  -146722320
+67109364
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109364
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109364
+vaddr after shift in tlb:  500
+paddr in tlb:  -146722316
+67109368
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109368
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109368
+vaddr after shift in tlb:  504
+paddr in tlb:  -146722312
+67109372
+now handling segment:  1
+now handling segment:  1
+VADDR in mapAndStoreVirtualMemory:  67109372
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109372
+vaddr after shift in tlb:  508
+paddr in tlb:  -146722308
+FINISHED UP LOAD BINARYbinary loaded
+DUMMYSTUFFSP BEFORE SHIFT:  67108840
+SP AFTER SHIFT :  201326568
+now handling segment:  2
+now handling segment:  2
+VADDR in mapAndStoreVirtualMemory:  201326568
+now handling segment:  2
+frame:  -146718720
+page:  16383
+vaddr before shift in tlb:  201326568
+vaddr after shift in tlb:  67108840
+paddr in tlb:  -146714648
+SP BEFORE SHIFT:  67108844
+SP AFTER SHIFT :  201326572
+now handling segment:  2
+now handling segment:  2
+VADDR in mapAndStoreVirtualMemory:  201326572
+now handling segment:  2
+frame:  -146718720
+page:  16383
+vaddr before shift in tlb:  201326572
+vaddr after shift in tlb:  67108844
+paddr in tlb:  -146714644
+SP BEFORE SHIFT:  67108848
+SP AFTER SHIFT :  201326576
+now handling segment:  2
+now handling segment:  2
+VADDR in mapAndStoreVirtualMemory:  201326576
+now handling segment:  2
+frame:  -146718720
+page:  16383
+vaddr before shift in tlb:  201326576
+vaddr after shift in tlb:  67108848
+paddr in tlb:  -146714640
+SP:  67108856
+now handling segment:  2
+now handling segment:  2
+VADDR in mapAndStoreVirtualMemory:  201326584
+now handling segment:  2
+frame:  -146718720
+page:  16383
+vaddr before shift in tlb:  201326584
+vaddr after shift in tlb:  67108856
+paddr in tlb:  -146714632
+AFTER MAP AND STORE:  67108856
+now handling segment:  2
+now handling segment:  2
+VADDR in mapAndStoreVirtualMemory:  201326564
+now handling segment:  2
+frame:  -146718720
+page:  16383
+vaddr before shift in tlb:  201326564
+vaddr after shift in tlb:  67108836
+paddr in tlb:  -146714652
+now handling segment:  2
+now handling segment:  2
+VADDR in mapAndStoreVirtualMemory:  201326560
+now handling segment:  2
+frame:  -146718720
+page:  16383
+vaddr before shift in tlb:  201326560
+vaddr after shift in tlb:  67108832
+paddr in tlb:  -146714656
+now handling segment:  2
+now handling segment:  2
+VADDR in mapAndStoreVirtualMemory:  201326588
+now handling segment:  2
+frame:  -146718720
+page:  16383
+vaddr before shift in tlb:  201326588
+vaddr after shift in tlb:  67108860
+paddr in tlb:  -146714628
+arguments loaded
+map page table after
+map segment table after
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108864
+vaddr after shift in tlb:  0
+paddr in tlb:  -146722816
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108868
+vaddr after shift in tlb:  4
+paddr in tlb:  -146722812
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108872
+vaddr after shift in tlb:  8
+paddr in tlb:  -146722808
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108876
+vaddr after shift in tlb:  12
+paddr in tlb:  -146722804
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108880
+vaddr after shift in tlb:  16
+paddr in tlb:  -146722800
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108884
+vaddr after shift in tlb:  20
+paddr in tlb:  -146722796
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108888
+vaddr after shift in tlb:  24
+paddr in tlb:  -146722792
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108892
+vaddr after shift in tlb:  28
+paddr in tlb:  -146722788
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108896
+vaddr after shift in tlb:  32
+paddr in tlb:  -146722784
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108900
+vaddr after shift in tlb:  36
+paddr in tlb:  -146722780
+Valid virtual adress::  67108860
+now handling segment:  2
+now handling segment:  2
+frame:  -146718720
+page:  16383
+vaddr before shift in tlb:  201326588
+vaddr after shift in tlb:  67108860
+paddr in tlb:  -146714628
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108904
+vaddr after shift in tlb:  40
+paddr in tlb:  -146722776
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108908
+vaddr after shift in tlb:  44
+paddr in tlb:  -146722772
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108912
+vaddr after shift in tlb:  48
+paddr in tlb:  -146722768
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108916
+vaddr after shift in tlb:  52
+paddr in tlb:  -146722764
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108920
+vaddr after shift in tlb:  56
+paddr in tlb:  -146722760
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108924
+vaddr after shift in tlb:  60
+paddr in tlb:  -146722756
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67108928
+vaddr after shift in tlb:  64
+paddr in tlb:  -146722752
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109260
+vaddr after shift in tlb:  396
+paddr in tlb:  -146722420
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+Fetching instruction
+now handling segment:  1
+frame:  -146722816
+page:  0
+vaddr before shift in tlb:  67109264
+vaddr after shift in tlb:  400
+paddr in tlb:  -146722416
+Valid virtual adress::  67108828
+now handling segment:  0
+./selfie: palloc out of physical memory
