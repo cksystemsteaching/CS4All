@@ -6825,7 +6825,8 @@ void up_loadArguments(int* table, int argc, int* argv) {
   int vargv;
   int i_argc;
   int i_vargv;
-
+	print("up_loadArguments");
+	println();
   // arguments are pushed onto stack which starts at highest virtual address
   SP = VIRTUALMEMORYSIZE - WORDSIZE;
 
@@ -6842,8 +6843,10 @@ void up_loadArguments(int* table, int argc, int* argv) {
   i_argc  = argc;
 
   while (i_argc > 0) {
+		print("before_up_loadString");
     SP = up_loadString(table, (int*) *argv, SP);
-		
+		print("after_up_loadString");
+		println();
 		//printd("SP",(i_vargv));
     // store pointer to string in virtual *argv
     mapAndStoreVirtualMemory(table, (leftShift(2,26) + i_vargv), SP);
@@ -6881,7 +6884,7 @@ void mapUnmappedPages(int* segTable) {
 	int allocateCount;
 	int oldFreePageFrameMemory;
 
-
+	print("Mapping Pages");
 	oldFreePageFrameMemory=freePageFrameMemory;
 
   // assert: context page table is only mapped from beginning up and end down
@@ -6915,7 +6918,8 @@ void mapUnmappedPages(int* segTable) {
 		pageCount=pageCount+1;
 		//freePageFrameMemory = 0;
 	}
-	
+	printd("used mem: ",usedPageFrameMemory); 
+	usedPageFrameMemory=0;
 }
 
 void down_mapPageTable(int* context) {
@@ -7137,7 +7141,10 @@ int bootminmob(int argc, int* argv, int machine) {
   // works only with mipsters
   int initID;
   int exitCode;
-
+	int count;
+	int firstID;
+	
+	count=0;
   print(selfieName);
   print((int*) ": this is selfie's ");
   if (machine == MINSTER)
@@ -7154,19 +7161,47 @@ int bootminmob(int argc, int* argv, int machine) {
   resetInterpreter();
   resetMicrokernel();
 
-  // create initial context on our boot level
-  initID = doCreate(MIPSTER_ID);
 
-  up_loadBinary(getST(usedContexts));
-
-  up_loadArguments(getST(usedContexts), argc, argv);
 
   if (machine == MINSTER){
-    // virtual is like physical memory in initial context up to memory size
-    // by mapping unmapped pages (for the heap) to all available page frames
-    // CAUTION: consumes memory even when not used
-				// MORTIS FIXME
-    mapUnmappedPages(getST(usedContexts));
+			while(count < processCallNumber){
+				// create initial context on microkernel boot level
+	
+				initID = doCreate(MIPSTER_ID);
+			
+				if(count==0)
+					firstID=initID;
+				if (usedContexts == (int*) 0){
+					// create duplicate of the initial context on our boot level
+					usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+				}
+
+				up_loadBinary(getST(usedContexts));
+				print((int*)"binary loaded");			
+				println();
+
+				up_loadArguments(getST(usedContexts), argc, argv);
+				print((int*)"arguments loaded");
+				println();
+
+			 // virtual is like physical memory in initial context up to memory size
+				// by mapping unmapped pages (for the heap) to all available page frames
+				// CAUTION: consumes memory even when not used
+						// MORTIS FIXME
+				mapUnmappedPages(getST(usedContexts));
+
+				print((int*)"map page table after");
+				println();
+				count = count + 1;
+			}
+   
+	}else{
+		// create initial context on our boot level
+		initID = doCreate(MIPSTER_ID);
+
+		up_loadBinary(getST(usedContexts));
+
+		up_loadArguments(getST(usedContexts), argc, argv);
 	}
 
   exitCode = runUntilExitWithoutExceptionHandling(initID);
