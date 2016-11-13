@@ -6652,12 +6652,9 @@ int* allocateContext(int ID, int parentID) {
   setRegHi(context, 0);
   setRegLo(context, 0);
 
-  // [EIFLES] Create SegTable here; How big does that thingy have to be?!
-  // 2^(12*4) = 2^48 different page addresses possible (because a single PT can have 2^12 different page addresses;)
-  // 12 bits per page table
-  // we have 4 different 4 tables since we have 4 different segments (code, heap, stack and empty segment)
-  // 2^48 = 6 bytes
-  setSGMTT(context, zalloc(6));
+  // [EIFLES] Create SegTable here
+  // SGMTT = 4 pointers to 4 different PTs (code,heap,stack,empty)
+  setSGMTT(context, zalloc(4 * SIZEOFINTSTAR));
 
   //[EIFLES] debug
   println();
