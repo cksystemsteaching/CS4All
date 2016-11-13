@@ -1189,7 +1189,7 @@ int  getParent(int* context)          { return        *(context + 9); }
 
 // [EIFLES] New method for segmented paging
 int* getSGMTT(int* context)       { return (int*) *(context + 10); }
-int* getPT(int* context, int segment) { return (int*) getSGMTT(context) + segment; }
+int* getPT(int* context, int segment) { return (int*) getSGMTT(context) + segment * SIZEOFINTSTAR; }
 
 void setNextContext(int* context, int* next)  { *context       = (int) next; }
 void setPrevContext(int* context, int* prev)  { *(context + 1) = (int) prev; }
@@ -1200,8 +1200,8 @@ void setRegHi(int* context, int reg_hi)       { *(context + 5) = reg_hi; }
 void setRegLo(int* context, int reg_lo)       { *(context + 6) = reg_lo; }
 //void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
 void setPT(int* context, int* pt, int segment){ 
-  printEifles("in setPT, set *(getSGMTT(context) + segment)", *(getSGMTT(context) + segment));
-  *(getSGMTT(context) + segment) = pt;    
+  //printEifles("in setPT, set *(getSGMTT(context) + segment)", *(getSGMTT(context) + segment));
+  *(getSGMTT(context) + segment * SIZEOFINTSTAR) = pt;    
 }
 //void setBreak(int* context, int brk)          { *(context + 8) = brk; }
 // [EIFLES]
@@ -6678,9 +6678,12 @@ int* allocateContext(int ID, int parentID) {
   // we take a global NUMBEROFPAGES for now
   setSGMTT(context, zalloc(4 * SIZEOFINTSTAR));
 
+  printEifles("BEFORE SETPT: ", "");
+
   i = 0;
   while (i < 4) {
-    printBinaryEifles("SGMTT: ", *(getSGMTT(context) + i * SIZEOFINTSTAR), 32);
+    printBinaryEifles("SGMTT code/heap/stack/empty address", getSGMTT(context) + i * SIZEOFINTSTAR, 32);
+    //printEifles("SGMTT code/heap/stack/empty value", *(getSGMTT(context) + i * SIZEOFINTSTAR));
     i = i + 1;
   }
 
@@ -6695,18 +6698,14 @@ int* allocateContext(int ID, int parentID) {
   setPT(context, zalloc(NUMBEROFPAGES), 2);
   setPT(context, zalloc(NUMBEROFPAGES), 3);
 
-  //[EIFLES] debug
-  println();
-  print((int*) "FIRST PTs of segments = ");
-  println();
-  printBinary( *(getSGMTT(context) + 0), 32);
-  println();
-  printBinary( *(getSGMTT(context) + 1), 32);
-  println();
-  printBinary( *(getSGMTT(context) + 2), 32);
-  println();
-  printBinary( *(getSGMTT(context) + 3), 32);
-  println();
+  printEifles("AFTER SETPT: ", "");
+
+  i = 0;
+  while (i < 4) {
+    printBinaryEifles("SGMTT code/heap/stack/empty address", getSGMTT(context) + i * SIZEOFINTSTAR, 32);
+    printBinaryEifles("SGMTT code/heap/stack/empty value", *(getSGMTT(context) + i * SIZEOFINTSTAR), 32);
+    i = i + 1;
+  }
 
   // heap starts where it is safe to start
   //setBreak(context, maxBinaryLength);
@@ -6788,7 +6787,7 @@ int* deleteContext(int* context, int* from) {
 
 void mapPage(int* table, int page, int frame) {
   // assert: 0 <= page < VIRTUALMEMORYSIZE / PAGESIZE
-  printEifles("in mapPage!", "yes");
+  //printEifles("in mapPage!", "yes");
   *(table + page) = frame;
 }
 
@@ -7244,6 +7243,7 @@ int boot(int argc, int* argv) {
 
     // [EIFLES] just an idea ...
     if (usedContexts == (int*) 0) {
+      printEifles("******************************************************", "in");
       // create duplicate of the initial context on our boot level
       usedContexts = createContext(nextID, selfie_ID(), (int*) 0);
       // upload binary only once for all contexts
@@ -7256,27 +7256,13 @@ int boot(int argc, int* argv) {
 
     // [EIFLES] this will have to be extended. I'd rather put it into "up_LoadBinary" (this is what we need to replace anyway)
 
-    println();
-    print((int*) "DEBUG: before up_loadBinary()");
-    println();
-    print("address of code PT = ");
-    println();
-    printBinary(getPT(usedContexts, 0), 32);
-    println();
-    print("value of code PT before = ");
-    println();
-    valueInPage = *(getPT(usedContexts, 0));
-    printBinary( (int*) valueInPage, 32);
-    println();
+    printBinaryEifles("DEBUG: address before = ", getPT(usedContexts, 0), 32);
+    printEifles("DEBUG: value before = ", *(getPT(usedContexts, 0)));
 
     up_loadBinary(getPT(usedContexts, 0));
 
-    println();
-    print("value of code PT afer = ");
-    println();
-    valueInPage = *(getPT(usedContexts, 0));
-    printBinary( (int*) valueInPage, 32);    
-    println();
+    printBinaryEifles("DEBUG: address after = ", getPT(usedContexts, 0), 32);
+    printEifles("DEBUG: value after = ", *(getPT(usedContexts, 0)));
 
     up_loadArguments(getPT(usedContexts, 2), argc, argv);
 
