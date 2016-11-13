@@ -6618,8 +6618,7 @@ int* allocateContext(int ID, int parentID) {
    //zalloc a page table for each segment in segment table
   while(pageCount<SEGMENTCOUNT){
     	*(segTable+pageCount) =(int) zalloc((VIRTUALMEMORYSIZE / 4 / PAGESIZE * WORDSIZE));
-
-		 printd((int*)"HOW MUCH ALLOCATE ",(VIRTUALMEMORYSIZE / 4 / PAGESIZE * WORDSIZE));
+		// printd((int*)"HOW MUCH ALLOCATE ",(VIRTUALMEMORYSIZE / 4 / PAGESIZE * WORDSIZE));
      pageCount=pageCount+1;
   }
   
@@ -6791,7 +6790,7 @@ void up_loadBinary(int* table) {
     vaddr = vaddr + WORDSIZE;
   }
 
-	print((int*)"FINISHED UP LOAD BINARY");
+	//print((int*)"FINISHED UP LOAD BINARY");
 }
 
 int up_loadString(int* table, int* s, int SP) {
