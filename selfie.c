@@ -1736,6 +1736,24 @@ void print(int* s) {
   }
 }
 
+void printEifles(int* message, int* s) {
+  println();
+  print((int*) "[EIFLES,int*] ");
+  print(message);
+  print((int*) ": ");
+  print(s);
+  println();
+}
+
+void printIntegerEifles(int* message, int i) {
+  println();
+  print((int*) "[EIFLES,int] ");
+  print(message);
+  print((int*) ": ");  
+  printInteger(i);
+  println();
+}
+
 void println() {
   putCharacter(CHAR_LF);
 }
