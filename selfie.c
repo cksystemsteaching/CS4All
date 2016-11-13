@@ -941,7 +941,7 @@ int getSegmentOfVirtualAddress(int vaddr);
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int debug_tlb = 1;
+int debug_tlb = 0;
 
 int MEGABYTE = 1048576;
 
@@ -1199,7 +1199,10 @@ void setRegs(int* context, int* regs)         { *(context + 4) = (int) regs; }
 void setRegHi(int* context, int reg_hi)       { *(context + 5) = reg_hi; }
 void setRegLo(int* context, int reg_lo)       { *(context + 6) = reg_lo; }
 //void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
-void setPT(int* context, int* pt, int segment){ *(getSGMTT(context) + segment) = (int) pt; }
+void setPT(int* context, int* pt, int segment){ 
+  printEifles("in setPT, set *(getSGMTT(context) + segment)", *(getSGMTT(context) + segment));
+  *(getSGMTT(context) + segment) = pt;    
+}
 //void setBreak(int* context, int brk)          { *(context + 8) = brk; }
 // [EIFLES]
 void setBreak(int* context, int* brk)          { *(context + 8) = (int) brk; }
@@ -1752,6 +1755,17 @@ void printIntegerEifles(int* message, int i) {
   print(message);
   print((int*) ": ");  
   printInteger(i);
+  println();
+}
+
+void printBinaryEifles(int* message, int i, int a) {
+  println();
+  print((int*) "[EIFLES,binary,a=");
+  printInteger(a);
+  print((int*) "] ");
+  print(message);
+  print((int*) ": ");  
+  printBinary(i,a);
   println();
 }
 
@@ -5558,6 +5572,8 @@ int getPageOfVirtualAddress(int vaddr) {
   // [EIFLES] so now it looks like this: vpage|offset|xx (last part generated from leftshift)
   // [EIFLES] and then rightshift by 12+2=14bits 
   // [EIFLES] (offset + bits generated from leftshift are shifted out), only vpage left
+  
+  // printIntegerEifles("getPageOfVirtualAddress returns ", rightShift(leftShift(vaddr,2),14));
   return rightShift(leftShift(vaddr,2),14);
 }
 
@@ -5658,8 +5674,12 @@ void storeVirtualMemory(int* table, int vaddr, int data) {
 void mapAndStoreVirtualMemory(int* table, int vaddr, int data) {
   // assert: isValidVirtualAddress(vaddr) == 1
 
-  if (isVirtualAddressMapped(table, vaddr) == 0)
+  if (isVirtualAddressMapped(table, vaddr) == 0) {
+    // printEifles("isVirtualAddressMapped: ", "no");
     mapPage(table, getPageOfVirtualAddress(vaddr), (int) palloc());
+  } else {
+    // printEifles("isVirtualAddressMapped: ", "yes");
+  }
 
   storeVirtualMemory(table, vaddr, data);
 }
@@ -6626,6 +6646,7 @@ int createID(int seed) {
 
 int* allocateContext(int ID, int parentID) {
   int* context;
+  int i;
 
   if (freeContexts == (int*) 0){
     //context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
@@ -6654,16 +6675,14 @@ int* allocateContext(int ID, int parentID) {
 
   // [EIFLES] Create SegTable here
   // SGMTT = 4 pointers to 4 different PTs (code,heap,stack,empty)
+  // we take a global NUMBEROFPAGES for now
   setSGMTT(context, zalloc(4 * SIZEOFINTSTAR));
 
-  //[EIFLES] debug
-  println();
-  print((int*) "DEBUG:");
-  println();
-  print((int*) "SGMTT ADDRESS = ");
-  println();
-  printBinary( *(context + 10), 32);
-  println();
+  i = 0;
+  while (i < 4) {
+    printBinaryEifles("SGMTT: ", *(getSGMTT(context) + i * SIZEOFINTSTAR), 32);
+    i = i + 1;
+  }
 
   // allocate zeroed memory for page table
   // TODO: save and reuse memory for page table
@@ -6769,6 +6788,7 @@ int* deleteContext(int* context, int* from) {
 
 void mapPage(int* table, int page, int frame) {
   // assert: 0 <= page < VIRTUALMEMORYSIZE / PAGESIZE
+  printEifles("in mapPage!", "yes");
   *(table + page) = frame;
 }
 
@@ -6847,19 +6867,30 @@ void up_loadBinary(int* pageTable) {
   // binaries start at lowest virtual address
   vaddr = 0;
 
+  println();
+  print((int*) "up_loadBinary() pageTable: ");
+  println();
+  printBinary(pageTable, 32); 
+  println();
+  print((int*) "up_loadBinary() *(pageTable): ");
+  println();
+  printBinary(*(pageTable), 32); 
+  println();
+
+
   while (vaddr < binaryLength) {
-    println();
-    print((int*) "up_loadBinary() BEFORE/AFTER writing code: ");
-    println();
-    print((int*) "content at *(binary + baddr / WORDSIZE) = ");
-    printBinary(*(binary + vaddr / WORDSIZE), 32); 
-    println();
+    // println();
+    // print((int*) "up_loadBinary() BEFORE/AFTER writing code: ");
+    // println();
+    // print((int*) "content at *(binary + baddr / WORDSIZE) = ");
+    // printBinary(*(binary + vaddr / WORDSIZE), 32); 
+    // println();
 
     mapAndStoreVirtualMemory(pageTable, vaddr, loadBinary(vaddr));
 
-    print((int*) "content at *(binary + baddr / WORDSIZE) = ");
-    printBinary(*(binary - WORDSIZE + vaddr / WORDSIZE), 32); 
-    println();
+    // print((int*) "content at *(binary + baddr / WORDSIZE) = ");
+    // printBinary(*(binary - WORDSIZE + vaddr / WORDSIZE), 32); 
+    // println();
     vaddr = vaddr + WORDSIZE;
   }
 
@@ -7243,7 +7274,8 @@ int boot(int argc, int* argv) {
     println();
     print("value of code PT afer = ");
     println();
-    printBinary( *(getPT(usedContexts, 0)), 32);
+    valueInPage = *(getPT(usedContexts, 0));
+    printBinary( (int*) valueInPage, 32);    
     println();
 
     up_loadArguments(getPT(usedContexts, 2), argc, argv);
