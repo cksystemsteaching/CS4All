@@ -951,6 +951,7 @@ int WORDSIZE = 4; // must be the same as SIZEOFINT and SIZEOFINTSTAR
 
 int PAGESIZE = 4096; // we use standard 4KB pages
 int PAGEBITS = 12;   // 2^12 == 4096
+int NUMBEROFPAGES = 0; // will be set in allocateContext
 
 // [EIFLES] 
 int SEGMENTSIZE = 4096; // we use standard 4KB pages
@@ -5626,7 +5627,7 @@ int* tlb(int* table, int vaddr) {
     print((int*) " vaddr: ");
     printBinary(vaddr, 32);
     println();
-    print((int*) " page:  ");
+    print((int*) " vpage: ");
     printBinary(vpage * PAGESIZE, 32);
     println();
     print((int*) " frame: ");
@@ -6625,7 +6626,6 @@ int createID(int seed) {
 
 int* allocateContext(int ID, int parentID) {
   int* context;
-  int segmentedMemorySize;
 
   if (freeContexts == (int*) 0){
     //context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
@@ -6672,13 +6672,12 @@ int* allocateContext(int ID, int parentID) {
   // TODO: save and reuse memory for page table
   //setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
 
-  segmentedMemorySize = VIRTUALMEMORYSIZE / 4;
-
+  NUMBEROFPAGES = (VIRTUALMEMORYSIZE / 4) / PAGESIZE * WORDSIZE;
   // [EIFLES] create code / stack / heap / empty page tables
-  setPT(context, zalloc(segmentedMemorySize / PAGESIZE * WORDSIZE), 0);
-  setPT(context, zalloc(segmentedMemorySize / PAGESIZE * WORDSIZE), 1);
-  setPT(context, zalloc(segmentedMemorySize / PAGESIZE * WORDSIZE), 2);
-  setPT(context, zalloc(segmentedMemorySize / PAGESIZE * WORDSIZE), 3);
+  setPT(context, zalloc(NUMBEROFPAGES), 0);
+  setPT(context, zalloc(NUMBEROFPAGES), 1);
+  setPT(context, zalloc(NUMBEROFPAGES), 2);
+  setPT(context, zalloc(NUMBEROFPAGES), 3);
 
   //[EIFLES] debug
   println();
@@ -6898,7 +6897,8 @@ void up_loadArguments(int* table, int argc, int* argv) {
   int i_vargv;
 
   // arguments are pushed onto stack which starts at highest virtual address
-  SP = VIRTUALMEMORYSIZE - WORDSIZE;
+  // SP = VIRTUALMEMORYSIZE - WORDSIZE;
+  SP = table + NUMBEROFPAGES - WORDSIZE;
 
   // allocate memory for storing stack pointer later
   SP = SP - WORDSIZE;
