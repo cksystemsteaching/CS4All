@@ -6981,9 +6981,12 @@ int runUntilExitWithoutExceptionHandling(int toID) {
 
       exceptionNumber = decodeExceptionNumber(savedStatus);
 
-      if (exceptionNumber == EXCEPTION_EXIT)
+      if (exceptionNumber == EXCEPTION_EXIT){
         // TODO: only return if all contexts have exited
         return decodeExceptionParameter(savedStatus);
+			}else if(exceptionNumber == EXCEPTION_YIELD){
+				toID=fromID;
+			}
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
