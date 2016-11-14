@@ -7163,15 +7163,15 @@ int bootminmob(int argc, int* argv, int machine) {
   // create initial context on our boot level
   initID = doCreate(MIPSTER_ID);
 
-  up_loadBinary(getPT(usedContexts));
+  up_loadBinary(getPT(usedContexts, 0));
 
-  up_loadArguments(getPT(usedContexts), argc, argv);
+  up_loadArguments(getPT(usedContexts, 2), argc, argv);
 
   if (machine == MINSTER)
     // virtual is like physical memory in initial context up to memory size
     // by mapping unmapped pages (for the heap) to all available page frames
     // CAUTION: consumes memory even when not used
-    mapUnmappedPages(getPT(usedContexts));
+    mapUnmappedPages(getPT(usedContexts, 0));
 
   exitCode = runUntilExitWithoutExceptionHandling(initID);
 
