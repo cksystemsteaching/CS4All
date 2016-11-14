@@ -31,3 +31,37 @@ clean:
 	rm -rf *.m
 	rm -rf *.s
 	rm -rf selfie
+
+winClean:
+	del *.m
+	del *.s
+	del selfie
+
+# Assignment 1 runnable on Linux
+assignment1:
+	make clean
+	make
+	./selfie -c test_program.c selfie.c -o test_program.m 
+	./selfie -timeslice 7777 -numprocesses 5 -l test_program.m -m 32
+
+# Assignment 1 runnable on Windows
+winAssignment1:
+	make winClean
+	make
+	selfie.exe -c test_program.c selfie.c -o test_program.m 
+	selfie.exe -timeslice 7777 -numprocesses 5 -l test_program.m -m 32
+
+# Assignment 2 runnable on Linux
+assignment2:
+	make clean
+	make
+	./selfie -c test_program.c selfie.c -o test_program.m 
+	./selfie -l test_program.m -min 32
+	
+
+# Assignment 2 runnable on Windows
+winAssignment2:
+	make winClean
+	make
+	selfie.exe -c test_program.c selfie.c -o test_program.m 
+	selfie.exe -l test_program.m -min 32
