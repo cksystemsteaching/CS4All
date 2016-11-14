@@ -952,6 +952,7 @@ int WORDSIZE = 4; // must be the same as SIZEOFINT and SIZEOFINTSTAR
 int PAGESIZE = 4096; // we use standard 4KB pages
 int PAGEBITS = 12;   // 2^12 == 4096
 int NUMBEROFPAGES = 0; // will be set in allocateContext
+int PTSIZE = 0; // size of a single PT
 
 // [EIFLES] 
 int SEGMENTSIZE = 4096; // we use standard 4KB pages
@@ -1189,7 +1190,7 @@ int  getParent(int* context)          { return        *(context + 9); }
 
 // [EIFLES] New method for segmented paging
 int* getSGMTT(int* context)       { return (int*) *(context + 10); }
-int* getPT(int* context, int segment) { return (int*) getSGMTT(context) + segment * SIZEOFINTSTAR; }
+int* getPT(int* context, int segment) { return (int*) *(getSGMTT(context) + segment * SIZEOFINTSTAR); }
 
 void setNextContext(int* context, int* next)  { *context       = (int) next; }
 void setPrevContext(int* context, int* prev)  { *(context + 1) = (int) prev; }
@@ -6648,6 +6649,10 @@ int* allocateContext(int ID, int parentID) {
   int* context;
   int i;
 
+  int* segAddress;
+  int* ptAddress;
+  int ptFirstValue;
+
   if (freeContexts == (int*) 0){
     //context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
     // [EIFLES] mallocate memory for context struct
@@ -6691,19 +6696,29 @@ int* allocateContext(int ID, int parentID) {
   // TODO: save and reuse memory for page table
   //setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
 
-  NUMBEROFPAGES = (VIRTUALMEMORYSIZE / 4) / PAGESIZE * WORDSIZE;
+  // VIRTUALMEMORYSIZE / 4 = space per PT
+  // space per PT / PAGESIZE = number of pages in it
+  // number of pages in it * WORDSIZE = value in bytes necessary to (z)allocate
+
+  // PAGESIZE = 4094, VIRTUALMEMORYSIZE = 64MB, WORDSIZE = 4B, NUMBEROFPTS = 4
+  NUMBEROFPAGES = (VIRTUALMEMORYSIZE / 4) / PAGESIZE;
+  PTSIZE = NUMBEROFPAGES * WORDSIZE;
   // [EIFLES] create code / stack / heap / empty page tables
-  setPT(context, zalloc(NUMBEROFPAGES), 0);
-  setPT(context, zalloc(NUMBEROFPAGES), 1);
-  setPT(context, zalloc(NUMBEROFPAGES), 2);
-  setPT(context, zalloc(NUMBEROFPAGES), 3);
+  setPT(context, zalloc(PTSIZE), 0);
+  setPT(context, zalloc(PTSIZE), 1);
+  setPT(context, zalloc(PTSIZE), 2);
+  setPT(context, zalloc(PTSIZE), 3);
 
   printEifles("AFTER SETPT: ", "");
 
   i = 0;
   while (i < 4) {
-    printBinaryEifles("SGMTT code/heap/stack/empty address", getSGMTT(context) + i * SIZEOFINTSTAR, 32);
-    printBinaryEifles("SGMTT code/heap/stack/empty value", *(getSGMTT(context) + i * SIZEOFINTSTAR), 32);
+    segAddress = getSGMTT(context) + i * SIZEOFINTSTAR;
+    ptAddress = *(getSGMTT(context) + i * SIZEOFINTSTAR);
+    ptFirstValue = *(ptAddress);
+    printBinaryEifles("SGMTT code/heap/stack/empty address", segAddress, 32);
+    printBinaryEifles("PT code/heap/stack/empty address", ptAddress, 32);
+    printBinaryEifles("PT code/heap/stack/empty value", ptFirstValue, 32);
     i = i + 1;
   }
 
@@ -7243,7 +7258,6 @@ int boot(int argc, int* argv) {
 
     // [EIFLES] just an idea ...
     if (usedContexts == (int*) 0) {
-      printEifles("******************************************************", "in");
       // create duplicate of the initial context on our boot level
       usedContexts = createContext(nextID, selfie_ID(), (int*) 0);
       // upload binary only once for all contexts
@@ -7256,13 +7270,13 @@ int boot(int argc, int* argv) {
 
     // [EIFLES] this will have to be extended. I'd rather put it into "up_LoadBinary" (this is what we need to replace anyway)
 
-    printBinaryEifles("DEBUG: address before = ", getPT(usedContexts, 0), 32);
-    printEifles("DEBUG: value before = ", *(getPT(usedContexts, 0)));
+    printBinaryEifles("DEBUG: address of 1st PT before = ", getPT(usedContexts, 0), 32);
+    printEifles("DEBUG: value of 1st PT before = ", *(getPT(usedContexts, 0)));
 
     up_loadBinary(getPT(usedContexts, 0));
 
-    printBinaryEifles("DEBUG: address after = ", getPT(usedContexts, 0), 32);
-    printEifles("DEBUG: value after = ", *(getPT(usedContexts, 0)));
+    printBinaryEifles("DEBUG: address of 1st pt after = ", getPT(usedContexts, 0), 32);
+    printEifles("DEBUG: value of 1st PT after = ", *(getPT(usedContexts, 0)));
 
     up_loadArguments(getPT(usedContexts, 2), argc, argv);
 
