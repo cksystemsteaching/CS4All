@@ -4415,6 +4415,14 @@ void decodeJFormat() {
 // -----------------------------------------------------------------
 
 int loadBinary(int baddr) {
+  //printBinaryEifles("baddr", baddr, 32);
+  //printBinaryEifles("binary", binary, 32);
+  return *(binary + baddr / WORDSIZE);
+}
+
+int loadSegmentsBinary(int baddr) {
+  //printBinaryEifles("baddr", baddr, 32);
+  //printBinaryEifles("binary", binary, 32);
   return *(binary + baddr / WORDSIZE);
 }
 
@@ -5546,6 +5554,7 @@ void storePhysicalMemory(int* paddr, int data) {
 }
 
 int getFrameForPage(int* table, int page) {
+  printBinaryEifles("value table + page in getFrameForPage", table + page,32);
   return *(table + page);
 }
 
@@ -5574,8 +5583,9 @@ int getPageOfVirtualAddress(int vaddr) {
   // [EIFLES] and then rightshift by 12+2=14bits 
   // [EIFLES] (offset + bits generated from leftshift are shifted out), only vpage left
   
-  // printIntegerEifles("getPageOfVirtualAddress returns ", rightShift(leftShift(vaddr,2),14));
-  return rightShift(leftShift(vaddr,2),14);
+  //printBinaryEifles("getPageOfVirtualAddress returns ", rightShift(leftShift(vaddr,2),14), 32);
+  //printBinaryEifles("getPageOfVirtualAddress returns2 ", leftShift(rightShift(leftShift(vaddr,8),20),12), 32);
+  return leftShift(rightShift(leftShift(vaddr,8),20),12);
 }
 
 // [EIFLES]
@@ -5675,11 +5685,13 @@ void storeVirtualMemory(int* table, int vaddr, int data) {
 void mapAndStoreVirtualMemory(int* table, int vaddr, int data) {
   // assert: isValidVirtualAddress(vaddr) == 1
 
+  //printEifles("I am Here", "YES!!!!!!!11");
+
   if (isVirtualAddressMapped(table, vaddr) == 0) {
-    // printEifles("isVirtualAddressMapped: ", "no");
+     //printEifles("isVirtualAddressMapped: ", "no");
     mapPage(table, getPageOfVirtualAddress(vaddr), (int) palloc());
   } else {
-    // printEifles("isVirtualAddressMapped: ", "yes");
+     //printEifles("isVirtualAddressMapped: ", "yes");
   }
 
   storeVirtualMemory(table, vaddr, data);
@@ -6879,12 +6891,10 @@ void up_loadBinary(int* pageTable) {
   int vaddr;
 
   // binaries start at lowest virtual address
-  //vaddr = 0;
   // [EIFLES] CAUTION: usedContexts NOT SURE!
-  vaddr = getPT(usedContexts, 0);
-
-  printBinaryEifles("vaddr", vaddr, 32);
-  printBinaryEifles("binaryLength", binaryLength, 32);
+  vaddr = 0;
+  //printBinaryEifles("vaddr", vaddr, 32);
+  //printBinaryEifles("binaryLength", getPT(usedContexts, 0) +  binaryLength, 32);
 
   while (vaddr < binaryLength) {
     // println();
@@ -6893,7 +6903,9 @@ void up_loadBinary(int* pageTable) {
     // print((int*) "content at *(binary + baddr / WORDSIZE) = ");
     // printBinary(*(binary + vaddr / WORDSIZE), 32); 
     // println();
-
+    //printBinaryEifles("vaddr", vaddr, 32);
+    //printBinaryEifles("binaryLength", getPT(usedContexts, 0) + binaryLength, 32);
+    //printBinaryEifles("pageTable: ", pageTable, 32);
     mapAndStoreVirtualMemory(pageTable, vaddr, loadBinary(vaddr));
 
     // print((int*) "content at *(binary + baddr / WORDSIZE) = ");
