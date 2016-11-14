@@ -5554,7 +5554,7 @@ void storePhysicalMemory(int* paddr, int data) {
 }
 
 int getFrameForPage(int* table, int page) {
-  printBinaryEifles("value table + page in getFrameForPage", table + page,32);
+  printBinaryEifles("value table + page in getFrameForPage", *(table + page),32);
   return *(table + page);
 }
 
@@ -5688,10 +5688,10 @@ void mapAndStoreVirtualMemory(int* table, int vaddr, int data) {
   //printEifles("I am Here", "YES!!!!!!!11");
 
   if (isVirtualAddressMapped(table, vaddr) == 0) {
-     //printEifles("isVirtualAddressMapped: ", "no");
+     printEifles("isVirtualAddressMapped: ", "no");
     mapPage(table, getPageOfVirtualAddress(vaddr), (int) palloc());
   } else {
-     //printEifles("isVirtualAddressMapped: ", "yes");
+     printEifles("isVirtualAddressMapped: ", "yes");
   }
 
   storeVirtualMemory(table, vaddr, data);
