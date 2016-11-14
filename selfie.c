@@ -1106,9 +1106,9 @@ void resetInterpreter() {
 
   st = (int*) 0;
 
-  // The heap must not start within the first segment (code segment!)
-  // Instead, it starts with the second segment
-  brk = SEGMENTSIZE;
+  // The heap must not start within the first segment (code segment) or second segment (globals segment)
+  // Instead, it starts with the third segment
+  brk = 2 * SEGMENTSIZE;
 
   trap = 0;
 
@@ -3981,7 +3981,8 @@ void bootstrapCode() {
 
   // assert: 0 <= savedBinaryLength < 2^28 (see load_integer)
 
-  load_integer(savedBinaryLength);
+  // globals are within segment 2
+  load_integer(savedBinaryLength + SEGMENTSIZE);
 
   // load binaryLength into GP register
   emitIFormat(OP_ADDIU, currentTemporary(), REG_GP, 0);
@@ -6628,8 +6629,8 @@ int* allocateContext(int ID, int parentID) {
 
   setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
 
-  // heap starts where it is safe to start
-  setBreak(context, maxBinaryLength);
+  // heap starts where it is safe to start -> third segment
+    setBreak(context, 2 * SEGMENTSIZE);
 
   setParent(context, parentID);
 
@@ -6785,11 +6786,17 @@ void up_loadBinarySegments(int *segmentTable) {
 
     vaddr = 0;
 
-    while (vaddr < binaryLength) {
-
+    // store code on the very first segment as usual
+    while (vaddr < codeLength) {
         mapAndStoreVirtualMemory(loadSPT(segmentTable, vaddr), vaddr, loadBinary(vaddr));
         vaddr = vaddr + WORDSIZE;
     }
+    // global variables must not be shared by processes, store them in the second segment(s)
+    while (vaddr < binaryLength) {
+        mapAndStoreVirtualMemory(loadSPT(segmentTable, vaddr + SEGMENTSIZE), vaddr, loadBinary(vaddr));
+        vaddr = vaddr + WORDSIZE;
+    }
+
 }
 
 
