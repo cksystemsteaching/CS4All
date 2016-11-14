@@ -6879,18 +6879,12 @@ void up_loadBinary(int* pageTable) {
   int vaddr;
 
   // binaries start at lowest virtual address
-  vaddr = 0;
+  //vaddr = 0;
+  // [EIFLES] CAUTION: usedContexts NOT SURE!
+  vaddr = getPT(usedContexts, 0);
 
-  println();
-  print((int*) "up_loadBinary() pageTable: ");
-  println();
-  printBinary(pageTable, 32); 
-  println();
-  print((int*) "up_loadBinary() *(pageTable): ");
-  println();
-  printBinary(*(pageTable), 32); 
-  println();
-
+  printBinaryEifles("vaddr", vaddr, 32);
+  printBinaryEifles("binaryLength", binaryLength, 32);
 
   while (vaddr < binaryLength) {
     // println();
@@ -7270,13 +7264,13 @@ int boot(int argc, int* argv) {
 
     // [EIFLES] this will have to be extended. I'd rather put it into "up_LoadBinary" (this is what we need to replace anyway)
 
-    printBinaryEifles("DEBUG: address of 1st PT before = ", getPT(usedContexts, 0), 32);
-    printEifles("DEBUG: value of 1st PT before = ", *(getPT(usedContexts, 0)));
+    //printBinaryEifles("DEBUG: address of 1st PT before = ", getPT(usedContexts, 0), 32);
+    //printEifles("DEBUG: value of 1st PT before = ", *(getPT(usedContexts, 0)));
 
     up_loadBinary(getPT(usedContexts, 0));
 
-    printBinaryEifles("DEBUG: address of 1st pt after = ", getPT(usedContexts, 0), 32);
-    printEifles("DEBUG: value of 1st PT after = ", *(getPT(usedContexts, 0)));
+    //printBinaryEifles("DEBUG: address of 1st pt after = ", getPT(usedContexts, 0), 32);
+    //printEifles("DEBUG: value of 1st PT after = ", *(getPT(usedContexts, 0)));
 
     up_loadArguments(getPT(usedContexts, 2), argc, argv);
 
