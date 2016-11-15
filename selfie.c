@@ -204,6 +204,9 @@ int numberOfWrittenCharacters = 0;
 int* outputName = (int*) 0;
 int  outputFD   = 1;
 
+int pageFaultExceptionAddr = 0;
+int pageFaultExceptionSegment = 0;
+
 // ------------------------- INITIALIZATION ------------------------
 
 void initLibrary() {
@@ -885,10 +888,10 @@ void implementDelete();
 void selfie_delete(int ID);
 
 void emitMap();
-void doMap(int ID, int page, int frame);
+void doMap(int ID, int page, int frame, int* segment);
 void implementMap();
 
-void selfie_map(int ID, int page, int frame);
+void selfie_map(int ID, int page, int frame, int* segment);
 
 // new 
 int schedule(int* fromContext);
@@ -5385,7 +5388,7 @@ void emitMap() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
-void doMap(int ID, int page, int frame) {
+void doMap(int ID, int page, int frame, int* segment) {
   int* mapContext;
   int* parentContext;
 
@@ -5398,7 +5401,7 @@ void doMap(int ID, int page, int frame) {
       if (parentContext != (int*) 0)
         // assert: 0 <= frame < VIRTUALMEMORYSIZE
 				// MORTIS FIXME
-        frame = getFrameForPage(getST(parentContext), frame / PAGESIZE);
+        frame = getFrameForPage(segment, frame / PAGESIZE);
       else if (debug_map) {
         print(binaryName);
         print((int*) ": selfie_map parent context ");
@@ -5412,7 +5415,7 @@ void doMap(int ID, int page, int frame) {
 
     // on boot level zero frame may be any signed integer
 		// MORTIS FIXME
-    mapPage(getST(mapContext), page, frame);
+    mapPage(segment, page, frame);
 
     if (debug_map) {
       print(binaryName);
@@ -5434,19 +5437,19 @@ void doMap(int ID, int page, int frame) {
 }
 
 void implementMap() {
-  doMap(*(registers+REG_A0), *(registers+REG_A1), *(registers+REG_A2));
+  doMap(*(registers+REG_A0), *(registers+REG_A1), *(registers+REG_A2), getST(currentContext));
 }
 
-void hypster_map(int ID, int page, int frame) {
+void hypster_map(int ID, int page, int frame, int* segment) {
   // this procedure is only executed at boot level zero
-  doMap(ID, page, frame);
+  doMap(ID, page, frame, segment);
 }
 
-void selfie_map(int ID, int page, int frame) {
+void selfie_map(int ID, int page, int frame, int* segment) {
   if (mipster)
-    doMap(ID, page, frame);
+    doMap(ID, page, frame, segment);
   else
-    hypster_map(ID, page, frame);
+    hypster_map(ID, page, frame, segment);
 }
 
 // *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~
@@ -5469,6 +5472,8 @@ void storePhysicalMemory(int* paddr, int data) {
 
 int getFrameForPage(int* table, int page) {
 
+	//printd("PAGE GET FRAME ",page);
+	//printd("POINTER GET FRAME ",*(table + page));
   return *(table + page);
 }
 
@@ -5509,6 +5514,12 @@ int getPageOfVirtualAddress(int vaddr) {
 
 int isVirtualAddressMapped(int* segmentTable, int vaddr) {
   // assert: isValidVirtualAddress(vaddr) == 1
+	
+	//printd("isVirtualAddressMapped segmenttable",segmentTable);
+	//printd("isVirtualAddressMapped vaddr",vaddr);
+	//printd("isVirtualAddressMapped segment",loadSegmentFromVirtual(segmentTable,vaddr));
+	//printd("isVirtualAddressMapped page",getPageOfVirtualAddress(vaddr));
+
   return isPageMapped(loadSegmentFromVirtual(segmentTable,vaddr), getPageOfVirtualAddress(vaddr));
 }
 
@@ -5581,8 +5592,18 @@ void mapAndStoreVirtualMemory(int* segmentTable, int vaddr, int data) {
 	int* pageTable;
 	pageTable = loadSegmentFromVirtual(segmentTable, vaddr);
 
-  if (isVirtualAddressMapped(segmentTable, vaddr) == 0)
+	
+	//printd("mapAndStoreVirtualMemory SEGMENT ",rightShift(vaddr,26));
+	//printd("mapAndStoreVirtualMemory VADDR ",rightShift(leftShift(vaddr,6),6));
+	//printd("mapAndStoreVirtualMemory PAGE ", getPageOfVirtualAddress(vaddr));
+
+
+  if (isVirtualAddressMapped(segmentTable, vaddr) == 0){
+		//println();
+		//print("IS VIRTUAL ADDRESS MAPPED SUCCEED");
+		//println();
     mapPage(pageTable, getPageOfVirtualAddress(vaddr), (int) palloc());
+	}
 	
 	//printd("VADDR in mapAndStoreVirtualMemory",vaddr);
   storeVirtualMemory(segmentTable, vaddr, data);
@@ -6130,17 +6151,21 @@ void op_lw() {
 	
     if (isValidVirtualAddress(vaddr)) {
 	
-		
+			pageFaultExceptionAddr = vaddr;
 			if(vaddr > brk){
 				vaddr=leftShift(2,26) + vaddr;
+				pageFaultExceptionSegment =	2;
 				//printd("VADDR op_lw() stack",vaddr);
 			}else if(vaddr>maxBinaryLength){
+				pageFaultExceptionSegment =	3;
 				vaddr=leftShift(3,26) + vaddr;
 				//printd("VADDR op_lw() heap",vaddr);	
 			}else{
+				pageFaultExceptionSegment =	1;
 				vaddr=leftShift(1,26) + vaddr;
 				//printd("VADDR op_lw() global",vaddr);
 			}
+
       if (isVirtualAddressMapped(st, vaddr)) {
 
         *(registers+rt) = loadVirtualMemory(st, vaddr);
@@ -6151,8 +6176,9 @@ void op_lw() {
         *(loadsPerAddress + pc / WORDSIZE) = *(loadsPerAddress + pc / WORDSIZE) + 1;
 
         pc = pc + WORDSIZE;
-      } else
-        throwException(EXCEPTION_PAGEFAULT, vaddr);
+      } else{
+        throwException(EXCEPTION_PAGEFAULT, pageFaultExceptionAddr);
+			}
     } else
       throwException(EXCEPTION_ADDRESSERROR, vaddr);
   }
@@ -6240,14 +6266,18 @@ void op_sw() {
     vaddr = *(registers+rs) + signExtend(immediate);
 
     if (isValidVirtualAddress(vaddr)) {
+			pageFaultExceptionAddr = vaddr;
 			if(vaddr > brk){
 				vaddr=leftShift(2,26) + vaddr;
+				pageFaultExceptionSegment = 2;
 			//	printd("VADDR op_sw() stack",vaddr);
 			}else if(vaddr>maxBinaryLength){
 				vaddr=leftShift(3,26) + vaddr;
+				pageFaultExceptionSegment = 3;
 			//	printd("VADDR op_sw() heap",vaddr);			
 			}else{
 				vaddr=leftShift(1,26) + vaddr;
+				pageFaultExceptionSegment = 1;
 			//	printd("VADDR op_sw() global",vaddr);
 			}
 
@@ -6260,8 +6290,9 @@ void op_sw() {
         *(storesPerAddress + pc / WORDSIZE) = *(storesPerAddress + pc / WORDSIZE) + 1;
 
         pc = pc + WORDSIZE;
-      } else
-        throwException(EXCEPTION_PAGEFAULT, vaddr);
+      } else{
+        throwException(EXCEPTION_PAGEFAULT, pageFaultExceptionAddr);
+			}
     } else
       throwException(EXCEPTION_ADDRESSERROR, vaddr);
   }
@@ -6602,7 +6633,7 @@ int* allocateContext(int ID, int parentID) {
   setID(context, ID);
   setPC(context, 0);
 
-  segTable=malloc(SEGMENTCOUNT * SIZEOFINTSTAR + SEGMENTCOUNT * SIZEOFINT);
+  segTable = malloc(SEGMENTCOUNT * SIZEOFINTSTAR + SEGMENTCOUNT * SIZEOFINT);
   
   // allocate zeroed memory for general purpose registers
   // TODO: reuse memory
@@ -6617,7 +6648,7 @@ int* allocateContext(int ID, int parentID) {
   pageCount=0;
    //zalloc a page table for each segment in segment table
   while(pageCount<SEGMENTCOUNT){
-    	*(segTable+pageCount) =(int) zalloc((VIRTUALMEMORYSIZE / 4 / PAGESIZE * WORDSIZE));
+    	*(segTable+pageCount) =(int) zalloc((VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
 		// printd((int*)"HOW MUCH ALLOCATE ",(VIRTUALMEMORYSIZE / 4 / PAGESIZE * WORDSIZE));
      pageCount=pageCount+1;
   }
@@ -6797,6 +6828,7 @@ int up_loadString(int* table, int* s, int SP) {
   int bytes;
   int i;
 
+
   bytes = roundUp(stringLength(s) + 1, WORDSIZE);
 
   // allocate memory for storing string
@@ -6808,9 +6840,10 @@ int up_loadString(int* table, int* s, int SP) {
 
 		//printd("SP BEFORE SHIFT", SP + i);
 		//printd("SP AFTER SHIFT ", (leftShift(2,26) + SP + i));
+		//printd("WRITE TO TABLE", table);
+
     mapAndStoreVirtualMemory(table, (leftShift(2,26) + SP + i), *s);
-		
-	
+
     s = s + 1;
 
     i = i + WORDSIZE;
@@ -6840,9 +6873,11 @@ void up_loadArguments(int* table, int argc, int* argv) {
   i_vargv = vargv;
   i_argc  = argc;
 
+
   while (i_argc > 0) {
+
     SP = up_loadString(table, (int*) *argv, SP);
-		
+
 		//printd("SP",(i_vargv));
     // store pointer to string in virtual *argv
     mapAndStoreVirtualMemory(table, (leftShift(2,26) + i_vargv), SP);
@@ -6926,24 +6961,36 @@ void down_mapPageTable(int* context) {
 
   // assert: context page table is only mapped from beginning up and end down
 
-  pageCount=1;
+  pageCount=0;
+
+	//mapAndStoreVirtualMemory(*(segTable+2) ,0,0);
+
    //zalloc a page table for each segment in segment table
   while(pageCount<SEGMENTCOUNT){
-		printd("END DOWN mAP PAGE TABLE FOR",pageCount);
+		//printd("START DOWN MAP PAGE TABLE FOR ",pageCount);
 		page = 0;
-					// MORTIS FIXME
+		// MORTIS FIXME
+
+		//printd("IS PAGE MAPPED CALL WITH",page);	
+
 		while (isPageMapped( *(segTable+pageCount) , page)) {
-			printd("END PAGE",page);
-		  selfie_map(getID(context), page, getFrameForPage( *(segTable+pageCount) , page));
+			//printd("IS PAGE MAPPED(true) ",page);
+		  selfie_map(getID(context), page, getFrameForPage( *(segTable+pageCount) , page), *(segTable+pageCount));
 		  page = page + 1;
 		}
 
-		page = (VIRTUALMEMORYSIZE/4 - maxBinaryLength - WORDSIZE) / PAGESIZE;
-				
+		//printd("ALREADY USED PAGE",page);
+
+		page = (VIRTUALMEMORYSIZE - WORDSIZE) / PAGESIZE;
+			
+		//printd("IS PAGE MAPPED CALL WITH",page);	
 		while (isPageMapped( *(segTable+pageCount) , page)) {
-		  selfie_map(getID(context), page, getFrameForPage( *(segTable+pageCount) , page));
+			
+			//printd("IS PAGE MAPPED(true) ",page);
+		  selfie_map(getID(context), page, getFrameForPage( *(segTable+pageCount) , page), *(segTable+pageCount));
 
 		  page = page - 1;
+			//print("IS PAGE MAPPED END");
 		}
 
 		pageCount=pageCount+1;
@@ -7035,12 +7082,10 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 				
 			toID = getParent(fromContext);
 			
-			
 			parentContext=findContext(toID, usedContexts);
 			if(parentContext==(int*)0)
 				return 0;
       
-	
     }else {
 			
       // we are the parent in charge of handling exceptions
@@ -7050,16 +7095,18 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
-				print("PAGE FAULT   ");
-				printInteger(exceptionParameter);
+				//printd("PAGE FAULT   ",pageFaultExceptionAddr);
+				//printd("PARAM   ",exceptionParameter);
+	
         frame = (int) palloc();
-		print("PALLOC FINISHED");
+
         // TODO: use this table to unmap and reuse frames
 				// MORTIS FIXME
-        mapPage(getST(fromContext), exceptionParameter, frame);
+        mapPage(*(st+pageFaultExceptionSegment), exceptionParameter, frame);
 
         // page table on microkernel boot level
-        selfie_map(fromID, exceptionParameter, frame);
+				// MORTIS FIXME
+        selfie_map(fromID, exceptionParameter, frame,*(st+pageFaultExceptionSegment));
       } else if (exceptionNumber == EXCEPTION_EXIT){
         // TODO: only return if all contexts have exited
 				print((int*)"EXIT of: ");
@@ -7227,16 +7274,18 @@ int boot(int argc, int* argv) {
 		  usedContexts = createContext(initID, selfie_ID(), (int*) 0);
 		}
 
-		up_loadBinary(getST(usedContexts));
+		
+		up_loadBinary(getST(findContext(initID, usedContexts)));
 		print((int*)"binary loaded");			
 		println();
 
-		up_loadArguments(getST(usedContexts), argc, argv);
+		printd("up_loadArguments with context ",initID);
+		up_loadArguments(getST(findContext(initID, usedContexts)), argc, argv);
 		print((int*)"arguments loaded");
 		println();
 
 		// propagate page table of initial context to microkernel boot level
-		down_mapPageTable(usedContexts);
+		down_mapPageTable(findContext(initID, usedContexts));
 
 		print((int*)"map page table after");
 		println();
@@ -7459,6 +7508,7 @@ void printd(int* text, int value) {
 	printInteger(value);
 	println();
 }
+
 
 
 
