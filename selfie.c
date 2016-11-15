@@ -959,7 +959,7 @@ int WORDSIZE = 4; // must be the same as SIZEOFINT and SIZEOFINTSTAR
 
 int PAGESIZE = 4096; // we use standard 4KB pages
 int PAGEBITS = 12;   // 2^12 == 4096
-int SEGMENTCOUNT = 4; 
+int SEGMENTCOUNT = 3; 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
 int pageFrameMemory = 0; // size of memory for frames in bytes
@@ -972,7 +972,7 @@ void initMemory(int megabytes) {
   else if (megabytes > 64)
     megabytes = 64;
 
-  pageFrameMemory = megabytes * MEGABYTE / 4;
+  pageFrameMemory = megabytes * MEGABYTE;
 }
 
 // -----------------------------------------------------------------
@@ -4848,7 +4848,6 @@ void implementWrite() {
 
   while (size > 0) {
     if (isValidVirtualAddress(vaddr)) {
-			vaddr=leftShift(3,26) + vaddr;
       if (isVirtualAddressMapped(st, vaddr)) {
         buffer = tlb(st, vaddr);
 
@@ -5498,7 +5497,8 @@ int isValidVirtualAddress(int vaddr) {
 }
 
 int getPageOfVirtualAddress(int vaddr) {
-  //return vaddr / PAGESIZE;
+  int* segment;
+  return vaddr / PAGESIZE;
 
 	// MORTIS 
 	// shift out segments and offset afterwards
@@ -5509,7 +5509,7 @@ int getPageOfVirtualAddress(int vaddr) {
 	//printd("VADDR IN GETPAGE OF VIRTUAL ADRESS AFTER LEFT SHIFT",leftShift(vaddr,6));
 	//printd("VADDR IN GETPAGE OF VIRTUAL ADRESS AFTER LEFT SHIFT",rightShift(leftShift(vaddr,6),6+13));
 	//return rightShift(leftShift(vaddr,6),6+13);
-	return rightShift(leftShift(vaddr,6),6) / PAGESIZE;
+	//return rightShift(leftShift(vaddr,6),6) / PAGESIZE;
 }
 
 int isVirtualAddressMapped(int* segmentTable, int vaddr) {
@@ -5527,8 +5527,13 @@ int* loadSegmentFromVirtual(int* segmentTable, int vaddr){
 	// MORTIS
 	// right shifting should shift  2 bits 12 bits 12 bits to only remaining 2 bits
 	//printd((int*)"now handling segment",( rightShift(vaddr,26)));
-
-	return (int*) *(segmentTable + rightShift(vaddr,26));
+		if(vaddr > brk){
+				return (int*) *(segmentTable+2);
+    }
+		else if(vaddr>maxBinaryLength){				
+				return (int*) *(segmentTable+1);
+		}
+	return (int*) *(segmentTable+0);
 }
 
 int* tlb(int* segmentTable, int vaddr) {
@@ -5548,7 +5553,7 @@ int* tlb(int* segmentTable, int vaddr) {
 	// MORTIS
 	//shift vaddr so segment number is away 24 bit remaining
 	//printd((int*)"vaddr before shift in tlb",vaddr);
-	vaddr = rightShift(leftShift(vaddr,6),6);
+	
 	//printd((int*)"vaddr after shift in tlb",vaddr);
   paddr = (vaddr - page * PAGESIZE) + frame;
 	//printd((int*)"paddr in tlb",paddr);
@@ -6151,21 +6156,7 @@ void op_lw() {
 	
     if (isValidVirtualAddress(vaddr)) {
 	
-			pageFaultExceptionAddr = vaddr;
-			if(vaddr > brk){
-				vaddr=leftShift(2,26) + vaddr;
-				pageFaultExceptionSegment =	2;
-				//printd("VADDR op_lw() stack",vaddr);
-			}else if(vaddr>maxBinaryLength){
-				pageFaultExceptionSegment =	3;
-				vaddr=leftShift(3,26) + vaddr;
-				//printd("VADDR op_lw() heap",vaddr);	
-			}else{
-				pageFaultExceptionSegment =	1;
-				vaddr=leftShift(1,26) + vaddr;
-				//printd("VADDR op_lw() global",vaddr);
-			}
-
+			
       if (isVirtualAddressMapped(st, vaddr)) {
 
         *(registers+rt) = loadVirtualMemory(st, vaddr);
@@ -6177,7 +6168,7 @@ void op_lw() {
 
         pc = pc + WORDSIZE;
       } else{
-        throwException(EXCEPTION_PAGEFAULT, pageFaultExceptionAddr);
+        throwException(EXCEPTION_PAGEFAULT, vaddr);
 			}
     } else
       throwException(EXCEPTION_ADDRESSERROR, vaddr);
@@ -6266,20 +6257,8 @@ void op_sw() {
     vaddr = *(registers+rs) + signExtend(immediate);
 
     if (isValidVirtualAddress(vaddr)) {
-			pageFaultExceptionAddr = vaddr;
-			if(vaddr > brk){
-				vaddr=leftShift(2,26) + vaddr;
-				pageFaultExceptionSegment = 2;
-			//	printd("VADDR op_sw() stack",vaddr);
-			}else if(vaddr>maxBinaryLength){
-				vaddr=leftShift(3,26) + vaddr;
-				pageFaultExceptionSegment = 3;
-			//	printd("VADDR op_sw() heap",vaddr);			
-			}else{
-				vaddr=leftShift(1,26) + vaddr;
-				pageFaultExceptionSegment = 1;
-			//	printd("VADDR op_sw() global",vaddr);
-			}
+
+
 
       if (isVirtualAddressMapped(st, vaddr)) {
         storeVirtualMemory(st, vaddr, *(registers+rt));
@@ -6291,7 +6270,7 @@ void op_sw() {
 
         pc = pc + WORDSIZE;
       } else{
-        throwException(EXCEPTION_PAGEFAULT, pageFaultExceptionAddr);
+        throwException(EXCEPTION_PAGEFAULT,vaddr);
 			}
     } else
       throwException(EXCEPTION_ADDRESSERROR, vaddr);
@@ -6380,7 +6359,7 @@ void fetch() {
 	//print((int*) "Fetching instruction");
 	//println();
 	
-  ir = loadVirtualMemory(st, (leftShift(1,26) + pc));
+  ir = loadVirtualMemory(st, pc);
 	//printInteger((int*)pc);
 	//println();
 	
@@ -6749,7 +6728,7 @@ void mapPage(int* table, int page, int frame) {
 int pavailable() {
   if (freePageFrameMemory > 0)
     return 1;
-  else if ((usedPageFrameMemory + (MEGABYTE/4)) <= pageFrameMemory)
+  else if (usedPageFrameMemory + MEGABYTE <= pageFrameMemory)
     return 1;
   else
     return 0;
@@ -6768,7 +6747,7 @@ int* palloc() {
   // assert: PAGESIZE is a factor of MEGABYTE strictly less than MEGABYTE
 
   if (freePageFrameMemory == 0) {
-    freePageFrameMemory = MEGABYTE/4;
+    freePageFrameMemory = MEGABYTE;
 
     if (usedPageFrameMemory + freePageFrameMemory <= pageFrameMemory) {
       // on boot level zero allocate zeroed memory
@@ -6811,12 +6790,12 @@ void up_loadBinary(int* table) {
 
   // binaries start at lowest virtual address 01 0000 0000 0000 0000 0000 0000  -  2 bits 12 bits 12 bits
 
-	vaddr = leftShift(1,26);
 
-  while (vaddr-leftShift(1,26) < binaryLength) {
+
+  while (vaddr < binaryLength) {
 		//printInteger(vaddr);	
 		//println();
-    mapAndStoreVirtualMemory(table, vaddr, loadBinary(vaddr-leftShift(1,26)));
+    mapAndStoreVirtualMemory(table, vaddr, loadBinary(vaddr));
 		
     vaddr = vaddr + WORDSIZE;
   }
@@ -6842,7 +6821,7 @@ int up_loadString(int* table, int* s, int SP) {
 		//printd("SP AFTER SHIFT ", (leftShift(2,26) + SP + i));
 		//printd("WRITE TO TABLE", table);
 
-    mapAndStoreVirtualMemory(table, (leftShift(2,26) + SP + i), *s);
+    mapAndStoreVirtualMemory(table, SP + i, *s);
 
     s = s + 1;
 
@@ -6880,7 +6859,7 @@ void up_loadArguments(int* table, int argc, int* argv) {
 
 		//printd("SP",(i_vargv));
     // store pointer to string in virtual *argv
-    mapAndStoreVirtualMemory(table, (leftShift(2,26) + i_vargv), SP);
+    mapAndStoreVirtualMemory(table, i_vargv, SP);
 		//printd("AFTER MAP AND STORE",(i_vargv));
 
     argv = argv + 1;
@@ -6894,47 +6873,37 @@ void up_loadArguments(int* table, int argc, int* argv) {
   SP = SP - WORDSIZE;
 
   // push argc
-  mapAndStoreVirtualMemory(table, (leftShift(2,26) + SP), argc);
+  mapAndStoreVirtualMemory(table, SP, argc);
 
   // allocate memory for one word on the stack
   SP = SP - WORDSIZE;
 
   // push virtual argv
-  mapAndStoreVirtualMemory(table, (leftShift(2,26) + SP), vargv);
+  mapAndStoreVirtualMemory(table,  SP, vargv);
 
 
   // store stack pointer at highest virtual address for binary to retrieve
-  mapAndStoreVirtualMemory(table, (leftShift(2,26) + (VIRTUALMEMORYSIZE - WORDSIZE)), SP);
+  mapAndStoreVirtualMemory(table, VIRTUALMEMORYSIZE - WORDSIZE, SP);
 }
 
 void mapUnmappedPages(int* segTable) {
   int page;
 
 	int pageCount;
-	int maxPageount;
-	int allocateCount;
-	int oldFreePageFrameMemory;
 
-
-	oldFreePageFrameMemory=freePageFrameMemory;
 
   // assert: context page table is only mapped from beginning up and end down
   pageCount=0;
 
-	freePageFrameMemory=0;
    //zalloc a page table for each segment in segment table
   while(pageCount<SEGMENTCOUNT){
   // assert: page table is only mapped from beginning up and end down
-		if(pageCount==1)
-			freePageFrameMemory=oldFreePageFrameMemory;
-		page = 0;
+
 		//printd("CURRENT SEGMENT ",pageCount);
 		while (isPageMapped(*(segTable+pageCount), page)){
 		//	printd("ALREADy MAPPED PAGE COUNT ",page);
 		  page = page + 1;
 		}
-
-		usedPageFrameMemory = page * PAGESIZE;
 
 		while (pavailable()) {
 
@@ -7102,11 +7071,11 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         // TODO: use this table to unmap and reuse frames
 				// MORTIS FIXME
-        mapPage(*(st+pageFaultExceptionSegment), exceptionParameter, frame);
+        mapPage(loadSegmentFromVirtual(st,exceptionParameter), exceptionParameter, frame);
 
         // page table on microkernel boot level
 				// MORTIS FIXME
-        selfie_map(fromID, exceptionParameter, frame,*(st+pageFaultExceptionSegment));
+        selfie_map(fromID, exceptionParameter, frame,loadSegmentFromVirtual(st,exceptionParameter));
       } else if (exceptionNumber == EXCEPTION_EXIT){
         // TODO: only return if all contexts have exited
 				print((int*)"EXIT of: ");
