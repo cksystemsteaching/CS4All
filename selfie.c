@@ -1074,7 +1074,7 @@ int mipster = 0; // flag for forcing to use mipster rather than hypster
 
 int interpret = 0; // flag for executing or disassembling code
 
-int debug = 1; // flag for logging code execution
+int debug = 0; // flag for logging code execution
 
 int  calls           = 0;        // total number of executed procedure calls
 int* callsPerAddress = (int*) 0; // number of executed calls of each procedure
@@ -6165,6 +6165,7 @@ void op_lw() {
 
         pc = pc + WORDSIZE;
       } else{
+				pageFaultExceptionAddr=vaddr;
         throwException(EXCEPTION_PAGEFAULT, vaddr);
 			}
     } else
@@ -6277,6 +6278,7 @@ void op_sw() {
 
         pc = pc + WORDSIZE;
       } else{
+				pageFaultExceptionAddr=vaddr;
         throwException(EXCEPTION_PAGEFAULT,vaddr);
 			}
     } else
@@ -6340,7 +6342,7 @@ void printStatus(int status) {
 
 void throwException(int exception, int parameter) {
   if (exception == EXCEPTION_PAGEFAULT)
-    status = encodeException(exception, parameter);
+    status = encodeException(exception, parameter / PAGESIZE);
   else
     status = encodeException(exception, parameter);
 
@@ -7085,10 +7087,9 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
-				print("PAGE FAULT   ");
-				
-				pageOfException=getPageOfVirtualAddress(exceptionParameter);
-				segmentOfException=loadSegmentFromVirtual(st, exceptionParameter);
+				//printd("PAGE FAULT   ",pageFaultExceptionAddr);
+				pageOfException=getPageOfVirtualAddress(pageFaultExceptionAddr);
+				segmentOfException=loadSegmentFromVirtual(st, pageFaultExceptionAddr);
 				
         frame = (int) palloc();
 				
