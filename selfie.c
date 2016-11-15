@@ -936,9 +936,6 @@ void storeVirtualMemory(int* table, int vaddr, int data);
 
 void mapAndStoreVirtualMemory(int* table, int vaddr, int data);
 
-// [EIFLES]
-int getSegmentOfVirtualAddress(int vaddr);
-
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_tlb = 0;
@@ -951,12 +948,6 @@ int WORDSIZE = 4; // must be the same as SIZEOFINT and SIZEOFINTSTAR
 
 int PAGESIZE = 4096; // we use standard 4KB pages
 int PAGEBITS = 12;   // 2^12 == 4096
-int NUMBEROFPAGES = 0; // will be set in allocateContext
-int PTSIZE = 0; // size of a single PT
-
-// [EIFLES] 
-int SEGMENTSIZE = 4096; // we use standard 4KB pages
-int SEGMENTBITS = 12;   // 2^12 == 4096
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1058,9 +1049,7 @@ int reg_lo = 0; // lo register for multiplication/division
 
 int* pt = (int*) 0; // page table
 
-//int brk = 0; // break between code, data, and heap
-// [EIFLES] BRK needs to be a pointer because it points to the page tables of the heap and stack PTs
-int* brk = (int*) 0;
+int brk = 0; // break between code, data, and heap
 
 int trap = 0; // flag for creating a trap
 
@@ -1115,10 +1104,7 @@ void resetInterpreter() {
 
   pt = (int*) 0;
 
-  // brk = maxBinaryLength;
-  // [EIFLES] brk is after the last address of code segment's PT, which is the
-  // beginning of the heap's PT.
-  // brk = getPT(currentContext, 1);
+  brk = maxBinaryLength;
 
   trap = 0;
 
@@ -1177,68 +1163,29 @@ void mapPage(int* table, int page, int frame);
 // | 10| sgmtt 	| pointer to segment table
 // +---+--------+
 
-int* getNextContext(int* context)     { return (int*) *context; }
-int* getPrevContext(int* context)     { return (int*) *(context + 1); }
-int  getID(int* context)              { return        *(context + 2); }
-int  getPC(int* context)              { return        *(context + 3); }
-int* getRegs(int* context)            { return (int*) *(context + 4); }
-int  getRegHi(int* context)           { return        *(context + 5); }
-int  getRegLo(int* context)           { return        *(context + 6); }
-//int* getPT(int* context)              { return (int*) *(context + 7); }
-int  getBreak(int* context)           { return        *(context + 8); }
-int  getParent(int* context)          { return        *(context + 9); }
-
-// [EIFLES] New method for segmented paging
+int* getNextContext(int* context) { return (int*) *context; }
+int* getPrevContext(int* context) { return (int*) *(context + 1); }
+int  getID(int* context)          { return        *(context + 2); }
+int  getPC(int* context)          { return        *(context + 3); }
+int* getRegs(int* context)        { return (int*) *(context + 4); }
+int  getRegHi(int* context)       { return        *(context + 5); }
+int  getRegLo(int* context)       { return        *(context + 6); }
+int* getPT(int* context)          { return (int*) *(context + 7); }
+int  getBreak(int* context)       { return        *(context + 8); }
+int  getParent(int* context)      { return        *(context + 9); }
 int* getSGMTT(int* context)       { return (int*) *(context + 10); }
-int* getPT(int* context, int segment) { return (int*) *(getSGMTT(context) + segment * SIZEOFINTSTAR); }
 
-void setNextContext(int* context, int* next)  { *context       = (int) next; }
-void setPrevContext(int* context, int* prev)  { *(context + 1) = (int) prev; }
-void setID(int* context, int id)              { *(context + 2) = id; }
-void setPC(int* context, int pc)              { *(context + 3) = pc; }
-void setRegs(int* context, int* regs)         { *(context + 4) = (int) regs; }
-void setRegHi(int* context, int reg_hi)       { *(context + 5) = reg_hi; }
-void setRegLo(int* context, int reg_lo)       { *(context + 6) = reg_lo; }
-//void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
-void setPT(int* context, int* pt, int segment){ 
-  //printEifles("in setPT, set *(getSGMTT(context) + segment)", *(getSGMTT(context) + segment));
-  *(getSGMTT(context) + segment * SIZEOFINTSTAR) = pt;    
-}
-//void setBreak(int* context, int brk)          { *(context + 8) = brk; }
-// [EIFLES]
-void setBreak(int* context, int* brk)          { *(context + 8) = (int) brk; }
-void setParent(int* context, int id)          { *(context + 9) = id; }
-
-void setSGMTT(int* context, int* sgmtt)         { *(context + 10) = (int) sgmtt; }
-
-// -----------------------------------------------------------------
-// ------------------------ SEGMENT TABLE --------------------------
-// -----------------------------------------------------------------
-
-// segment table struct:
-// +---+
-// |seg| 
-// +---+
-// |PT1| CODE segment of current context (at pos 0) -> points to page table 1 with size MAX_SIZE_PT
-// |PT2| HEAP segment of current context (at pos 1)
-// |PT3| STACK segment of current context (at pos 2)
-// |PT4| currently empty (at pos 3)
-// +---+--------+
-
-// -----------------------------------------------------------------
-// ------------------------ PAGE TABLE -----------------------------
-// -----------------------------------------------------------------
-
-// page table "struct":
-// +--------+-----+
-// | PPage# | ... | physical address of page | data
-// +--------+-----|
-// |   .    |  .  |
-// |   .    |  .  |
-// |   .    |  .  |
-// +--------+-----+
-// | PPAGE# | ... |
-// +--------+-----+
+void setNextContext(int* context, int* next) { *context       = (int) next; }
+void setPrevContext(int* context, int* prev) { *(context + 1) = (int) prev; }
+void setID(int* context, int id)             { *(context + 2) = id; }
+void setPC(int* context, int pc)             { *(context + 3) = pc; }
+void setRegs(int* context, int* regs)        { *(context + 4) = (int) regs; }
+void setRegHi(int* context, int reg_hi)      { *(context + 5) = reg_hi; }
+void setRegLo(int* context, int reg_lo)      { *(context + 6) = reg_lo; }
+void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
+void setBreak(int* context, int brk)         { *(context + 8) = brk; }
+void setParent(int* context, int id)         { *(context + 9) = id; }
+void setSGMTT(int* context, int* sgmtt)      { *(context + 10) = (int) sgmtt; }
 
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
@@ -1258,8 +1205,6 @@ int* currentContext = (int*) 0; // context currently running
 
 int* usedContexts = (int*) 0; // doubly-linked list of used contexts
 int* freeContexts = (int*) 0; // singly-linked list of free contexts
-
-int* freeSegments = (int*) 0; // singly-linked list of free segments
 
 // ------------------------- INITIALIZATION ------------------------
 
@@ -1739,35 +1684,6 @@ void print(int* s) {
 
     i = i + 1;
   }
-}
-
-void printEifles(int* message, int* s) {
-  println();
-  print((int*) "[EIFLES,int*] ");
-  print(message);
-  print((int*) ": ");
-  print(s);
-  println();
-}
-
-void printIntegerEifles(int* message, int i) {
-  println();
-  print((int*) "[EIFLES,int] ");
-  print(message);
-  print((int*) ": ");  
-  printInteger(i);
-  println();
-}
-
-void printBinaryEifles(int* message, int i, int a) {
-  println();
-  print((int*) "[EIFLES,binary,a=");
-  printInteger(a);
-  print((int*) "] ");
-  print(message);
-  print((int*) ": ");  
-  printBinary(i,a);
-  println();
 }
 
 void println() {
@@ -4415,14 +4331,6 @@ void decodeJFormat() {
 // -----------------------------------------------------------------
 
 int loadBinary(int baddr) {
-  //printBinaryEifles("baddr", baddr, 32);
-  //printBinaryEifles("binary", binary, 32);
-  return *(binary + baddr / WORDSIZE);
-}
-
-int loadSegmentsBinary(int baddr) {
-  //printBinaryEifles("baddr", baddr, 32);
-  //printBinaryEifles("binary", binary, 32);
   return *(binary + baddr / WORDSIZE);
 }
 
@@ -5291,7 +5199,7 @@ int doSwitch(int toID) {
   int* toContext;
 
   fromID = getID(currentContext);
-
+  // [EIFLES] In here, we have to assign the correct position in the seg.table for the chosen context!
   toContext = findContext(toID, usedContexts);
 
   if (toContext != (int*) 0) {
@@ -5471,8 +5379,6 @@ void emitMap() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
-
-// [EIFLES] Is this "downmapping" that he mention? So that only a specified FRAME of the corresponding context is 'visible' to the processor?
 void doMap(int ID, int page, int frame) {
   int* mapContext;
   int* parentContext;
@@ -5485,7 +5391,7 @@ void doMap(int ID, int page, int frame) {
 
       if (parentContext != (int*) 0)
         // assert: 0 <= frame < VIRTUALMEMORYSIZE
-        frame = getFrameForPage(getPT(parentContext, 0), frame / PAGESIZE);
+        frame = getFrameForPage(getPT(parentContext), frame / PAGESIZE);
       else if (debug_map) {
         print(binaryName);
         print((int*) ": selfie_map parent context ");
@@ -5498,7 +5404,7 @@ void doMap(int ID, int page, int frame) {
     }
 
     // on boot level zero frame may be any signed integer
-    mapPage(getPT(mapContext, 0), page, frame);
+    mapPage(getPT(mapContext), page, frame);
 
     if (debug_map) {
       print(binaryName);
@@ -5554,7 +5460,6 @@ void storePhysicalMemory(int* paddr, int data) {
 }
 
 int getFrameForPage(int* table, int page) {
-  printBinaryEifles("value table + page in getFrameForPage", *(table + page),32);
   return *(table + page);
 }
 
@@ -5576,41 +5481,7 @@ int isValidVirtualAddress(int vaddr) {
 }
 
 int getPageOfVirtualAddress(int vaddr) {
-  //return vaddr / PAGESIZE;
-  // [EIFLES] vaddr = seg|vpage|offset = 2bits|12bits|12bits
-  // [EIFLES] to get page, first leftshift by 2 (segment is shifted out) 
-  // [EIFLES] so now it looks like this: vpage|offset|xx (last part generated from leftshift)
-  // [EIFLES] and then rightshift by 12+2=14bits 
-  // [EIFLES] (offset + bits generated from leftshift are shifted out), only vpage left
-  
-  //printBinaryEifles("getPageOfVirtualAddress returns ", rightShift(leftShift(vaddr,2),14), 32);
-  //printBinaryEifles("getPageOfVirtualAddress returns2 ", leftShift(rightShift(leftShift(vaddr,8),20),12), 32);
-  return leftShift(rightShift(leftShift(vaddr,8),20),12);
-}
-
-// [EIFLES]
-int getSegmentOfVirtualAddress(int vaddr) {
-  // return vaddr / SEGMENTSIZE;
-  // [EIFLES] vaddr = seg|vpage|offset = 2bits|12bits|12bits
-  // [EIFLES] to get segment, rightshift by 12+12=24bits (vpage and offset shifted out)
-  return rightShift(vaddr,24);
-}
-
-// [EILFES]
-int getOffsetOfVirtualAddress(int vaddr) {
-  // [EIFLES] vaddr = seg|vpage|offset = 2bits|12bits|12bits
-  int temp;
-  int offset;
-
-  temp = vaddr;
-  // remove offset of vaddr (offset is 12 bits long)
-  vaddr = rightShift(vaddr, 12);
-  // replace offset of vaddr with 000000000000
-  vaddr = leftShift(vaddr, 12);
-  // only offset will be left
-  offset = temp - vaddr;
-  
-  return offset;
+  return vaddr / PAGESIZE;
 }
 
 int isVirtualAddressMapped(int* table, int vaddr) {
@@ -5620,32 +5491,19 @@ int isVirtualAddressMapped(int* table, int vaddr) {
 }
 
 int* tlb(int* table, int vaddr) {
+  int page;
   int frame;
   int paddr;
-
-  // [EIFLES]
-  int vpage;
-  int offset;
 
   // assert: isValidVirtualAddress(vaddr) == 1
   // assert: isVirtualAddressMapped(table, vaddr) == 1
 
-  //page = getPageOfVirtualAddress(vaddr);
-  vpage = getPageOfVirtualAddress(vaddr);
+  page = getPageOfVirtualAddress(vaddr);
 
-  //frame = getFrameForPage(table, page);
-  frame = getFrameForPage(table, vpage);
+  frame = getFrameForPage(table, page);
 
   // map virtual address to physical address
-  // paddr = (vaddr - page * PAGESIZE) + frame;
-
-  // [EIFLES]
-  offset = getOffsetOfVirtualAddress(vaddr);
-  // physical address (paddr) = 
-  // +-----------------+
-  // | ppage# | offset |
-  // +-----------------+
-  paddr = frame + offset;
+  paddr = (vaddr - page * PAGESIZE) + frame;
 
   if (debug_tlb) {
     print(binaryName);
@@ -5654,8 +5512,8 @@ int* tlb(int* table, int vaddr) {
     print((int*) " vaddr: ");
     printBinary(vaddr, 32);
     println();
-    print((int*) " vpage: ");
-    printBinary(vpage * PAGESIZE, 32);
+    print((int*) " page:  ");
+    printBinary(page * PAGESIZE, 32);
     println();
     print((int*) " frame: ");
     printBinary(frame, 32);
@@ -5685,14 +5543,8 @@ void storeVirtualMemory(int* table, int vaddr, int data) {
 void mapAndStoreVirtualMemory(int* table, int vaddr, int data) {
   // assert: isValidVirtualAddress(vaddr) == 1
 
-  //printEifles("I am Here", "YES!!!!!!!11");
-
-  if (isVirtualAddressMapped(table, vaddr) == 0) {
-     printEifles("isVirtualAddressMapped: ", "no");
+  if (isVirtualAddressMapped(table, vaddr) == 0)
     mapPage(table, getPageOfVirtualAddress(vaddr), (int) palloc());
-  } else {
-     printEifles("isVirtualAddressMapped: ", "yes");
-  }
 
   storeVirtualMemory(table, vaddr, data);
 }
@@ -6659,17 +6511,9 @@ int createID(int seed) {
 
 int* allocateContext(int ID, int parentID) {
   int* context;
-  int i;
 
-  int* segAddress;
-  int* ptAddress;
-  int ptFirstValue;
-
-  if (freeContexts == (int*) 0){
-    //context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
-    // [EIFLES] mallocate memory for context struct
-    context = malloc(5 * SIZEOFINTSTAR + 6 * SIZEOFINT);
-  }
+  if (freeContexts == (int*) 0)
+    context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
   else {
     context = freeContexts;
 
@@ -6690,55 +6534,12 @@ int* allocateContext(int ID, int parentID) {
   setRegHi(context, 0);
   setRegLo(context, 0);
 
-  // [EIFLES] Create SegTable here
-  // SGMTT = 4 pointers to 4 different PTs (code,heap,stack,empty)
-  // we take a global NUMBEROFPAGES for now
-  setSGMTT(context, zalloc(4 * SIZEOFINTSTAR));
-
-  printEifles("BEFORE SETPT: ", "");
-
-  i = 0;
-  while (i < 4) {
-    printBinaryEifles("SGMTT code/heap/stack/empty address", getSGMTT(context) + i * SIZEOFINTSTAR, 32);
-    //printEifles("SGMTT code/heap/stack/empty value", *(getSGMTT(context) + i * SIZEOFINTSTAR));
-    i = i + 1;
-  }
-
   // allocate zeroed memory for page table
   // TODO: save and reuse memory for page table
-  //setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
-
-  // VIRTUALMEMORYSIZE / 4 = space per PT
-  // space per PT / PAGESIZE = number of pages in it
-  // number of pages in it * WORDSIZE = value in bytes necessary to (z)allocate
-
-  // PAGESIZE = 4094, VIRTUALMEMORYSIZE = 64MB, WORDSIZE = 4B, NUMBEROFPTS = 4
-  NUMBEROFPAGES = (VIRTUALMEMORYSIZE / 4) / PAGESIZE;
-  PTSIZE = NUMBEROFPAGES * WORDSIZE;
-  // [EIFLES] create code / stack / heap / empty page tables
-  setPT(context, zalloc(PTSIZE), 0);
-  setPT(context, zalloc(PTSIZE), 1);
-  setPT(context, zalloc(PTSIZE), 2);
-  setPT(context, zalloc(PTSIZE), 3);
-
-  printEifles("AFTER SETPT: ", "");
-
-  i = 0;
-  while (i < 4) {
-    segAddress = getSGMTT(context) + i * SIZEOFINTSTAR;
-    ptAddress = *(getSGMTT(context) + i * SIZEOFINTSTAR);
-    ptFirstValue = *(ptAddress);
-    printBinaryEifles("SGMTT code/heap/stack/empty address", segAddress, 32);
-    printBinaryEifles("PT code/heap/stack/empty address", ptAddress, 32);
-    printBinaryEifles("PT code/heap/stack/empty value", ptFirstValue, 32);
-    i = i + 1;
-  }
+  setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
 
   // heap starts where it is safe to start
-  //setBreak(context, maxBinaryLength);
-
-  // [EIFLES] brk pointer points to end of code and thus to the start of the heap (heap is encoded with 01 in the vaddr)
-  setBreak(context, getPT(context, 1));
+  setBreak(context, maxBinaryLength);
 
   setParent(context, parentID);
 
@@ -6774,8 +6575,6 @@ int* findContext(int ID, int* in) {
 }
 
 void switchContext(int* from, int* to) {
-
-  // [EIFLES] TODO: Make sure that the correct sgmt/pt is set in here!!!!
   // save machine state
   setPC(from, pc);
   setRegHi(from, reg_hi);
@@ -6787,7 +6586,7 @@ void switchContext(int* from, int* to) {
   registers = getRegs(to);
   reg_hi    = getRegHi(to);
   reg_lo    = getRegLo(to);
-  pt        = getPT(to, 0);
+  pt        = getPT(to);
   brk       = getBreak(to);
 }
 
@@ -6814,14 +6613,7 @@ int* deleteContext(int* context, int* from) {
 
 void mapPage(int* table, int page, int frame) {
   // assert: 0 <= page < VIRTUALMEMORYSIZE / PAGESIZE
-  //printEifles("in mapPage!", "yes");
   *(table + page) = frame;
-}
-
-// [EIFLES]
-void mapSegment(int* table, int segment, int frame) {
-  // assert: 0 <= page < VIRTUALMEMORYSIZE / PAGESIZE
-  *(table + segment) = frame;
 }
 
 // -----------------------------------------------------------------
@@ -6887,33 +6679,17 @@ void pfree(int* frame) {
   // TODO: implement free list of page frames
 }
 
-void up_loadBinary(int* pageTable) {
+void up_loadBinary(int* table) {
   int vaddr;
 
   // binaries start at lowest virtual address
-  // [EIFLES] CAUTION: usedContexts NOT SURE!
   vaddr = 0;
-  //printBinaryEifles("vaddr", vaddr, 32);
-  //printBinaryEifles("binaryLength", getPT(usedContexts, 0) +  binaryLength, 32);
 
   while (vaddr < binaryLength) {
-    // println();
-    // print((int*) "up_loadBinary() BEFORE/AFTER writing code: ");
-    // println();
-    // print((int*) "content at *(binary + baddr / WORDSIZE) = ");
-    // printBinary(*(binary + vaddr / WORDSIZE), 32); 
-    // println();
-    //printBinaryEifles("vaddr", vaddr, 32);
-    //printBinaryEifles("binaryLength", getPT(usedContexts, 0) + binaryLength, 32);
-    //printBinaryEifles("pageTable: ", pageTable, 32);
-    mapAndStoreVirtualMemory(pageTable, vaddr, loadBinary(vaddr));
+    mapAndStoreVirtualMemory(table, vaddr, loadBinary(vaddr));
 
-    // print((int*) "content at *(binary + baddr / WORDSIZE) = ");
-    // printBinary(*(binary - WORDSIZE + vaddr / WORDSIZE), 32); 
-    // println();
     vaddr = vaddr + WORDSIZE;
   }
-
 }
 
 int up_loadString(int* table, int* s, int SP) {
@@ -6945,8 +6721,7 @@ void up_loadArguments(int* table, int argc, int* argv) {
   int i_vargv;
 
   // arguments are pushed onto stack which starts at highest virtual address
-  // SP = VIRTUALMEMORYSIZE - WORDSIZE;
-  SP = table + NUMBEROFPAGES - WORDSIZE;
+  SP = VIRTUALMEMORYSIZE - WORDSIZE;
 
   // allocate memory for storing stack pointer later
   SP = SP - WORDSIZE;
@@ -7012,16 +6787,16 @@ void down_mapPageTable(int* context) {
 
   page = 0;
 
-  while (isPageMapped(getPT(context, 0), page)) {
-    selfie_map(getID(context), page, getFrameForPage(getPT(context, 0), page));
+  while (isPageMapped(getPT(context), page)) {
+    selfie_map(getID(context), page, getFrameForPage(getPT(context), page));
 
     page = page + 1;
   }
 
   page = (VIRTUALMEMORYSIZE - WORDSIZE) / PAGESIZE;
 
-  while (isPageMapped(getPT(context, 0), page)) {
-    selfie_map(getID(context), page, getFrameForPage(getPT(context, 0), page));
+  while (isPageMapped(getPT(context), page)) {
+    selfie_map(getID(context), page, getFrameForPage(getPT(context), page));
 
     page = page - 1;
   }
@@ -7110,7 +6885,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         frame = (int) palloc();
 
         // TODO: use this table to unmap and reuse frames
-        mapPage(getPT(fromContext, 0), exceptionParameter, frame);
+        mapPage(getPT(fromContext), exceptionParameter, frame);
 
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
@@ -7175,15 +6950,15 @@ int bootminmob(int argc, int* argv, int machine) {
   // create initial context on our boot level
   initID = doCreate(MIPSTER_ID);
 
-  up_loadBinary(getPT(usedContexts, 0));
+  up_loadBinary(getPT(usedContexts));
 
-  up_loadArguments(getPT(usedContexts, 2), argc, argv);
+  up_loadArguments(getPT(usedContexts), argc, argv);
 
   if (machine == MINSTER)
     // virtual is like physical memory in initial context up to memory size
     // by mapping unmapped pages (for the heap) to all available page frames
     // CAUTION: consumes memory even when not used
-    mapUnmappedPages(getPT(usedContexts, 0));
+    mapUnmappedPages(getPT(usedContexts));
 
   exitCode = runUntilExitWithoutExceptionHandling(initID);
 
@@ -7211,8 +6986,6 @@ int boot(int argc, int* argv) {
   int processIndex;
   int nextID;
 
-  int valueInPage;
-
   print(selfieName);
   print((int*) ": this is selfie's ");
   if (mipster)
@@ -7234,34 +7007,18 @@ int boot(int argc, int* argv) {
   processIndex = 0;
 
   // [EIFLES] in here, we probably have to count how many instances are created within the while loop
-  // [EIFLES] needed to know in how many pieces we have to devide the main memory (segmenttable)
+  // [EIFLES] needed to know in how many pieces we have to devide the mainmemory (segmenttable)
   while (processIndex < numProcesses) {
     // create initial context on microkernel boot level
     nextID = selfie_create();
 
-    // [EIFLES] just an idea ...
-    if (usedContexts == (int*) 0) {
+    if (usedContexts == (int*) 0)
       // create duplicate of the initial context on our boot level
       usedContexts = createContext(nextID, selfie_ID(), (int*) 0);
-      // upload binary only once for all contexts
-      up_loadBinary(getPT(usedContexts, 0));
-    }
 
+    up_loadBinary(getPT(usedContexts));
 
-    // up_loadBinary(getPT(usedContexts));
-    // up_loadArguments(getPT(usedContexts), argc, argv);
-
-    // [EIFLES] this will have to be extended. I'd rather put it into "up_LoadBinary" (this is what we need to replace anyway)
-
-    //printBinaryEifles("DEBUG: address of 1st PT before = ", getPT(usedContexts, 0), 32);
-    //printEifles("DEBUG: value of 1st PT before = ", *(getPT(usedContexts, 0)));
-
-    up_loadBinary(getPT(usedContexts, 0));
-
-    //printBinaryEifles("DEBUG: address of 1st pt after = ", getPT(usedContexts, 0), 32);
-    //printEifles("DEBUG: value of 1st PT after = ", *(getPT(usedContexts, 0)));
-
-    up_loadArguments(getPT(usedContexts, 2), argc, argv);
+    up_loadArguments(getPT(usedContexts), argc, argv);
 
     // propagate page table of initial context to microkernel boot level
     down_mapPageTable(usedContexts);
