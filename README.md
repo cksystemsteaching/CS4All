@@ -79,9 +79,52 @@ This assignment deals with cooperative multitasking of _n_ processes in mipster 
 * __Deadline__: Nov 7, 8pm
 
 -----------
+
 [Lecture 3](https://myfiles.sbg.ac.at/index.php/s/sDpx7HPjbGitXwA)
------------
 
 -----------
+
 [Lecture 4](https://myfiles.sbg.ac.at/index.php/s/j7xW8qDRTxnd7pO)
+
 -----------
+
+[Cover slides for class no. 5](https://myfiles.sbg.ac.at/index.php/s/yGZIpDCe5iccUK7)
+
+-----------
+
+Assignment 3
+
+* Run multiple processes like in assignment 1, but this time alongside an OS process - the OS part of selfie. 
+
+The command line (for two user processes) should look like
+./selfie -l selfie.m -k 4 -l myprog.m -c 2 -u 1 
+
+All interrupts, traps or exceptions must be handled by the OS process instead of the emulator. This is indicated by  using option -k. When an exception occurs from a user process (run with parameter -u) and the OS is not there to handle it, print an error message and exit. The OS should trigger only the EXIT exception. 
+
+* Read about the POSIX shared memory API.
+
+* Implement basic POSIX-like shared memory support in selfie, consisting of the following system calls:
+
+int shm_open(int name); 
+// creates or opens a new shared memory object and returns a descriptor (OS identifier) for it. 
+// In case of error, it returns -1
+
+int shm_size(int id, int shSize);
+// sets or returns the size (in bytes) of the shm object with identifier id. 
+// If the object had size zero, it sets the size to shSize and returns shSize.
+// If the object had some previously set size actSize, then it ignores shSize and simply returns actSize.
+
+int* shm_map(int* addr, int id);
+// maps the virtual address addr to the start of the shared memory identified by id
+// if addr is zero, then memory is allocated first, of the size equal to the shared memory size. 
+// returns virtual address actually used for mapping, 0 for error.
+
+int shm_close(int id);
+// decouples the calling process from the shared memory object with descriptor id
+// previously mapped memory is now private to the process
+// after all processes have closed their access to a shared memory object, the OS should free the resources associated with the object.
+
+* Demonstrate the usage of shared memory between at least 2 user processes.
+
+-----------
+
