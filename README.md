@@ -81,18 +81,16 @@ This assignment deals with cooperative multitasking of _n_ processes in mipster 
 -----------
 
 [Lecture 3](https://myfiles.sbg.ac.at/index.php/s/sDpx7HPjbGitXwA)
-
 -----------
 
 [Lecture 4](https://myfiles.sbg.ac.at/index.php/s/j7xW8qDRTxnd7pO)
-
 -----------
 
 [Cover slides for class no. 5](https://myfiles.sbg.ac.at/index.php/s/yGZIpDCe5iccUK7)
-
 -----------
 
-Assignment 3
+Assignment 3: Shared memory
+-------------------------------------------------------
 
 * Run multiple processes like in assignment 1, but this time alongside an OS process - the OS part of selfie. 
 
@@ -125,6 +123,3 @@ int shm_close(int id);
 // after all processes have closed their access to a shared memory object, the OS should free the resources associated with the object.
 
 * Demonstrate the usage of shared memory between at least 2 user processes.
-
------------
-
