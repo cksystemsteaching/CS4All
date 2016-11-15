@@ -7137,6 +7137,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 				//println();
 			}else if(exceptionNumber == EXCEPTION_YIELD){
 			  toID=schedule(fromContext);
+        cycles=0;
 			}else if(exceptionNumber == EXCEPTION_TIMER){
 			  toID=schedule(fromContext);
 			}
