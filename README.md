@@ -103,23 +103,23 @@ All interrupts, traps or exceptions must be handled by the OS process instead of
 
 * Implement basic POSIX-like shared memory support in selfie, consisting of the following system calls:
 
-*int shm_open(int name)*   
-// creates or opens a new shared memory object and returns a descriptor (OS identifier) for it.   
-// In case of error, it returns -1   
+    int shm_open(int name)   
+// Creates or opens a new shared memory object and returns a descriptor (OS identifier) for it.   
+// In case of error, it returns -1.   
 
-*int shm_size(int id, int shSize)*   
-// sets or returns the size (in bytes) of the shm object with identifier id.   
+	int shm_size(int id, int shSize)   
+// Sets or returns the size (in bytes) of the shm object with identifier id.   
 // If the object had size zero, it sets the size to shSize and returns shSize.   
 // If the object had some previously set size actSize, then it ignores shSize and simply returns actSize.   
 
-*int\* shm_map(int\* addr, int id)*   
-// maps the virtual address addr to the start of the shared memory identified by id   
-// if addr is zero, then memory is allocated first, of the size equal to the shared memory size.    
-// returns virtual address actually used for mapping, 0 for error.   
+	int* shm_map(int* addr, int id)    
+// Maps the virtual address addr to the start of the shared memory identified by id.   
+// If addr is zero, then memory is allocated first, of the size equal to the shared memory size.    
+// Returns virtual address actually used for mapping, 0 for error.   
 
-*int shm_close(int id)*  
-// decouples the calling process from the shared memory object with descriptor id   
-// previously mapped memory is now private to the process   
-// after all processes have closed their access to a shared memory object, the OS should free the resources associated  with the object.   
+	int shm_close(int id)     
+// Decouples the calling process from the shared memory object with descriptor id.   
+// Previously mapped memory is now private to the process.   
+// After all processes have closed their access to a shared memory object, the OS should free the resources associated  with the object.   
 
 * Demonstrate the usage of shared memory between at least 2 user processes.
