@@ -1041,7 +1041,7 @@ int EXCEPTION_YIELD          	 = 8;
 
 int* EXCEPTIONS; // strings representing exceptions
 
-int debug_exception = 0;
+int debug_exception = 1;
 
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
@@ -1074,7 +1074,7 @@ int mipster = 0; // flag for forcing to use mipster rather than hypster
 
 int interpret = 0; // flag for executing or disassembling code
 
-int debug = 0; // flag for logging code execution
+int debug = 1; // flag for logging code execution
 
 int  calls           = 0;        // total number of executed procedure calls
 int* callsPerAddress = (int*) 0; // number of executed calls of each procedure
@@ -5496,6 +5496,7 @@ int isValidVirtualAddress(int vaddr) {
 
 int getPageOfVirtualAddress(int vaddr) {
   int* segment;
+
   return vaddr / PAGESIZE;
 
 	// MORTIS 
@@ -5602,7 +5603,7 @@ void mapAndStoreVirtualMemory(int* segmentTable, int vaddr, int data) {
 		//println();
 		//print("IS VIRTUAL ADDRESS MAPPED SUCCEED");
 		//println();
-		//	print("virtual mapped ");
+			print("virtual mapped ");
     mapPage(pageTable, getPageOfVirtualAddress(vaddr), (int) palloc());
 	}
 	
@@ -6254,7 +6255,16 @@ void op_sw() {
 		
 		//println();
 		//printBinary(vaddr,26);
-	
+		//println();
+		//printInteger(vaddr);
+		//println();
+		//print("Segment: ");
+		//printInteger(loadSegmentFromVirtual(st,vaddr));
+		//println();
+		//print("Page: ");
+		//printInteger(getPageOfVirtualAddress(vaddr));
+		//println();
+		
     if (isValidVirtualAddress(vaddr)) {
       if (isVirtualAddressMapped(st, vaddr)) {
 				//print("is mapped ");
@@ -6330,7 +6340,7 @@ void printStatus(int status) {
 
 void throwException(int exception, int parameter) {
   if (exception == EXCEPTION_PAGEFAULT)
-    status = encodeException(exception, parameter / PAGESIZE);
+    status = encodeException(exception, parameter);
   else
     status = encodeException(exception, parameter);
 
@@ -6838,7 +6848,7 @@ void up_loadArguments(int* table, int argc, int* argv) {
   int vargv;
   int i_argc;
   int i_vargv;
- // print("Uploading arguments\n");
+  print("Uploading arguments\n");
   // arguments are pushed onto stack which starts at highest virtual address
   SP = VIRTUALMEMORYSIZE - WORDSIZE;
 
@@ -6874,7 +6884,7 @@ void up_loadArguments(int* table, int argc, int* argv) {
 
   // allocate memory for one word on the stack
   SP = SP - WORDSIZE;
- //  print("Before!\n");
+   print("Before!\n");
   // push argc
   mapAndStoreVirtualMemory(table, SP, argc);
 
@@ -6887,7 +6897,7 @@ void up_loadArguments(int* table, int argc, int* argv) {
 
   // store stack pointer at highest virtual address for binary to retrieve
   mapAndStoreVirtualMemory(table, VIRTUALMEMORYSIZE - WORDSIZE, SP);
- //print("After!\n");
+ print("After!\n");
 }
 
 void mapUnmappedPages(int* segTable) {
@@ -6895,8 +6905,8 @@ void mapUnmappedPages(int* segTable) {
 
 	int pageCount;
 
- // print("Mapping unmapped pages\n");
- // printd("SegTable: ",segTable);
+  print("Mapping unmapped pages\n");
+  printd("SegTable: ",segTable);
   // assert: context page table is only mapped from beginning up and end down
   pageCount=0;
   page=0;
@@ -6905,20 +6915,21 @@ void mapUnmappedPages(int* segTable) {
   while(pageCount<SEGMENTCOUNT){
   // assert: page table is only mapped from beginning up and end down
 		
-		//printd("CURRENT SEGMENT ",*(segTable+pageCount));
-		//printd("usedPageFrameMemory ",usedPageFrameMemory);
+		printd("CURRENT SEGMENT ",*(segTable+pageCount));
+		printd("usedPageFrameMemory ",usedPageFrameMemory);
 		while (isPageMapped(*(segTable+pageCount), page)){
 		//	printd("ALREADy MAPPED PAGE COUNT ",page);
     
 		  page = page + 1;
 		}
-		//map as many pages for the segment as possible (depends on the available physical space)
+	
+		//map as many pages for the segment as possible (depends on the available physical mem)
 		while (pavailable( )) {
       
 			//printd("UNMAPPED MAPPED PAGE COUNT ",page);
 		  mapPage(*(segTable+pageCount), page, (int) palloc());
       //printd("mapping page: ",page);
-		  page = page + 1;
+		
 		//	printd("freePageFrameMemory",freePageFrameMemory);
 		
 		}
@@ -7041,7 +7052,8 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int exceptionParameter;
   int frame;
 	int* parentContext;
-
+	int pageOfException;
+	int* segmentOfException;
 	//fromID = toID;
   while (1) {
     
@@ -7073,18 +7085,20 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
-				//printd("PAGE FAULT   ",pageFaultExceptionAddr);
-				//printd("PARAM   ",exceptionParameter);
-	
+				print("PAGE FAULT   ");
+				
+				pageOfException=getPageOfVirtualAddress(exceptionParameter);
+				segmentOfException=loadSegmentFromVirtual(st, exceptionParameter);
+				
         frame = (int) palloc();
-
+				
         // TODO: use this table to unmap and reuse frames
 				// MORTIS FIXME
-        mapPage(loadSegmentFromVirtual(st,exceptionParameter), exceptionParameter, frame);
+        mapPage(segmentOfException, pageOfException, frame);
 
         // page table on microkernel boot level
 				// MORTIS FIXME
-        selfie_map(fromID, exceptionParameter, frame,loadSegmentFromVirtual(st,exceptionParameter));
+        selfie_map(fromID, pageOfException, frame,segmentOfException);
       } else if (exceptionNumber == EXCEPTION_EXIT){
         // TODO: only return if all contexts have exited
 				print((int*)"EXIT of: ");
