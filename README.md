@@ -16,7 +16,7 @@ a manual context switch is triggered.
 
 - MIPSTER CALL
 
-TODO
+./selfie -c selfie.c -o selfie.m && ./selfie -l selfie.m -conc 3 -freq 1 -m  2
 
 
 # Selfie [![Build Status](https://travis-ci.org/cksystemsteaching/selfie.svg?branch=master)](https://travis-ci.org/cksystemsteaching/selfie)
