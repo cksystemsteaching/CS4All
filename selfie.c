@@ -1777,7 +1777,7 @@ int* zalloc(int size) {
   size = roundUp(size, WORDSIZE);
 
   memory = malloc(size);
-
+  
   size = size / WORDSIZE;
 
   i = 0;
@@ -5471,8 +5471,6 @@ void storePhysicalMemory(int* paddr, int data) {
 
 int getFrameForPage(int* table, int page) {
 
-	//printd("PAGE GET FRAME ",page);
-	//printd("POINTER GET FRAME ",*(table + page));
   return *(table + page);
 }
 
@@ -5514,11 +5512,9 @@ int getPageOfVirtualAddress(int vaddr) {
 
 int isVirtualAddressMapped(int* segmentTable, int vaddr) {
   // assert: isValidVirtualAddress(vaddr) == 1
-	
-	//printd("isVirtualAddressMapped segmenttable",segmentTable);
-	//printd("isVirtualAddressMapped vaddr",vaddr);
-	//printd("isVirtualAddressMapped segment",loadSegmentFromVirtual(segmentTable,vaddr));
-	//printd("isVirtualAddressMapped page",getPageOfVirtualAddress(vaddr));
+	//println();
+	//printInteger(loadSegmentFromVirtual(segmentTable,vaddr)+getPageOfVirtualAddress(vaddr));
+	//println();
 
   return isPageMapped(loadSegmentFromVirtual(segmentTable,vaddr), getPageOfVirtualAddress(vaddr));
 }
@@ -5533,6 +5529,7 @@ int* loadSegmentFromVirtual(int* segmentTable, int vaddr){
 		else if(vaddr>maxBinaryLength){				
 				return (int*) *(segmentTable+1);
 		}
+
 	return (int*) *(segmentTable+0);
 }
 
@@ -5598,15 +5595,14 @@ void mapAndStoreVirtualMemory(int* segmentTable, int vaddr, int data) {
 	pageTable = loadSegmentFromVirtual(segmentTable, vaddr);
 
 	
-	//printd("mapAndStoreVirtualMemory SEGMENT ",rightShift(vaddr,26));
-	//printd("mapAndStoreVirtualMemory VADDR ",rightShift(leftShift(vaddr,6),6));
-	//printd("mapAndStoreVirtualMemory PAGE ", getPageOfVirtualAddress(vaddr));
 
 
+	
   if (isVirtualAddressMapped(segmentTable, vaddr) == 0){
 		//println();
 		//print("IS VIRTUAL ADDRESS MAPPED SUCCEED");
 		//println();
+		//	print("virtual mapped ");
     mapPage(pageTable, getPageOfVirtualAddress(vaddr), (int) palloc());
 	}
 	
@@ -6255,12 +6251,13 @@ void op_sw() {
 
   if (interpret) {
     vaddr = *(registers+rs) + signExtend(immediate);
-
+		
+		//println();
+		//printBinary(vaddr,26);
+	
     if (isValidVirtualAddress(vaddr)) {
-
-
-
       if (isVirtualAddressMapped(st, vaddr)) {
+				//print("is mapped ");
         storeVirtualMemory(st, vaddr, *(registers+rt));
 
         // keep track of number of stores
@@ -6627,11 +6624,13 @@ int* allocateContext(int ID, int parentID) {
   pageCount=0;
    //zalloc a page table for each segment in segment table
   while(pageCount<SEGMENTCOUNT){
-    	*(segTable+pageCount) =(int) zalloc((VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
+    	*(segTable+pageCount) =(int) zalloc(VIRTUALMEMORYSIZE / PAGESIZE);
+       printd("zalloc: ",(int*) *(segTable+pageCount));
+        printd("size: ",VIRTUALMEMORYSIZE / PAGESIZE);
 		// printd((int*)"HOW MUCH ALLOCATE ",(VIRTUALMEMORYSIZE / 4 / PAGESIZE * WORDSIZE));
      pageCount=pageCount+1;
   }
-  
+    
 	
 	//printSegmentTable(segTable);
 
@@ -6718,6 +6717,9 @@ int* deleteContext(int* context, int* from) {
 
 void mapPage(int* table, int page, int frame) {
   // assert: 0 <= page < VIRTUALMEMORYSIZE / PAGESIZE
+	//print("Mapping page: ");
+	//printInteger( table + page);
+	//println();
   *(table + page) = frame;
 }
 
@@ -6728,10 +6730,11 @@ void mapPage(int* table, int page, int frame) {
 int pavailable() {
   if (freePageFrameMemory > 0)
     return 1;
-  else if (usedPageFrameMemory + MEGABYTE <= pageFrameMemory)
+  else if (usedPageFrameMemory + MEGABYTE <= pageFrameMemory/SEGMENTCOUNT)
     return 1;
-  else
+  else{
     return 0;
+  }
 }
 
 int pused() {
@@ -6786,16 +6789,15 @@ void pfree(int* frame) {
 
 void up_loadBinary(int* table) {
   int vaddr;
-
-
-  // binaries start at lowest virtual address 01 0000 0000 0000 0000 0000 0000  -  2 bits 12 bits 12 bits
-
-
-
+	int* pageTable;
+	vaddr=0;
   while (vaddr < binaryLength) {
 		//printInteger(vaddr);	
 		//println();
+		
     mapAndStoreVirtualMemory(table, vaddr, loadBinary(vaddr));
+		pageTable = loadSegmentFromVirtual(table, vaddr);
+	
 		
     vaddr = vaddr + WORDSIZE;
   }
@@ -6836,7 +6838,7 @@ void up_loadArguments(int* table, int argc, int* argv) {
   int vargv;
   int i_argc;
   int i_vargv;
-
+ // print("Uploading arguments\n");
   // arguments are pushed onto stack which starts at highest virtual address
   SP = VIRTUALMEMORYSIZE - WORDSIZE;
 
@@ -6860,6 +6862,7 @@ void up_loadArguments(int* table, int argc, int* argv) {
 		//printd("SP",(i_vargv));
     // store pointer to string in virtual *argv
     mapAndStoreVirtualMemory(table, i_vargv, SP);
+   
 		//printd("AFTER MAP AND STORE",(i_vargv));
 
     argv = argv + 1;
@@ -6871,7 +6874,7 @@ void up_loadArguments(int* table, int argc, int* argv) {
 
   // allocate memory for one word on the stack
   SP = SP - WORDSIZE;
-
+ //  print("Before!\n");
   // push argc
   mapAndStoreVirtualMemory(table, SP, argc);
 
@@ -6884,6 +6887,7 @@ void up_loadArguments(int* table, int argc, int* argv) {
 
   // store stack pointer at highest virtual address for binary to retrieve
   mapAndStoreVirtualMemory(table, VIRTUALMEMORYSIZE - WORDSIZE, SP);
+ //print("After!\n");
 }
 
 void mapUnmappedPages(int* segTable) {
@@ -6891,32 +6895,37 @@ void mapUnmappedPages(int* segTable) {
 
 	int pageCount;
 
-
+ // print("Mapping unmapped pages\n");
+ // printd("SegTable: ",segTable);
   // assert: context page table is only mapped from beginning up and end down
   pageCount=0;
-
+  page=0;
+  
    //zalloc a page table for each segment in segment table
   while(pageCount<SEGMENTCOUNT){
   // assert: page table is only mapped from beginning up and end down
-
-		//printd("CURRENT SEGMENT ",pageCount);
+		
+		//printd("CURRENT SEGMENT ",*(segTable+pageCount));
+		//printd("usedPageFrameMemory ",usedPageFrameMemory);
 		while (isPageMapped(*(segTable+pageCount), page)){
 		//	printd("ALREADy MAPPED PAGE COUNT ",page);
+    
 		  page = page + 1;
 		}
-
-		while (pavailable()) {
-
+		//map as many pages for the segment as possible (depends on the available physical space)
+		while (pavailable( )) {
+      
 			//printd("UNMAPPED MAPPED PAGE COUNT ",page);
 		  mapPage(*(segTable+pageCount), page, (int) palloc());
-
+      //printd("mapping page: ",page);
 		  page = page + 1;
 		//	printd("freePageFrameMemory",freePageFrameMemory);
 		
 		}
-
+  
 		pageCount=pageCount+1;
-		//freePageFrameMemory = 0;
+    usedPageFrameMemory=0;
+ 		page=0;
 	}
 	
 }
@@ -7186,6 +7195,7 @@ int bootminmob(int argc, int* argv, int machine) {
     // CAUTION: consumes memory even when not used
 				// MORTIS FIXME
     mapUnmappedPages(getST(usedContexts));
+
 	}
 
   exitCode = runUntilExitWithoutExceptionHandling(initID);
