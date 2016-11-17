@@ -119,6 +119,7 @@ void println();
 void printCharacter(int c);
 void printString(int* s);
 void printInteger(int n);
+void printDebug();
 void printFixedPointPercentage(int a, int b);
 void printFixedPointRatio(int a, int b);
 void printHexadecimal(int n, int a);
@@ -972,66 +973,100 @@ void initMemory(int megabytes) {
   pageFrameMemory = megabytes * MEGABYTE;
 }
 
-// -----------------------------------------------------------------
-// ------------------------- SHARED MEMORY -------------------------
-// -----------------------------------------------------------------
+// -------------------------------------------------------------------------------------------
+// -------------------------------SHARED MEMORY OBJECTS --------------------------------------
+// -------------------------------------------------------------------------------------------
 
 int* shmo_list = (int*) 0;
 int  shmo_id_counter = 0;
 
-// shared memory struct:
+// shared memory object struct:
 // +---------------+
 // | 0 | next      |
 // | 1 | prev      |
 // | 2 | id        |
 // | 3 | name      |
 // | 4 | size      |
-// | 5 | processes |
+// | 5 | frames    |
+// | 6 | clients   |
 // +---------------+
 
 int* get_next_shmo(int *shmo);
 int* get_prev_shmo(int *shmo);
+int* get_prev_shmo(int *shmo);
 int* get_shmo_name(int *shmo);
 int  get_shmo_id(int *shmo);
 int  get_shmo_size(int *shmo);
-int* get_shmo_processes(int *shmo);
+int* get_shmo_frames(int *shmo);
+int* get_shmo_clients(int *shmo);
 
 void set_next_shmo(int *shmo, int *next);
 void set_prev_shmo(int *shmo, int *prev);
 void set_shmo_size(int *shmo, int size);
 void set_shmo_id(int *shmo, int id);
 void set_shmo_name(int *shmo, int *name);
-void set_shmo_processes(int *shmo, int *processes);
+void set_shmo_frames(int *shmo, int *frames);
+void set_shmo_clients(int *shmo, int *clients);
 
 int  delete_shmo(int *shmo, int *shmo_list);
 int* create_shmo(int *name);
 int  create_shmo_id();
 int* find_shmo_by_name(int *name);
 int* find_shmo_by_id(int id);
-void registerProcessToShmo(int *shmo, int pid);
+
 void print_shmo(int *shmo);
-void print_shmo_list();
 
 
-//process list
+// -------------------------------------------------------------------------------------------
+// -------------------------------SHARED MEMORY FRAMES ---------------------------------------
+// -------------------------------------------------------------------------------------------
+
+// shared memory frame struct:
+// +-----------+
+// | 0 | frame |
+// | 1 | next  |
+// +-----------+
+
+void allocate_shmo_frames(int *shmo);
+int* allocate_shmo_frame(int *frames);
+
+int  getFrame(int *frameEntry);
+int* getNextFrame(int *frameEntry);
+void setNextFrame(int *frameEntry, int *next);
+void setFrame(int *frameEntry, int *frame);
+
+
+
+// -------------------------------------------------------------------------------------------
+// ------------------------------- CLIENT LIST -----------------------------------------------
+// -------------------------------------------------------------------------------------------
+
+// client struct:
 // +-----------+
 // | 0 | next  |
 // | 1 | prev  |
 // | 2 | pid   |
+// | 3 | pages |
 // +-----------+
 
-void set_plist_id(int *entry, int id);
-void set_plist_next(int *entry, int *next);
-void set_plist_prev(int *entry, int *prev);
+int* getNextClient(int *client);
+int* getPrevClient(int *client);
+int  getClientPID(int *client);
+int* getClientPages(int *client);
 
-int  get_plist_id(int *entry);
-int* get_plist_next(int *entry);
-int* get_plist_prev(int *entry);
+void setNextClient(int *client, int *next);
+void setPrevClient(int *client, int *prev);
+void setClientPID(int *client, int pid);
+void setClientPages(int *client, int *pages);
 
-int* insert_plist(int *proc, int *plist);
+void registerClient(int *shmo, int pid);
+int* findClientByPID(int *shmo, int pid);
 
-void printPlist(int *plist);
+void addClientPage(int *client, int page);
 
+void printClientList(int *shmo);
+
+void printClientPages(int *client);
 
 
 // -----------------------------------------------------------------
@@ -1786,6 +1821,12 @@ void printString(int* s) {
 
 void printInteger(int n) {
   print(itoa(n, integer_buffer, 10, 0, 0));
+}
+
+void printDebug() {
+    println();
+    print((int *) "--Debug--");
+    println();
 }
 
 void printFixedPointPercentage(int a, int b) {
@@ -4695,127 +4736,186 @@ void selfie_load() {
 // -----------------------------------------------------------------
 // ----------------------- MIPSTER SYSCALLS ------------------------
 // -----------------------------------------------------------------
-
-void emitShmOpen() {
-    createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_open", 0, PROCEDURE, VOID_T, 0, binaryLength);
-
-    emitIFormat(OP_LW, REG_SP, REG_A0, 0); // name
-    emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
-
-    emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMO);
-    emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
-
-    // jump back to caller, return value is in REG_V0
-    emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
-}
-
-void implementShmOpen() {
-    int *shmo;
-    int *name;
-    int id;
-
-    name = (int*) *(registers + REG_A0);
-
-    print((int*)"EEEEEK");
-    print(name);
-    println();
-
-    // look up the shared memory object by its name/identifier
-    shmo = find_shmo_by_name(name);
-
-    // if it does not exist yet, create it with the given name
-    if (shmo == (int*) 0) {
-        shmo = create_shmo(name);
-    }
-
-    // register the current process to the shared memory object
-    registerProcessToShmo(shmo, getID(currentContext));
-    
-    id = get_shmo_id(shmo);
-
-    print_shmo(shmo);
-
-    // return the id of the shared memory object
-    *(registers+REG_V0) = id;
-}
-
-void emitShmSize() {
-    createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_size", 0, PROCEDURE, VOID_T, 0, binaryLength);
-
-    emitIFormat(OP_LW, REG_SP, REG_A1, 0); // shSize
-    emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
-
-    emitIFormat(OP_LW, REG_SP, REG_A0, 0); // id
-    emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
-
-    emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMS);
-    emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
-
-    // jump back to caller, return value is in REG_V0
-    emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
-}
-
-void implementShmSize() {
-    int *shmo;
-    int actSize;
-    int id;
-    int shSize;
-
-    id = *(registers + REG_A0);
-    shSize = *(registers + REG_A1);
-
-    shmo = find_shmo_by_id(id);
-
-    if (shmo == (int*) 0) {
-        actSize = -1;
-    }
-    else {
-        if (get_shmo_size(shmo) == 0) {
-            set_shmo_size(shmo, shSize);
-        }
-
-        actSize = get_shmo_size(shmo);
-    }
-
-    *(registers+REG_V0) = actSize;
-}
-
 void emitShmMap() {
-    createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_map", 0, PROCEDURE, VOID_T, 0, binaryLength);
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_map", 0, PROCEDURE, VOID_T, 0, binaryLength);
 
-    emitIFormat(OP_LW, REG_SP, REG_A1, 0); // id
-    emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+  emitIFormat(OP_LW, REG_SP, REG_A1, 0); // id
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
-    emitIFormat(OP_LW, REG_SP, REG_A0, 0); // addr
-    emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // addr
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
-    emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMM);
-    emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMM);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
 
-    // jump back to caller, return value is in REG_V0
-    emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+  // jump back to caller, return value is in REG_V0
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
 void implementShmMap() {
+    int *shmo;
+    int id;
+    //int addr;
+    int *frameEntry;
+    int startAddr;
+    int *client;
+
+    // retrieve addr and id from registers
+    // TODO: assume for now that addr is always NULL, i.e. OS can choose the start address
+    //addr = *(registers + REG_A0);
+    id = *(registers + REG_A1);
+
+
+    // find the shared memory object by the given ID
+    shmo = find_shmo_by_id(id);
+
+    // check first if the shared memory exists
+    if (shmo != (int*) 0) {
+
+        // if there are no frames in physical memory associated to the shared memory object yet,
+        // the current process is the first one to call shm_map() for that object. In this case,
+        // allocate the frames once
+        if (get_shmo_frames(shmo) == (int *) 0) {
+            allocate_shmo_frames(shmo);
+        }
+
+        // find brk where the shared memory may start. We must not start somewhere in an already mapped page.
+        // instead, we start at the beginning of the next unmapped page --> round up brk
+        brk = roundUp(brk, PAGESIZE);
+
+        // start address of shared memory for the current process, based on its brk
+        startAddr = brk;
+
+        // find the client object representing the calling process by its pid
+        client = findClientByPID(shmo, getID(currentContext));
+
+        frameEntry = get_shmo_frames(shmo);
+        while (frameEntry != (int *) 0) {
+            // for each frame, create a mapping between frame and a page in the page table of the current process
+            mapPage(getPT(currentContext), getPageOfVirtualAddress(brk), getFrame(frameEntry));
+            // also store the mapped page in the page list of the client
+            addClientPage(client, getPageOfVirtualAddress(brk));
+
+            // move to the next page
+            brk = brk + PAGESIZE;
+
+            frameEntry = getNextFrame(frameEntry);
+        }
+    }
+    else {
+        // if shared memory object does not exist, return -1 to indicate error
+        startAddr = 0;
+    }
+
+    // return start address of shared memory to the calling process
+    *(registers+REG_V0) = startAddr;
 
 }
 
 void emitShmClose() {
-    createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_close", 0, PROCEDURE, VOID_T, 0, binaryLength);
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_close", 0, PROCEDURE, VOID_T, 0, binaryLength);
 
-    emitIFormat(OP_LW, REG_SP, REG_A0, 0); // name
-    emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // id
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
-    emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMC);
-    emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMC);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
 
-    // jump back to caller, return value is in REG_V0
-    emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+  // jump back to caller, return value is in REG_V0
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
 void implementShmClose() {
 
+    //TODO
+
+
 }
+
+void emitShmSize() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_size", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A1, 0); // shSize
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // id
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMS);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller, return value is in REG_V0
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmSize() {
+  int *shmo;
+  int actSize;
+  int id;
+  int shSize;
+
+  // retrieve id and shSize from registers
+  id = *(registers + REG_A0);
+  shSize = *(registers + REG_A1);
+
+  // search the shared memory object by the id
+  shmo = find_shmo_by_id(id);
+
+  // if the shared memory object does not exist, return -1 as size
+  if (shmo == (int*) 0) {
+    actSize = -1;
+  }
+  else {
+    // shared memory object exists
+    if (get_shmo_size(shmo) == 0) {
+      // if current size is 0, replace it by shSize. Do nothing otherwise.
+      set_shmo_size(shmo, shSize);
+
+    }
+    // retrieve the current size
+    actSize = get_shmo_size(shmo);
+  }
+
+  // return the current size to the calling process
+  *(registers+REG_V0) = actSize;
+}
+
+
+void emitShmOpen() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_open", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // name
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMO);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller, return value is in REG_V0
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmOpen() {
+  int *shmo;
+  int *name;
+
+  // extract name string (located in global segment of calling process)
+  name = tlb(getPT(currentContext), *(registers + REG_A0));
+
+  // look up the shared memory object by its name
+  shmo = find_shmo_by_name(name);
+
+  // if it does not exist yet, create it with the given name
+  if (shmo == (int*) 0) {
+    shmo = create_shmo(name);
+  }
+
+  // register the client process to the shared memory object
+  //registerClient(shmo, getID(currentContext));
+
+  // return the ID of the shared memory object to the calling process
+  *(registers+REG_V0) = get_shmo_id(shmo);
+}
+
 
 
 void emitExit() {
@@ -5729,25 +5829,26 @@ void mapAndStoreVirtualMemory(int* table, int vaddr, int data) {
   storeVirtualMemory(table, vaddr, data);
 }
 
-// -----------------------------------------------------------------
-// ------------------------- SHARED MEMORY -------------------------
-// -----------------------------------------------------------------
+// -------------------------------------------------------------------------------------------
+// -------------------------------SHARED MEMORY OBJECTS --------------------------------------
+// -------------------------------------------------------------------------------------------
 
 // struct operations
-int* get_next_shmo(int *shmo)                  { return (int*) *shmo;}
-int* get_prev_shmo(int *shmo)                  { return (int*) *(shmo + 1);}
-int  get_shmo_id(int *shmo)                    { return        *(shmo + 2);}
-int* get_shmo_name(int *shmo)                  { return (int*) *(shmo + 3);}
-int  get_shmo_size(int *shmo)                  { return        *(shmo + 4);}
-int* get_shmo_processes(int *shmo)             { return (int*) *(shmo + 5);}
+int* get_next_shmo(int *shmo)                  { return (int*) *shmo; }
+int* get_prev_shmo(int *shmo)                  { return (int*) *(shmo + 1); }
+int  get_shmo_id(int *shmo)                    { return        *(shmo + 2); }
+int* get_shmo_name(int *shmo)                  { return (int*) *(shmo + 3); }
+int  get_shmo_size(int *shmo)                  { return        *(shmo + 4); }
+int* get_shmo_frames(int *shmo)                { return (int*) *(shmo + 5); }
+int* get_shmo_clients(int *shmo)               { return (int*) *(shmo + 6); }
 
-void set_next_shmo(int *shmo, int *next)       {*shmo = (int) next;}
-void set_prev_shmo(int *shmo, int *prev)       {*(shmo + 1) = (int) prev;}
-void set_shmo_id(int *shmo, int id)            {*(shmo + 2) = id;}
-void set_shmo_name(int *shmo, int *name)       {*(shmo + 3) = (int) name;}
-void set_shmo_size(int *shmo, int size)        {*(shmo + 4) = size;}
-void set_shmo_processes(int *shmo, int *plist) {*(shmo + 5) = (int) plist;}
-
+void set_next_shmo(int *shmo, int *next)       { *shmo = (int) next; }
+void set_prev_shmo(int *shmo, int *prev)       { *(shmo + 1) = (int) prev; }
+void set_shmo_id(int *shmo, int id)            { *(shmo + 2) = id; }
+void set_shmo_name(int *shmo, int *name)       { *(shmo + 3) = (int) name; }
+void set_shmo_size(int *shmo, int size)        { *(shmo + 4) = size; }
+void set_shmo_frames(int *shmo, int *frames)   { *(shmo + 5) = (int) frames; }
+void set_shmo_clients(int *shmo, int *clients) { *(shmo + 6) = (int) clients; }
 
 int delete_shmo(int *shmo, int *shmo_list) {
 
@@ -5781,27 +5882,27 @@ int *find_shmo_by_id(int id) {
     return shmo;
 }
 
-// Create a new shared memory object, initialize it and put it into the list of shared memory objects
+// Create a new shared memory object, initialize it and put
+// it into the list of shared memory objects
 int *create_shmo(int *name) {
     int *shmo;
 
-    shmo = malloc(2 * SIZEOFINT + 4 * SIZEOFINTSTAR);
+    shmo = malloc(2 * SIZEOFINT + 5 * SIZEOFINTSTAR);
 
+    // initialize shared memory object
     set_next_shmo(shmo, (int *) 0);
     set_prev_shmo(shmo, (int *) 0);
-
     set_shmo_id(shmo, create_shmo_id());
     set_shmo_size(shmo, 0);
     set_shmo_name(shmo, name);
-    set_shmo_processes(shmo, (int *) 0);
+    set_shmo_frames(shmo, (int*) 0);
+    set_shmo_clients(shmo, (int*) 0);
 
-    print_shmo(shmo);
-
+    // new shared memory object becomes head of existing list
     if (shmo_list != (int*) 0) {
         set_next_shmo(shmo, shmo_list);
         set_prev_shmo(shmo_list, shmo);
     }
-
     shmo_list = shmo;
 
     return shmo;
@@ -5814,22 +5915,6 @@ int create_shmo_id() {
     shmo_id = shmo_id_counter;
     shmo_id_counter = shmo_id_counter + 1;
     return shmo_id;
-}
-
-
-void registerProcessToShmo(int *shmo, int id) {
-    int *plist;
-    int *proc;
-
-    proc = malloc(SIZEOFINT + 2 * SIZEOFINTSTAR);
-
-    set_plist_id(proc, id);
-    set_plist_prev(proc, (int*) 0);
-    set_plist_next(proc, (int*) 0);
-
-    plist = get_shmo_processes(shmo);
-    plist = insert_plist(proc, plist);
-    set_shmo_processes(shmo, plist);
 }
 
 // prints the given shared memory object
@@ -5848,56 +5933,140 @@ void print_shmo(int *shmo) {
     printInteger(get_shmo_size(shmo));
     println();
     print((int*)"Registered Processes: ");
-    printPlist(get_shmo_processes(shmo));
+    printClientList(shmo);
     println();
 
 }
 
-// prints all shared memory objects in the global list
-void print_shmo_list() {
-    int *shmo;
+// -------------------------------------------------------------------------------------------
+// -------------------------------SHARED MEMORY FRAMES ---------------------------------------
+// -------------------------------------------------------------------------------------------
 
-    shmo = shmo_list;
+int getFrame(int *frameEntry)      { return *frameEntry; }
+int* getNextFrame(int *frameEntry) { return (int*) *(frameEntry + 1); }
 
-    while (shmo != (int*) 0) {
-        print_shmo(shmo);
-        shmo = get_next_shmo(shmo);
+void setFrame(int *frameEntry, int *frame)    {*frameEntry = (int) frame; }
+void setNextFrame(int *frameEntry, int *next) {*(frameEntry + 1) = (int) next; }
+
+
+// used for creating a list of frames for a shared memory object.
+// the number of frames in this list depends on the user-specified size of the shared memory
+void allocate_shmo_frames(int *shmo) {
+    int frame_count;
+    int i;
+    int *frames;
+
+    // the frame list is empty first
+    frames = (int*) 0;
+
+    // only multiples of page/frame size are allocated -> round up size to be multiple of PAGESIZE
+    // then determine how many frames have to be allocated -> divide by PAGESIZE
+    frame_count = roundUp(get_shmo_size(shmo), PAGESIZE) / PAGESIZE;
+
+    i = 0;
+    while (i < frame_count) {
+        // allocate new frame and store it in the growing frame list
+        frames = allocate_shmo_frame(frames);
+        i = i + 1;
     }
+
+    // associate the frame list to the shared memory object
+    set_shmo_frames(shmo, frames);
 }
 
 
+// used for creating a single frame entry
+int *allocate_shmo_frame(int *frames) {
+    int *entry;
 
-void set_plist_id(int *entry, int id) {*entry = id;}
-void set_plist_next(int *entry, int *next) {*(entry + 1) = (int) next;}
-void set_plist_prev(int *entry, int *prev) {*(entry + 2) = (int) prev;}
+    entry = malloc(2 * SIZEOFINTSTAR);
 
-int  get_plist_id(int *entry) {return *entry;}
-int* get_plist_next(int *entry) { return (int*) *(entry + 1);}
-int* get_plist_prev(int *entry) {return (int*) *(entry + 2);}
+    // allocate a new frame in physical memory
+    setFrame(entry, palloc());
+    // new frame becomes head of the already existing list
+    setNextFrame(entry, frames);
 
-
-int* insert_plist(int *proc, int *plist) {
-
-    if (plist != (int*) 0) {
-        set_plist_next(proc, plist);
-        set_plist_prev(plist, proc);
-    }
-
-    return proc;
+    return entry;
 }
 
-void printPlist(int *plist) {
-    int *ptr;
-    
-    ptr = plist;
-    while (ptr != (int*) 0) {
-        printInteger(get_plist_id(ptr));
-        ptr = get_plist_next(ptr);
-    }
+// -------------------------------------------------------------------------------------------
+// ------------------------------- CLIENT LIST -----------------------------------------------
+// -------------------------------------------------------------------------------------------
+
+int* getNextClient(int *client)  { return (int*) *client; }
+int* getPrevClient(int *client)  { return (int*) *(client + 1); }
+int  getClientPID(int *client)   { return *(client + 2); }
+int* getClientPages(int *client) { return (int*) *(client + 3); }
+
+void setNextClient(int *client, int *next)   { *client = (int) next; }
+void setPrevClient(int *client, int *prev)   { *(client + 1) = (int) prev; }
+void setClientPID(int *client, int pid)      { *(client + 2) = pid; }
+void setClientPages(int *client, int *pages) { *(client + 3) = (int) pages; }
+
+void registerClient(int *shmo, int pid) {
+    int *client;
+
+    //allocate and initialize client struct
+    client = malloc(SIZEOFINT + 3 * SIZEOFINTSTAR);
+    setClientPID(client, pid);
+    setClientPages(client, (int*) 0);
+    setNextClient(client, (int*) 0);
+
+    // make new client the head of the client list
+    setNextClient(client, get_shmo_clients(shmo));
+    set_shmo_clients(shmo, client);
+
 }
 
-int delete_plist(int *proc, int *plist) {}
+int* findClientByPID(int *shmo, int pid) {
+    int *client;
 
+    client = get_shmo_clients(shmo);
+    while (client != (int*) 0) {
+        if (getClientPID(client) == pid) {
+            return client;
+        }
+        client = getNextClient(client);
+    }
+    return client;
+}
+
+void printClientPages(int *client) {
+    int *page;
+    page = getClientPages(client);
+
+    while (page != (int*) 0) {
+        printInteger(*page);
+        print((int*) " ");
+        page = (int*) *(page+1);
+    }
+    println();
+}
+
+void printClientList(int *shmo) {
+    int *client;
+
+    client = get_shmo_clients(shmo);
+
+    while (client != (int*) 0) {
+        printInteger(getClientPID(client));
+        print((int*) " ");
+        client = getNextClient(client);
+    }
+    println();
+}
+
+void addClientPage(int *client, int page) {
+    int *pageEntry;
+
+    pageEntry = malloc(SIZEOFINT + SIZEOFINTSTAR);
+
+    *pageEntry = page;
+    *(pageEntry + 1) = (int) getClientPages(client);
+
+    setClientPages(client, pageEntry);
+
+}
 
 // -----------------------------------------------------------------
 // ------------------------- INSTRUCTIONS --------------------------
@@ -5936,12 +6105,12 @@ void fct_syscall() {
       implementDelete();
     else if (*(registers+REG_V0) == SYSCALL_MAP)
       implementMap();
-    else if (*(registers+REG_V0) == SYSCALL_SHMC)
-      implementShmClose();  
-    else if (*(registers+REG_V0) == SYSCALL_SHMM)
-      implementShmMap();
     else if (*(registers+REG_V0) == SYSCALL_SHMO)
       implementShmOpen();
+    else if (*(registers+REG_V0) == SYSCALL_SHMC)
+      implementShmClose();
+    else if (*(registers+REG_V0) == SYSCALL_SHMM)
+      implementShmMap();
     else if (*(registers+REG_V0) == SYSCALL_SHMS)
       implementShmSize();
     else {
