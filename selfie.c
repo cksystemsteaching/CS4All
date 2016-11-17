@@ -4693,7 +4693,7 @@ void emitShm_Open() {
 
 int implementShm_Open(int name) {
 
-  return -1;
+  return 1;
 }
 
 void emitShm_Size() {
@@ -4702,7 +4702,7 @@ void emitShm_Size() {
 
 int implementShm_Size(int id, int shsize) {
   
-  return -1;
+  return 1;
 }
 
 void emitShm_Map() {
@@ -4711,7 +4711,7 @@ void emitShm_Map() {
 
 int* implementShm_Map(int* addr, int id) {
   
-  return (int*) -1;
+  return 1;
 }
 
 void emitShm_Close() {
@@ -4720,7 +4720,7 @@ void emitShm_Close() {
 
 int implementShm_Close(int id) {
   
-  return -1;
+  return 1;
 }
 
 void emitRead() {
