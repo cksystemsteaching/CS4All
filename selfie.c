@@ -7198,12 +7198,15 @@ int selfie() {
         setTimeslice();
       else if (stringCompare(option, (int*) "-numprocesses"))
         setNumProcesses();
-      else if (stringCompare(option, (int*) "-c")) // [EIFLES] Count, probably equals to -numprocesses
-        //do Stuff here
-      else if (stringCompare(option, (int*) "-u")) // [EIFLES] Indicates user process
-        //do Stuff here
-      else if (stringCompare(option, (int*) "-k")) // [EIFLES] Handover interrupts, etc to the OS process, NOT the emulator
-        //do Stuff here
+      else if (stringCompare(option, (int*) "-c")) { //do Stuff here 
+      } // [EIFLES] Count, probably equals to -numprocesses
+        
+      else if (stringCompare(option, (int*) "-u")) { //do Stuff here 
+      } // [EIFLES] Indicates user process
+      
+      else if (stringCompare(option, (int*) "-k")) { //do Stuff here 
+      } // [EIFLES] Handover interrupts, etc to the OS process, NOT the emulator
+  
       else if (stringCompare(option, (int*) "-o"))
         selfie_output();
       else if (stringCompare(option, (int*) "-s"))
@@ -7243,7 +7246,7 @@ int main(int argc, int* argv) {
   if (exitCode == USAGE) {
     print(selfieName);
     print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary }");
-    print((int*)) " [ ((-m | -d | -y | -k | -min | -mob ) size ...) ]"
+    print((int*) " [ ((-m | -d | -y | -k | -min | -mob ) size ...) ]");
     print((int*) " [ -timeslice numberOfSteps ] [ -numprocesses binaryCount ] [ -c count ] [ -u userprocess ]");
     println();
 
