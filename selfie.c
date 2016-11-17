@@ -794,7 +794,7 @@ void selfie_load();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int maxBinaryLength = 131072; // 128KB
+int maxBinaryLength = 262144;//131072; // 128KB
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -4910,7 +4910,7 @@ void implementShmOpen() {
   }
 
   // register the client process to the shared memory object
-  //registerClient(shmo, getID(currentContext));
+  registerClient(shmo, getID(currentContext));
 
   // return the ID of the shared memory object to the calling process
   *(registers+REG_V0) = get_shmo_id(shmo);
@@ -5992,6 +5992,14 @@ int *allocate_shmo_frame(int *frames) {
 // -------------------------------------------------------------------------------------------
 // ------------------------------- CLIENT LIST -----------------------------------------------
 // -------------------------------------------------------------------------------------------
+
+// client struct:
+// +-----------+
+// | 0 | next  |
+// | 1 | prev  |
+// | 2 | pid   |
+// | 3 | pages |
+// +-----------+
 
 int* getNextClient(int *client)  { return (int*) *client; }
 int* getPrevClient(int *client)  { return (int*) *(client + 1); }
