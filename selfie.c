@@ -7180,8 +7180,6 @@ int selfie() {
         setTimeslice();
       else if (stringCompare(option, (int*) "-numprocesses"))
         setNumProcesses();
-      else if (stringCompare(option, (int*) "-c")) { //do Stuff here 
-      } // [EIFLES] Count, probably equals to -numprocesses
         
       else if (stringCompare(option, (int*) "-u")) { //do Stuff here 
       } // [EIFLES] Indicates user process
@@ -7229,7 +7227,7 @@ int main(int argc, int* argv) {
     print(selfieName);
     print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary }");
     print((int*) " [ ((-m | -d | -y | -k | -min | -mob ) size ...) ]");
-    print((int*) " [ -timeslice numberOfSteps ] [ -numprocesses binaryCount ] [ -c count ] [ -u userprocess ]");
+    print((int*) " [ -timeslice numberOfSteps ] [ -numprocesses binaryCount ] [ -u userprocess ]");
     println();
 
     return 0;

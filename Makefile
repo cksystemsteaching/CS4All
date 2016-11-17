@@ -37,7 +37,7 @@ winClean:
 	del *.s
 	del selfie
 
-# Assignment 1 runnable on Linux
+# Assignment 1: run multiple processes
 assignment1:
 	make clean
 	make
@@ -51,7 +51,7 @@ winAssignment1:
 	selfie.exe -c test_program.c selfie.c -o test_program.m 
 	selfie.exe -timeslice 7777 -numprocesses 5 -l test_program.m -m 32
 
-# Assignment 2 runnable on Linux
+# Assignment 2: sched_yield()
 assignment2:
 	make clean
 	make
@@ -65,3 +65,11 @@ winAssignment2:
 	make
 	selfie.exe -c test_program.c selfie.c -o test_program.m 
 	selfie.exe -l test_program.m -min 32
+
+# Assignment 3: shared memory
+assignment3:
+	make clean
+	make
+	./selfie -c selfie.c -o selfie.m # create selfie mipster binary
+	./selfie -c test_program.c selfie.c -o test_program.m # create test program
+	./selfie -l selfie.m -k 4 -l test_program.m -numprocesses 2 -u 1
