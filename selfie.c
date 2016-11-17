@@ -848,8 +848,13 @@ int SYSCALL_EXIT   = 4001;
 int SYSCALL_READ   = 4003;
 int SYSCALL_WRITE  = 4004;
 int SYSCALL_OPEN   = 4005;
-// [EIFLES]
+// [EIFLES] Assignment 2
 int SYSCALL_SCHED_YIELD = 4006;
+// [EIFLES] Assignment 3
+int SYSCALL_SHM_OPEN = 4007;
+int SYSCALL_SHM_SIZE = 4008;
+int* SYSCALL_SHM_MAP = 4009;
+int SYSCALL_SHM_CLOSE = 4010;
 
 int SYSCALL_MALLOC = 4045;
 
@@ -1777,10 +1782,6 @@ int* zalloc(int size) {
 void sched_yield () {
 	print((int*) "sched_yield() called.");
 	println();
-
-  // emitSchedYield();
-	//throwException(EXCEPTION_SCHED_YIELD,0);		// [EIFLES] correct parameter?
-	// throwException(EXCEPTION_NOEXCEPTION,0);		// [EIFLES] correct parameter?
 }
 
 // *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~
@@ -4036,6 +4037,7 @@ void selfie_compile() {
   emitWrite();
   emitOpen();
   emitMalloc();
+  // [EIFLES]
   emitSchedYield();
 
   emitID();
@@ -4044,9 +4046,6 @@ void selfie_compile() {
   emitStatus();
   emitDelete();
   emitMap();
-
-  // [EIFLES]
-  //emitSchedYield();
 
   while (link) {
     if (numberOfRemainingArguments() == 0)
@@ -4673,30 +4672,9 @@ void implementExit() {
   println();
 }
 
+// [EIFLES] Assignment 2
 void emitSchedYield() {
 
-  ////////////
-  //createSymbolTableEntry(LIBRARY_TABLE, (int*) "read", 0, PROCEDURE, INT_T, 0, binaryLength);
-  //emitIFormat(OP_LW, REG_SP, REG_A2, 0); // size
-  //emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
-  //emitIFormat(OP_LW, REG_SP, REG_A1, 0); // *buffer
-  //emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
-  //emitIFormat(OP_LW, REG_SP, REG_A0, 0); // fd
-  //emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
-  //emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_READ);
-  //emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
-  // jump back to caller, return value is in REG_V0
-  //emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
-  ////////////
-
-  //////
-  //createSymbolTableEntry(LIBRARY_TABLE, (int*) "hypster_status", 0, PROCEDURE, INT_T, 0, binaryLength);
-  //emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_STATUS);
-  //emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
-  //emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
-  ///////
-
-  // [EIFLES] correct?
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "sched_yield", 0, PROCEDURE, VOID_T, 0, binaryLength);
   emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SCHED_YIELD);
   emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
@@ -4705,9 +4683,44 @@ void emitSchedYield() {
 }
 
 void implementSchedYield() {
-
-
   throwException(EXCEPTION_SCHED_YIELD, 0);
+}
+
+// [EIFLES] Assignment 3 (Emit-procedures also need arguments? To be checked!)
+void emitShm_Open() {
+
+}
+
+int implementShm_Open(int name) {
+
+  return -1;
+}
+
+void emitShm_Size() {
+  
+}
+
+int implementShm_Size(int id, int shsize) {
+  
+  return -1;
+}
+
+void emitShm_Map() {
+  
+}
+
+int* implementShm_Map(int* addr, int id) {
+  
+  return (int*) -1;
+}
+
+void emitShm_Close() {
+  
+}
+
+int implementShm_Close(int id) {
+  
+  return -1;
 }
 
 void emitRead() {
@@ -5199,7 +5212,7 @@ int doSwitch(int toID) {
   int* toContext;
 
   fromID = getID(currentContext);
-  // [EIFLES] In here, we have to assign the correct position in the seg.table for the chosen context!
+
   toContext = findContext(toID, usedContexts);
 
   if (toContext != (int*) 0) {
@@ -6875,10 +6888,10 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       exceptionNumber    = decodeExceptionNumber(savedStatus);
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
-      print((int*) "############# caught exception with exceptionNumber: ");
-      printInteger(exceptionNumber);
-      print((int*) " #############");
-      println();
+      //print((int*) "############# caught exception with exceptionNumber: ");
+      //printInteger(exceptionNumber);
+      //print((int*) " #############");
+      //println();
 
 
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
@@ -7006,8 +7019,6 @@ int boot(int argc, int* argv) {
 
   processIndex = 0;
 
-  // [EIFLES] in here, we probably have to count how many instances are created within the while loop
-  // [EIFLES] needed to know in how many pieces we have to devide the mainmemory (segmenttable)
   while (processIndex < numProcesses) {
     // create initial context on microkernel boot level
     nextID = selfie_create();
@@ -7118,9 +7129,6 @@ int runScheduler(int thisID) {
   int *thisContext;
   int *nextContext;
 
-  // [EIFLES] print((int*) "DEBUG: runScheduler() called");
-  // [EIFLES] println();
-
   thisContext = findContext(thisID, usedContexts);
   nextContext = getNextContext(thisContext);
 
@@ -7190,6 +7198,12 @@ int selfie() {
         setTimeslice();
       else if (stringCompare(option, (int*) "-numprocesses"))
         setNumProcesses();
+      else if (stringCompare(option, (int*) "-c")) // [EIFLES] Count, probably equals to -numprocesses
+        //do Stuff here
+      else if (stringCompare(option, (int*) "-u")) // [EIFLES] Indicates user process
+        //do Stuff here
+      else if (stringCompare(option, (int*) "-k")) // [EIFLES] Handover interrupts, etc to the OS process, NOT the emulator
+        //do Stuff here
       else if (stringCompare(option, (int*) "-o"))
         selfie_output();
       else if (stringCompare(option, (int*) "-s"))
@@ -7228,8 +7242,9 @@ int main(int argc, int* argv) {
 
   if (exitCode == USAGE) {
     print(selfieName);
-    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary } [ ((-m | -d | -y | -min | -mob ) size ...) ]");
-    print((int*) " [ -timeslice numberOfSteps ] [ -numprocesses binaryCount]");
+    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary }");
+    print((int*)) " [ ((-m | -d | -y | -k | -min | -mob ) size ...) ]"
+    print((int*) " [ -timeslice numberOfSteps ] [ -numprocesses binaryCount ] [ -c count ] [ -u userprocess ]");
     println();
 
     return 0;
