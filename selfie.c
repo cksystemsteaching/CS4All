@@ -6271,16 +6271,6 @@ void throwException(int exception, int parameter) {
   else
     status = encodeException(exception, parameter);
 
-  println();
-  print((int*) "------[throwException, exception=");
-  printInteger(exception);
-  print((int*) ", status=");
-  printInteger(status);
-  print((int*) ", parameter=");
-  printInteger(parameter);
-  print((int*) "]------");
-	println();
-
   trap = 1;
 
   if (debug_exception) {
@@ -6888,12 +6878,6 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       exceptionNumber    = decodeExceptionNumber(savedStatus);
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
-      //print((int*) "############# caught exception with exceptionNumber: ");
-      //printInteger(exceptionNumber);
-      //print((int*) " #############");
-      //println();
-
-
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
         frame = (int) palloc();
 
@@ -6917,8 +6901,6 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       }
       else if (exceptionNumber == EXCEPTION_SCHED_YIELD) {
       // else if (exceptionNumber == EXCEPTION_NOEXCEPTION) {
-        print((int*) "+++++++++++ exceptionNumber == EXCEPTION_SCHED_YIELD ++++++++++++");
-        println();
         toID = runScheduler(fromID);
         cycles = 0;
       }
