@@ -881,6 +881,18 @@ void doMap(int ID, int page, int frame);
 void implementMap();
 void selfie_map(int ID, int page, int frame);
 
+void emitShmOpen();
+void implementShmOpen();
+
+void emitShmSize();
+void implementShmSize();
+
+void emitShmMap();
+void implementShmMap();
+
+void emitShmClose();
+void implementShmClose();
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_create = 0;
@@ -896,6 +908,12 @@ int SYSCALL_STATUS = 4904;
 int SYSCALL_DELETE = 4905;
 int SYSCALL_MAP    = 4906;
 int SYSCALL_YIELD  = 4907;
+int SYSCALL_SHMO   = 4908;
+int SYSCALL_SHMS   = 4909;
+int SYSCALL_SHMM   = 4910;
+int SYSCALL_SHMC   = 4911;
+
+
 
 // *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~
 // -----------------------------------------------------------------
@@ -953,6 +971,68 @@ void initMemory(int megabytes) {
 
   pageFrameMemory = megabytes * MEGABYTE;
 }
+
+// -----------------------------------------------------------------
+// ------------------------- SHARED MEMORY -------------------------
+// -----------------------------------------------------------------
+
+int* shmo_list = (int*) 0;
+int  shmo_id_counter = 0;
+
+// shared memory struct:
+// +---------------+
+// | 0 | next      |
+// | 1 | prev      |
+// | 2 | id        |
+// | 3 | name      |
+// | 4 | size      |
+// | 5 | processes |
+// +---------------+
+
+int* get_next_shmo(int *shmo);
+int* get_prev_shmo(int *shmo);
+int* get_shmo_name(int *shmo);
+int  get_shmo_id(int *shmo);
+int  get_shmo_size(int *shmo);
+int* get_shmo_processes(int *shmo);
+
+void set_next_shmo(int *shmo, int *next);
+void set_prev_shmo(int *shmo, int *prev);
+void set_shmo_size(int *shmo, int size);
+void set_shmo_id(int *shmo, int id);
+void set_shmo_name(int *shmo, int *name);
+void set_shmo_processes(int *shmo, int *processes);
+
+int  delete_shmo(int *shmo, int *shmo_list);
+int* create_shmo(int *name);
+int  create_shmo_id();
+int* find_shmo_by_name(int *name);
+int* find_shmo_by_id(int id);
+void registerProcessToShmo(int *shmo, int pid);
+void print_shmo(int *shmo);
+void print_shmo_list();
+
+
+//process list
+// +-----------+
+// | 0 | next  |
+// | 1 | prev  |
+// | 2 | pid   |
+// +-----------+
+
+void set_plist_id(int *entry, int id);
+void set_plist_next(int *entry, int *next);
+void set_plist_prev(int *entry, int *prev);
+
+int  get_plist_id(int *entry);
+int* get_plist_next(int *entry);
+int* get_plist_prev(int *entry);
+
+int* insert_plist(int *proc, int *plist);
+
+void printPlist(int *plist);
+
+
 
 // -----------------------------------------------------------------
 // ------------------------- INSTRUCTIONS --------------------------
@@ -4024,6 +4104,10 @@ void selfie_compile() {
   emitStatus();
   emitDelete();
   emitMap();
+  emitShmClose();
+  emitShmMap();
+  emitShmOpen();
+  emitShmSize();
 
   while (link) {
     if (numberOfRemainingArguments() == 0)
@@ -4611,6 +4695,128 @@ void selfie_load() {
 // -----------------------------------------------------------------
 // ----------------------- MIPSTER SYSCALLS ------------------------
 // -----------------------------------------------------------------
+
+void emitShmOpen() {
+    createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_open", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+    emitIFormat(OP_LW, REG_SP, REG_A0, 0); // name
+    emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+    emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMO);
+    emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+    // jump back to caller, return value is in REG_V0
+    emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmOpen() {
+    int *shmo;
+    int *name;
+    int id;
+
+    name = (int*) *(registers + REG_A0);
+
+    print((int*)"EEEEEK");
+    print(name);
+    println();
+
+    // look up the shared memory object by its name/identifier
+    shmo = find_shmo_by_name(name);
+
+    // if it does not exist yet, create it with the given name
+    if (shmo == (int*) 0) {
+        shmo = create_shmo(name);
+    }
+
+    // register the current process to the shared memory object
+    registerProcessToShmo(shmo, getID(currentContext));
+    
+    id = get_shmo_id(shmo);
+
+    print_shmo(shmo);
+
+    // return the id of the shared memory object
+    *(registers+REG_V0) = id;
+}
+
+void emitShmSize() {
+    createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_size", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+    emitIFormat(OP_LW, REG_SP, REG_A1, 0); // shSize
+    emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+    emitIFormat(OP_LW, REG_SP, REG_A0, 0); // id
+    emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+    emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMS);
+    emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+    // jump back to caller, return value is in REG_V0
+    emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmSize() {
+    int *shmo;
+    int actSize;
+    int id;
+    int shSize;
+
+    id = *(registers + REG_A0);
+    shSize = *(registers + REG_A1);
+
+    shmo = find_shmo_by_id(id);
+
+    if (shmo == (int*) 0) {
+        actSize = -1;
+    }
+    else {
+        if (get_shmo_size(shmo) == 0) {
+            set_shmo_size(shmo, shSize);
+        }
+
+        actSize = get_shmo_size(shmo);
+    }
+
+    *(registers+REG_V0) = actSize;
+}
+
+void emitShmMap() {
+    createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_map", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+    emitIFormat(OP_LW, REG_SP, REG_A1, 0); // id
+    emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+    emitIFormat(OP_LW, REG_SP, REG_A0, 0); // addr
+    emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+    emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMM);
+    emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+    // jump back to caller, return value is in REG_V0
+    emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmMap() {
+
+}
+
+void emitShmClose() {
+    createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_close", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+    emitIFormat(OP_LW, REG_SP, REG_A0, 0); // name
+    emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+    emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMC);
+    emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+    // jump back to caller, return value is in REG_V0
+    emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmClose() {
+
+}
+
 
 void emitExit() {
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "exit", 0, PROCEDURE, VOID_T, 0, binaryLength);
@@ -5524,6 +5730,176 @@ void mapAndStoreVirtualMemory(int* table, int vaddr, int data) {
 }
 
 // -----------------------------------------------------------------
+// ------------------------- SHARED MEMORY -------------------------
+// -----------------------------------------------------------------
+
+// struct operations
+int* get_next_shmo(int *shmo)                  { return (int*) *shmo;}
+int* get_prev_shmo(int *shmo)                  { return (int*) *(shmo + 1);}
+int  get_shmo_id(int *shmo)                    { return        *(shmo + 2);}
+int* get_shmo_name(int *shmo)                  { return (int*) *(shmo + 3);}
+int  get_shmo_size(int *shmo)                  { return        *(shmo + 4);}
+int* get_shmo_processes(int *shmo)             { return (int*) *(shmo + 5);}
+
+void set_next_shmo(int *shmo, int *next)       {*shmo = (int) next;}
+void set_prev_shmo(int *shmo, int *prev)       {*(shmo + 1) = (int) prev;}
+void set_shmo_id(int *shmo, int id)            {*(shmo + 2) = id;}
+void set_shmo_name(int *shmo, int *name)       {*(shmo + 3) = (int) name;}
+void set_shmo_size(int *shmo, int size)        {*(shmo + 4) = size;}
+void set_shmo_processes(int *shmo, int *plist) {*(shmo + 5) = (int) plist;}
+
+
+int delete_shmo(int *shmo, int *shmo_list) {
+
+}
+
+// Search for a shared memory object by its name
+int *find_shmo_by_name(int *name) {
+    int *shmo;
+
+    shmo = shmo_list;
+    while (shmo != (int*) 0) {
+        if (stringCompare(get_shmo_name(shmo), name)) {
+            return shmo;
+        }
+        shmo = get_next_shmo(shmo);
+    }
+    return shmo;
+}
+
+// Search for shared memory by its id
+int *find_shmo_by_id(int id) {
+    int *shmo;
+
+    shmo = shmo_list;
+    while (shmo != (int*) 0) {
+        if (get_shmo_id(shmo) == id) {
+            return shmo;
+        }
+        shmo = get_next_shmo(shmo);
+    }
+    return shmo;
+}
+
+// Create a new shared memory object, initialize it and put it into the list of shared memory objects
+int *create_shmo(int *name) {
+    int *shmo;
+
+    shmo = malloc(2 * SIZEOFINT + 4 * SIZEOFINTSTAR);
+
+    set_next_shmo(shmo, (int *) 0);
+    set_prev_shmo(shmo, (int *) 0);
+
+    set_shmo_id(shmo, create_shmo_id());
+    set_shmo_size(shmo, 0);
+    set_shmo_name(shmo, name);
+    set_shmo_processes(shmo, (int *) 0);
+
+    print_shmo(shmo);
+
+    if (shmo_list != (int*) 0) {
+        set_next_shmo(shmo, shmo_list);
+        set_prev_shmo(shmo_list, shmo);
+    }
+
+    shmo_list = shmo;
+
+    return shmo;
+}
+
+// Create a unique shared memory id
+int create_shmo_id() {
+    int shmo_id;
+
+    shmo_id = shmo_id_counter;
+    shmo_id_counter = shmo_id_counter + 1;
+    return shmo_id;
+}
+
+
+void registerProcessToShmo(int *shmo, int id) {
+    int *plist;
+    int *proc;
+
+    proc = malloc(SIZEOFINT + 2 * SIZEOFINTSTAR);
+
+    set_plist_id(proc, id);
+    set_plist_prev(proc, (int*) 0);
+    set_plist_next(proc, (int*) 0);
+
+    plist = get_shmo_processes(shmo);
+    plist = insert_plist(proc, plist);
+    set_shmo_processes(shmo, plist);
+}
+
+// prints the given shared memory object
+void print_shmo(int *shmo) {
+
+    println();
+    print((int*)"ID: ");
+    printInteger(get_shmo_id(shmo));
+    println();
+
+    print((int*)"Name: ");
+    print(get_shmo_name(shmo));
+    println();
+
+    print((int*)"Size: ");
+    printInteger(get_shmo_size(shmo));
+    println();
+    print((int*)"Registered Processes: ");
+    printPlist(get_shmo_processes(shmo));
+    println();
+
+}
+
+// prints all shared memory objects in the global list
+void print_shmo_list() {
+    int *shmo;
+
+    shmo = shmo_list;
+
+    while (shmo != (int*) 0) {
+        print_shmo(shmo);
+        shmo = get_next_shmo(shmo);
+    }
+}
+
+
+
+void set_plist_id(int *entry, int id) {*entry = id;}
+void set_plist_next(int *entry, int *next) {*(entry + 1) = (int) next;}
+void set_plist_prev(int *entry, int *prev) {*(entry + 2) = (int) prev;}
+
+int  get_plist_id(int *entry) {return *entry;}
+int* get_plist_next(int *entry) { return (int*) *(entry + 1);}
+int* get_plist_prev(int *entry) {return (int*) *(entry + 2);}
+
+
+int* insert_plist(int *proc, int *plist) {
+
+    if (plist != (int*) 0) {
+        set_plist_next(proc, plist);
+        set_plist_prev(plist, proc);
+    }
+
+    return proc;
+}
+
+void printPlist(int *plist) {
+    int *ptr;
+    
+    ptr = plist;
+    while (ptr != (int*) 0) {
+        printInteger(get_plist_id(ptr));
+        ptr = get_plist_next(ptr);
+    }
+}
+
+int delete_plist(int *proc, int *plist) {}
+
+
+// -----------------------------------------------------------------
 // ------------------------- INSTRUCTIONS --------------------------
 // -----------------------------------------------------------------
 
@@ -5560,6 +5936,14 @@ void fct_syscall() {
       implementDelete();
     else if (*(registers+REG_V0) == SYSCALL_MAP)
       implementMap();
+    else if (*(registers+REG_V0) == SYSCALL_SHMC)
+      implementShmClose();  
+    else if (*(registers+REG_V0) == SYSCALL_SHMM)
+      implementShmMap();
+    else if (*(registers+REG_V0) == SYSCALL_SHMO)
+      implementShmOpen();
+    else if (*(registers+REG_V0) == SYSCALL_SHMS)
+      implementShmSize();
     else {
       pc = pc - WORDSIZE;
 
