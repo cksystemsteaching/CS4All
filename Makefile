@@ -73,3 +73,13 @@ assignment3:
 	./selfie -c selfie.c -o selfie.m # create selfie mipster binary
 	./selfie -c test_program.c selfie.c -o test_program.m # create test program
 	./selfie -l selfie.m -k 4 -l test_program.m -numprocesses 2 -u 1
+
+tempHypster:
+	make clean
+	make
+	./selfie -c selfie.c -o selfie.m # create selfie mipster binary
+	./selfie -c test_program.c selfie.c -o test_program.m # create test program
+	./selfie -l test_program.m -y 1
+
+
+

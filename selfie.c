@@ -1066,6 +1066,9 @@ int timer = 0; // counter for timer interrupt
 
 int mipster = 0; // flag for forcing to use mipster rather than hypster
 
+// [EIFLES]
+int hypster = 0; // flag for forcing hypster rather than mipster
+
 int interpret = 0; // flag for executing or disassembling code
 
 int debug = 0; // flag for logging code execution
@@ -1201,6 +1204,9 @@ void resetMicrokernel();
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int MIPSTER_ID = -1;
+
+// [EIFLES]
+int HYPSTER_ID = -2;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1693,6 +1699,24 @@ void print(int* s) {
 
 void println() {
   putCharacter(CHAR_LF);
+}
+
+void printEifles(int* message, int* s) {
+  println();
+  print((int*) "[EIFLES,int*] ");
+  print(message);
+  print((int*) ": ");
+  print(s);
+  println();
+}
+
+void printIntegerEifles(int* message, int i) {
+  println();
+  print((int*) "[EIFLES,int] ");
+  print(message);
+  print((int*) ": ");  
+  printInteger(i);
+  println();
 }
 
 void printCharacter(int c) {
@@ -5131,7 +5155,8 @@ void implementID() {
 
 int hypster_ID() {
   // this procedure is only executed at boot level zero
-  return MIPSTER_ID;
+  //return MIPSTER_ID;
+  return HYPSTER_ID;
 }
 
 int selfie_ID() {
@@ -5181,13 +5206,18 @@ void implementCreate() {
 }
 
 int hypster_create() {
+
+  printEifles("hypster_create()", "hypster created!!!");
+
   // this procedure is only executed at boot level zero
   return doCreate(selfie_ID());
 }
 
 int selfie_create() {
-  if (mipster)
+  if (mipster){
+    printEifles("selfie_create()", "mipster created!!!");
     return doCreate(selfie_ID());
+  }
   else
     return hypster_create();
 }
@@ -6863,6 +6893,8 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
     // assert: fromContext must be in usedContexts (created here)
 
+    printIntegerEifles("getParent(fromContext)", getParent(fromContext));
+
     if (getParent(fromContext) != selfie_ID()) {
       // switch to parent which is in charge of handling exceptions
       // [EIFLES] However, we need to check if there even exists a parent! Infinite loop without this check!!
@@ -7179,12 +7211,14 @@ int selfie() {
       else if (stringCompare(option, (int*) "-timeslice"))
         setTimeslice();
       else if (stringCompare(option, (int*) "-numprocesses"))
-        setNumProcesses();
-        
-      else if (stringCompare(option, (int*) "-u")) { //do Stuff here 
-      } // [EIFLES] Indicates user process
-      
-      else if (stringCompare(option, (int*) "-k")) { //do Stuff here 
+        setNumProcesses();  
+      else if (stringCompare(option, (int*) "-u")) {
+        // [EIFLES] Indicates user process
+        return selfie_run(MIPSTER, MIPSTER, 0);
+      }
+      else if (stringCompare(option, (int*) "-k")) {
+        hypster = 1;
+        return selfie_run(HYPSTER, MIPSTER, 0);
       } // [EIFLES] Handover interrupts, etc to the OS process, NOT the emulator
   
       else if (stringCompare(option, (int*) "-o"))
