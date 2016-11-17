@@ -833,6 +833,9 @@ void implementMalloc();
 void emitSchedYield();
 void implementSchedYield();
 
+void emitShmOpen();
+void implementShmOpen();
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_read   = 0;
@@ -840,6 +843,9 @@ int debug_write  = 0;
 int debug_open   = 0;
 
 int debug_malloc = 0;
+
+int debug_shed_yield = 0;
+int debug_shm_open = 0;
 
 int SYSCALL_EXIT   = 4001;
 int SYSCALL_READ   = 4003;
@@ -849,6 +855,7 @@ int SYSCALL_OPEN   = 4005;
 int SYSCALL_MALLOC = 4045;
 
 int SYSCALL_SCHED_YIELD = 4158; // linux opcode for sched yield
+int SYSCALL_SHM_OPEN = 4200; 
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
@@ -4091,6 +4098,7 @@ void selfie_compile() {
   emitOpen();
   emitMalloc();
   emitSchedYield();
+  emitShmOpen();
 
   emitID();
   emitCreate();
@@ -5126,11 +5134,30 @@ void emitSchedYield() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
-void implementSchedYield() { // TODO: should we change method type to int?
+void implementSchedYield() { 
 
   //print((int*) "Now yielding context: "); printInteger(getID(currentContext)); println();
 
   throwException(EXCEPTION_TIMER,0);
+}
+
+void emitShmOpen() {
+  // create entry in symboltable for shm_open
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_open", 0, PROCEDURE, INT_T, 0, binaryLength); // use INT_T, as shm_open should return an integer value
+
+  // load correct syscall number
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_OPEN);
+  // invoke the syscall
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmOpen() { 
+  //TODO:
+  //Creates or opens a new shared memory object and returns a descriptor (OS identifier) for it.
+  //In case of error, it returns -1.
 }
 
 
@@ -5630,6 +5657,8 @@ void fct_syscall() {
       implementMap();
     else if (*(registers+REG_V0) == SYSCALL_SCHED_YIELD)
       implementSchedYield();
+    else if (*(registers+REG_V0) == SYSCALL_SHM_OPEN)
+      implementShmOpen();
     else {
       pc = pc - WORDSIZE;
 
