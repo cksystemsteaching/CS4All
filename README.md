@@ -4,15 +4,12 @@ Workflow
 * Step 0: get a [github](https://github.com) account unless you already have one
 * Step 1: join the `#se2016` and `#cs4all-bot` [slack channels](https://cksystemsteaching.slack.com/signup) and use your github username as slack username
 * Step 2: form a team of 2-3 members and give your team a name
-* Step 3: one person per team forks the [CS4All](https://github.com/cksystemsteaching/CS4All/fork) repository
-* Step 4: add the other team members to __your__ fork as collaborators
-* Step 5: each team member clones that fork
-* Step 6: check out the [selfie-se](https://github.com/cksystemsteaching/CS4All/tree/selfie-se) branch
-* Step 7: add a new file called TEAM to this branch
-* Step 8: list the name of your team as well as your names in the TEAM file
-* Step 9: implement solutions of assignments in this branch as well (see below)
-* Step 10: commit regularly and push your changes to your fork
-* Step 11: to submit solutions send pull requests from your fork via github.com to the [selfie-se](https://github.com/cksystemsteaching/CS4All/tree/selfie-se) branch
+* Step 3: each team member visits the invitation page shared in slack to get access to the team repository.
+* Step 4: each team member clones this repositoy
+* Step 5: add a new file called TEAM to this branch
+* Step 6: list the name of your team as well as your names in the TEAM file
+* Step 7: implement solutions of assignments in this branch as well (see below)
+* Step 8: commit regularly and push your changes the repository
 
 General Requirements
 --------------------
@@ -69,3 +66,20 @@ Again, what can you do with your new powers? Write some examples that showcase
 multitasking (be sure to add output). For most non-trivial examples you will
 need some form of IPC - but you are in luck: it is already there for you. Find
 it and use it!
+
+
+Assignment 4: Dynamic relocation
+----------------------------------
+__Deadline__: November 22, 9am
+
+Implement a basic form of virtual memory: pure base & bounds without segmentation or
+swapping, but *with* memory protection.
+
+Remove the process duplication from Assignment 3 and implement a `fork()` syscall instead.
+Calling `./selfie -l binary.m -m 2 5` should start a single process of `binary.m` in a 2MB virtual address space
+and allow for up to 5 processes (each with 2MB address spaces) to run concurrently on a single and contiguous physical memory.
+Be sure reclaim memory from exited processes so that arbitrarily many processes can be created during a single run of the emulator.
+
+As always, write examples that exercise all the new functionality and finally document the what, the why and any problems encountered.
+
+Use the repositories from Assignment 3.
