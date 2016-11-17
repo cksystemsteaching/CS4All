@@ -839,6 +839,9 @@ void implementShmOpen();
 void emitShmSize();
 void implementShmSize();
 
+void emitShmMap();
+void implementShmMap();
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_read   = 0;
@@ -850,6 +853,7 @@ int debug_malloc = 0;
 int debug_shed_yield = 0;
 int debug_shm_open = 0;
 int debug_shm_size = 0;
+int debug_shm_map = 0;
 
 int SYSCALL_EXIT   = 4001;
 int SYSCALL_READ   = 4003;
@@ -861,6 +865,7 @@ int SYSCALL_MALLOC = 4045;
 int SYSCALL_SCHED_YIELD = 4158; // linux opcode for sched yield
 int SYSCALL_SHM_OPEN = 4200; 
 int SYSCALL_SHM_SIZE = 4201;
+int SYSCALL_SHM_MAP = 4202;
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
@@ -4105,6 +4110,7 @@ void selfie_compile() {
   emitSchedYield();
   emitShmOpen();
   emitShmSize();
+  emitShmMap();
 
   emitID();
   emitCreate();
@@ -5186,6 +5192,26 @@ void implementShmSize() {
   //If the object had some previously set size actSize, then it ignores shSize and simply returns actSize.
 }
 
+void emitShmMap() {
+  // create entry in symboltable for shm_map
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_map", 0, PROCEDURE, INT_T, 0, binaryLength); // use INT_T, as shm_map should return an integer value
+
+  // load correct syscall number
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_MAP);
+  // invoke the syscall
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmMap() { 
+  //TODO:
+  //Maps the virtual address addr to the start of the shared memory identified by id.
+  //If addr is zero, then memory is allocated first, of the size equal to the shared memory size.
+  //Returns virtual address actually used for mapping, o for error.
+}
+
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
@@ -5687,6 +5713,8 @@ void fct_syscall() {
       implementShmOpen();
     else if (*(registers+REG_V0) == SYSCALL_SHM_SIZE)
       implementShmSize();
+    else if (*(registers+REG_V0) == SYSCALL_SHM_MAP)
+      implementShmMap();
     else {
       pc = pc - WORDSIZE;
 
