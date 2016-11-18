@@ -833,6 +833,18 @@ void implementMalloc();
 void emitSchedYield();
 void implementSchedYield();
 
+void emitShmOpen();
+void implementShmOpen();
+
+void emitShmSize();
+void implementShmSize();
+
+void emitShmMap();
+void implementShmMap();
+
+void emitShmClose();
+void implementShmClose();
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_read   = 0;
@@ -840,6 +852,12 @@ int debug_write  = 0;
 int debug_open   = 0;
 
 int debug_malloc = 0;
+
+int debug_shed_yield = 0;
+int debug_shm_open = 0;
+int debug_shm_size = 0;
+int debug_shm_map = 0;
+int debug_shm_close = 0;
 
 int SYSCALL_EXIT   = 4001;
 int SYSCALL_READ   = 4003;
@@ -849,6 +867,10 @@ int SYSCALL_OPEN   = 4005;
 int SYSCALL_MALLOC = 4045;
 
 int SYSCALL_SCHED_YIELD = 4158; // linux opcode for sched yield
+int SYSCALL_SHM_OPEN = 4200; 
+int SYSCALL_SHM_SIZE = 4201;
+int SYSCALL_SHM_MAP = 4202;
+int SYSCALL_SHM_CLOSE = 4203;
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
@@ -4127,6 +4149,10 @@ void selfie_compile() {
   emitOpen();
   emitMalloc();
   emitSchedYield();
+  emitShmOpen();
+  emitShmSize();
+  emitShmMap();
+  emitShmClose();
 
   emitID();
   emitCreate();
@@ -5162,13 +5188,91 @@ void emitSchedYield() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
-void implementSchedYield() { // TODO: should we change method type to int?
+void implementSchedYield() { 
 
 	print((int*) "Now yielding context: "); printInteger(getID(currentContext)); println();
 
 	throwException(EXCEPTION_TIMER,0);
 }
 
+void emitShmOpen() {
+  // create entry in symboltable for shm_open
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_open", 0, PROCEDURE, INT_T, 0, binaryLength); // use INT_T, as shm_open should return an integer value
+
+  // load correct syscall number
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_OPEN);
+  // invoke the syscall
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmOpen() { 
+  //TODO:
+  //Creates or opens a new shared memory object and returns a descriptor (OS identifier) for it.
+  //In case of error, it returns -1.
+}
+
+void emitShmSize() {
+  // create entry in symboltable for shm_size
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_size", 0, PROCEDURE, INT_T, 0, binaryLength); // use INT_T, as shm_size should return an integer value
+
+  // load correct syscall number
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_SIZE);
+  // invoke the syscall
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmSize() { 
+  //TODO:
+  //Sets or returns the size (in bytes) of the shm object with identifier id.
+  //If the object had size zero, it sets the size to shSize and returns shSize.
+  //If the object had some previously set size actSize, then it ignores shSize and simply returns actSize.
+}
+
+void emitShmMap() {
+  // create entry in symboltable for shm_map
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_map", 0, PROCEDURE, INT_T, 0, binaryLength); // use INT_T, as shm_map should return an integer value
+
+  // load correct syscall number
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_MAP);
+  // invoke the syscall
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmMap() { 
+  //TODO:
+  //Maps the virtual address addr to the start of the shared memory identified by id.
+  //If addr is zero, then memory is allocated first, of the size equal to the shared memory size.
+  //Returns virtual address actually used for mapping, o for error.
+}
+
+void emitShmClose() {
+  // create entry in symboltable for shm_close
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_close", 0, PROCEDURE, INT_T, 0, binaryLength); // use INT_T, as shm_close should return an integer value
+
+  // load correct syscall number
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_CLOSE);
+  // invoke the syscall
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmClose() { 
+  //TODO:
+  //Decouples the calling process from the shared memory object with descriptor id.
+  //Previously mapped memory is now private to the process.
+  //After all processes have closed their access to the shared memory object, the OS should free the resources associated with the object.
+}
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
@@ -5695,6 +5799,14 @@ void fct_syscall() {
       implementMap();
     else if (*(registers+REG_V0) == SYSCALL_SCHED_YIELD)
       implementSchedYield();
+    else if (*(registers+REG_V0) == SYSCALL_SHM_OPEN)
+      implementShmOpen();
+    else if (*(registers+REG_V0) == SYSCALL_SHM_SIZE)
+      implementShmSize();
+    else if (*(registers+REG_V0) == SYSCALL_SHM_MAP)
+      implementShmMap();
+    else if (*(registers+REG_V0) == SYSCALL_SHM_CLOSE)
+      implementShmClose();
     else {
       pc = pc - WORDSIZE;
 
