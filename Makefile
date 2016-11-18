@@ -74,12 +74,12 @@ assignment3:
 	./selfie -c test_program.c selfie.c -o test_program.m # create test program
 	./selfie -l selfie.m -k 4 -l test_program.m -numprocesses 2 -u 1
 
-tempHypster:
-	make clean
+winAssignment3:
+	make winClean
 	make
-	./selfie -c selfie.c -o selfie.m # create selfie mipster binary
-	./selfie -c test_program.c selfie.c -o test_program.m # create test program
-	./selfie -l test_program.m -y 1
+	selfie.exe -c selfie.c -o selfie.m # create selfie mipster binary
+	selfie.exe -c test_program.c selfie.c -o test_program.m # create test program
+	selfie.exe -l selfie.m -k 4 -l test_program.m -numprocesses 2 -u 1
 
 
 

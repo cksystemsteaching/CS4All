@@ -899,9 +899,9 @@ void selfie_map(int ID, int page, int frame);
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int debug_create = 0;
+int debug_create = 1;
 int debug_switch = 0;
-int debug_status = 1;
+int debug_status = 0;
 int debug_delete = 0;
 int debug_map    = 0;
 
