@@ -56,6 +56,22 @@ int main(int argc, int *argv) {
     write(1,"heap",4);
     dumbITOA(*ptr);
 
+    i = 0;
+    while (i < hypster_ID() * 500000) {
+        i = i + 1;
+    }
+    shm_close(id);
+    write(1, "close the shared memory ", 23);
+
+    write(1, "id:", 3);
+    dumbITOA(hypster_ID())
+    *start = *start + 1;
+    *ptr = *ptr + 1;
+    write(1,"aStart",6);
+    dumbITOA(*start);
+    write(1,"aHeap",5);
+    dumbITOA(*ptr);
+
     //id = shm_open("/smem");
 
     //size = shm_size(409);

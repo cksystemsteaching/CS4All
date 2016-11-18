@@ -945,6 +945,8 @@ void storeVirtualMemory(int* table, int vaddr, int data);
 
 void mapAndStoreVirtualMemory(int* table, int vaddr, int data);
 
+void copyFrameToFrame(int* target, int* source);
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_tlb = 0;
@@ -1008,7 +1010,7 @@ void set_shmo_name(int *shmo, int *name);
 void set_shmo_frames(int *shmo, int *frames);
 void set_shmo_clients(int *shmo, int *clients);
 
-int  delete_shmo(int *shmo, int *shmo_list);
+int  delete_shmo(int *shmo);
 int* create_shmo(int *name);
 int  create_shmo_id();
 int* find_shmo_by_name(int *name);
@@ -4804,7 +4806,7 @@ void implementShmMap() {
     }
     else {
         // if shared memory object does not exist, return -1 to indicate error
-        startAddr = 0;
+        startAddr = -1;
     }
 
     // return start address of shared memory to the calling process
@@ -4826,10 +4828,88 @@ void emitShmClose() {
 }
 
 void implementShmClose() {
+  int *shmo;
+  int smoID;
 
-    //TODO
+  int *frameEntry;
 
+  int *client;
+  int *clientPageEntry;
+  int *pageTable;
+  int *privateFrame;
 
+  int returnValue;
+
+  smoID = *(registers + REG_A0);
+
+  // find the shared memory object by the given ID
+  shmo = find_shmo_by_id(smoID);
+
+  // check first if the shared memory exists
+  if (shmo != (int*) 0) {
+
+    // first check if there are frames existing!
+    // else we can't delete the frames
+    frameEntry = get_shmo_frames(shmo);
+    if (frameEntry == (int *) 0) {
+      returnValue = -1;
+    }
+    // there are frames existing
+    else {
+      // for every frame do:
+      // delete reference to frame
+      // get private page
+      // copy data to private page
+
+      //find right client and remove from the clientList
+      client = get_shmo_clients(shmo);
+      while (client != (int*) 0) {
+        if(getID(currentContext) == getClientPID(client)) {
+          //we only need the pages of the client -> store them if found
+          // we should break the while now.. but we ignore the perfomance loses and iterate over all clients
+          clientPageEntry = getClientPages(client);
+
+          //delete yourself from list
+          if (getPrevClient(client) != (int*) 0) {
+            setNextClient(getPrevClient(client), getNextClient(client));
+          }
+          // is head of list -> set head Pointer to the next one
+          else {
+            set_shmo_clients(shmo, getNextClient(client));
+          }
+          if (getNextClient(client) != (int*) 0) {
+            setPrevClient(getNextClient(client), getPrevClient(client));
+          }
+        }
+        client = getNextClient(client);
+      }
+
+      pageTable = getPT(currentContext);
+      //iterate over all frames
+      while (frameEntry != (int*) 0){
+
+        //unmap page in pageTable of the client's context
+        *(pageTable + (*clientPageEntry)) = 0;
+        //create private page
+        privateFrame = palloc();
+        mapPage(pageTable, (*clientPageEntry), (int) privateFrame);
+        //copy shared memory to private page
+        copyFrameToFrame(privateFrame, (int*) getFrame(frameEntry));
+
+        frameEntry = getNextFrame(frameEntry);
+      }
+
+      //delete shmo if no clients are existing
+      if (get_shmo_clients(shmo) == (int*) 0){
+        delete_shmo(shmo);
+        //TODO free the frames & release the krakens ;-)
+      }
+    }
+    returnValue = 0;
+  }
+
+  // return start address of shared memory to the calling process
+  *(registers+REG_V0) = returnValue;
 }
 
 void emitShmSize() {
@@ -5829,6 +5909,16 @@ void mapAndStoreVirtualMemory(int* table, int vaddr, int data) {
   storeVirtualMemory(table, vaddr, data);
 }
 
+void copyFrameToFrame(int* target, int* source){
+  int i;
+
+  i = 0;
+  while (i < PAGESIZE){
+    *target = *source;
+    i = i + 1;
+  }
+}
+
 // -------------------------------------------------------------------------------------------
 // -------------------------------SHARED MEMORY OBJECTS --------------------------------------
 // -------------------------------------------------------------------------------------------
@@ -5850,8 +5940,19 @@ void set_shmo_size(int *shmo, int size)        { *(shmo + 4) = size; }
 void set_shmo_frames(int *shmo, int *frames)   { *(shmo + 5) = (int) frames; }
 void set_shmo_clients(int *shmo, int *clients) { *(shmo + 6) = (int) clients; }
 
-int delete_shmo(int *shmo, int *shmo_list) {
+int delete_shmo(int *shmo) {
 
+  //delete yourself from list
+  if (get_prev_shmo(shmo) != (int*) 0) {
+    set_next_shmo(get_prev_shmo(shmo), get_next_shmo(shmo));
+  }
+  // is head of list -> set head Pointer to the next one
+  else {
+    shmo_list = get_next_shmo(shmo);
+  }
+  if (get_next_shmo(shmo) != (int*) 0) {
+    set_prev_shmo(get_next_shmo(shmo), get_prev_shmo(shmo));
+  }
 }
 
 // Search for a shared memory object by its name

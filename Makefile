@@ -50,8 +50,13 @@ testC: selfie
 	
 	
 assign2: selfie
-	./selfie -c assign2test.c -o assign2test.m -m 32 -l assign2test.m -m 4
-	
+	./selfie -c assign2test.c -o assign2test.m -n 4 -m 32 -l assign2test.m -m 4
+
+
+shmoTest: selfie
+	./selfie -c shmo.c -o shmo.m -n 4 -m 32 -l shmo.m -m 4
+
+#waaas
 cleanWin:
 	del *.m
 	del *.s
