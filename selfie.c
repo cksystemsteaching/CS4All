@@ -893,11 +893,15 @@ void implementMap();
 
 void selfie_map(int ID, int page, int frame, int* segment);
 
-// new 
+// MORTIS
 int schedule(int* fromContext);
+
 void setConcurrentCount();
 void setInstructionTimer();
 void setHypsterID();
+
+void setOSExceptionHandling();
+void setUserProcess();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -1092,6 +1096,10 @@ int* storesPerAddress = (int*) 0; // number of executed stores per store operati
 
 int processCallNumber = 1;
 int hypsterIDValue = 0;
+
+
+int exceptionHandlingOS = 0;
+int userProcess = 0;
 
 // ------------------------- INITIALIZATION ------------------------
 
@@ -7433,13 +7441,18 @@ int selfie() {
         setInstructionTimer();
       else if (stringCompare(option, (int*) "-hyd"))
         setHypsterID();
+      else if (stringCompare(option, (int*) "-u"))
+        setUserProcess();
       else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
         return selfie_run(MIPSTER, MIPSTER, 1);
       else if (stringCompare(option, (int*) "-y"))
         return selfie_run(HYPSTER, MIPSTER, 0);
-      else if (stringCompare(option, (int*) "-min"))
+      else if (stringCompare(option, (int*) "-k")){
+				setOSExceptionHandling();
+        return selfie_run(HYPSTER, MIPSTER, 0);
+      }else if (stringCompare(option, (int*) "-min"))
         return selfie_run(MIPSTER, MINSTER, 0);
       else if (stringCompare(option, (int*) "-mob"))
         return selfie_run(MIPSTER, MOBSTER, 0);
@@ -7464,6 +7477,14 @@ void setHypsterID(){
   hypsterIDValue = atoi(getArgument());
   printInteger(hypsterIDValue);
   println();
+}
+
+void setOSExceptionHandling(){
+	exceptionHandlingOS = 1;
+}
+
+void setUserProcess(){
+	userProcess = 1;
 }
 
 void setInstructionTimer(){
