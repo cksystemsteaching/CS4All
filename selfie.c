@@ -905,7 +905,7 @@ int debug_create = 0;
 int debug_switch = 0;
 int debug_status = 0;
 int debug_delete = 0;
-int debug_map    = 1;
+int debug_map    = 0;
 
 int SYSCALL_ID     = 4901;
 int SYSCALL_CREATE = 4902;
