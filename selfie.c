@@ -5133,7 +5133,7 @@ void implementYield() {
 // Creates or opens a new shared memory object and returns a descriptor (OS identifier) for it.
 // In case of error, it returns -1.
 void emitShmOpen(){
-  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_open", 0, PROCEDURE, VOID_T, 0, binaryLength);
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_open", 0, PROCEDURE, INT_T, 0, binaryLength);
   emitIFormat(OP_LW, REG_SP, REG_A0, 0);
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
   emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMO);
@@ -5152,7 +5152,7 @@ void implementShmOpen(){
 // If the object had some previously set size actSize, then it ignores shSize and simply returns actSize.
 
 void emitShmSize(){
-	createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_size", 0, PROCEDURE, VOID_T, 0, binaryLength);
+	createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_size", 0, PROCEDURE, INT_T, 0, binaryLength);
   emitIFormat(OP_LW, REG_SP, REG_A1, 0);
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
   emitIFormat(OP_LW, REG_SP, REG_A0, 0);
@@ -5172,7 +5172,7 @@ void implementShmSize(){
 // Returns virtual address actually used for mapping, 0 for error.
 
 void emitShmMap(){
-  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_map", 0, PROCEDURE, VOID_T, 0, binaryLength);
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_map", 0, PROCEDURE, INT_T, 0, binaryLength);
   emitIFormat(OP_LW, REG_SP, REG_A1, 0);
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
   emitIFormat(OP_LW, REG_SP, REG_A0, 0);
@@ -5191,7 +5191,7 @@ void implementShmMap(){
 // Previously mapped memory is now private to the process.
 // After all processes have closed their access to a shared memory object, the OS should free the resources associated with the object. 
 void emitShmClose(){
-  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_close", 0, PROCEDURE, VOID_T, 0, binaryLength);
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_close", 0, PROCEDURE, INT_T, 0, binaryLength);
   emitIFormat(OP_LW, REG_SP, REG_A0, 0);
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
   emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMC);
