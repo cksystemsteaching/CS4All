@@ -6636,7 +6636,7 @@ int* allocateContext(int ID, int parentID) {
   pageCount=0;
    //zalloc a page table for each segment in segment table
   while(pageCount<SEGMENTCOUNT){
-    	*(segTable+pageCount) =(int) zalloc(VIRTUALMEMORYSIZE );
+    	*(segTable+pageCount) =(int) zalloc((VIRTUALMEMORYSIZE / PAGESIZE) * WORDSIZE);
        printd("zalloc: ",(int*) *(segTable+pageCount));
         printd("size: ",VIRTUALMEMORYSIZE / PAGESIZE);
 		// printd((int*)"HOW MUCH ALLOCATE ",(VIRTUALMEMORYSIZE / 4 / PAGESIZE * WORDSIZE));
