@@ -6636,7 +6636,7 @@ int* allocateContext(int ID, int parentID) {
   pageCount=0;
    //zalloc a page table for each segment in segment table
   while(pageCount<SEGMENTCOUNT){
-    	*(segTable+pageCount) =(int) zalloc((VIRTUALMEMORYSIZE / PAGESIZE) * WORDSIZE);
+    	*(segTable+pageCount) =(int) zalloc((VIRTUALMEMORYSIZE / PAGESIZE)*WORDSIZE);
        printd("zalloc: ",(int*) *(segTable+pageCount));
         printd("size: ",VIRTUALMEMORYSIZE / PAGESIZE);
 		// printd((int*)"HOW MUCH ALLOCATE ",(VIRTUALMEMORYSIZE / 4 / PAGESIZE * WORDSIZE));
@@ -6831,7 +6831,9 @@ int up_loadString(int* table, int* s, int SP) {
 
   while (i < bytes) {
 
-
+		//printd("SP BEFORE SHIFT", SP + i);
+		//printd("SP AFTER SHIFT ", (leftShift(2,26) + SP + i));
+		//printd("WRITE TO TABLE", table);
 
     mapAndStoreVirtualMemory(table, SP + i, *s);
 
@@ -6929,7 +6931,7 @@ void mapUnmappedPages(int* segTable) {
 			//printd("UNMAPPED MAPPED PAGE COUNT ",page);
 		  mapPage(*(segTable+pageCount), page, (int) palloc());
       //printd("mapping page: ",page);
-			page = page + 1;
+			page=page+1;
 		//	printd("freePageFrameMemory",freePageFrameMemory);
 		
 		}
@@ -7272,12 +7274,10 @@ int boot(int argc, int* argv) {
 		print((int*)"binary loaded");			
 		println();
 
-	
 		printd("up_loadArguments with context ",initID);
 		up_loadArguments(getST(findContext(initID, usedContexts)), argc, argv);
 		print((int*)"arguments loaded");
 		println();
-		
 
 		// propagate page table of initial context to microkernel boot level
 		down_mapPageTable(findContext(initID, usedContexts));
@@ -7503,6 +7503,7 @@ void printd(int* text, int value) {
 	printInteger(value);
 	println();
 }
+
 
 
 
