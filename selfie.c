@@ -6931,7 +6931,7 @@ void mapUnmappedPages(int* segTable) {
 			//printd("UNMAPPED MAPPED PAGE COUNT ",page);
 		  mapPage(*(segTable+pageCount), page, (int) palloc());
       //printd("mapping page: ",page);
-		
+			page = page + 1;
 		//	printd("freePageFrameMemory",freePageFrameMemory);
 		
 		}
