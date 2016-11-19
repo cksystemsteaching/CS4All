@@ -1,0 +1,10 @@
+
+
+./selfie -l selfie.m -y 4 -l selfie.m -conc 3 -freq 1 -m 2 
+
+running simple:
+./selfie  -l sample.m -conc 3 -freq 1 -m 2 
+
+running sample concurrently in a mipster hosted in a hypster:
+./selfie -l selfie.m -y 4 -l sample.m -conc 3 -freq 1 -m 2 
+
