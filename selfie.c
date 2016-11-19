@@ -5757,6 +5757,14 @@ void fct_syscall() {
       implementMalloc();
     else if (*(registers+REG_V0) == SYSCALL_YIELD)
       implementYield();
+    else if (*(registers+REG_V0) == SYSCALL_SHMO)
+      implementShmOpen();
+    else if (*(registers+REG_V0) == SYSCALL_SHMM)
+      implementShmMap();
+    else if (*(registers+REG_V0) == SYSCALL_SHMS)
+      implementShmSize();
+    else if (*(registers+REG_V0) == SYSCALL_SHMC)
+      implementShmClose();
     else if (*(registers+REG_V0) == SYSCALL_ID)
       implementID();
     else if (*(registers+REG_V0) == SYSCALL_CREATE)
