@@ -838,6 +838,33 @@ void implementMalloc();
 void emitYield();
 void implementYield();
 
+// int shm_open(int name)
+// Creates or opens a new shared memory object and returns a descriptor (OS identifier) for it.
+// In case of error, it returns -1.
+void emitShmOpen();
+void implementShmOpen();
+
+//int shm_size(int id, int shSize)
+// Sets or returns the size (in bytes) of the shm object with identifier id.
+// If the object had size zero, it sets the size to shSize and returns shSize.
+// If the object had some previously set size actSize, then it ignores shSize and simply returns actSize.
+void emitShmSize();
+void implementShmSize();
+
+//int* shm_map(int* addr, int id)
+// Maps the virtual address addr to the start of the shared memory identified by id.
+// If addr is zero, then memory is allocated first, of the size equal to the shared memory size.
+// Returns virtual address actually used for mapping, 0 for error.
+void emitShmMap();
+void implementShmMap();
+
+//int shm_close(int id)
+// Decouples the calling process from the shared memory object with descriptor id.
+// Previously mapped memory is now private to the process.
+// After all processes have closed their access to a shared memory object, the OS should free the resources associated with the object. 
+void emitShmClose();
+void implementShmClose();
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_read   = 0;
@@ -852,7 +879,14 @@ int SYSCALL_WRITE  = 4004;
 int SYSCALL_OPEN   = 4005;
 
 int SYSCALL_MALLOC = 4045;
+
+// Mortis
 int SYSCALL_YIELD  = 4046;
+
+int SYSCALL_SHMO  = 4047;
+int SYSCALL_SHMS  = 4048;
+int SYSCALL_SHMM  = 4049;
+int SYSCALL_SHMC  = 4050;
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
@@ -5080,6 +5114,7 @@ void implementMalloc() {
   }
 }
 
+// MORTIS
 void emitYield() {
   createSymbolTableEntry(LIBRARY_TABLE, (int*)"sched_yield", 0, PROCEDURE, INT_T, 0, binaryLength);
   emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_YIELD);
@@ -5093,6 +5128,80 @@ void implementYield() {
   throwException(EXCEPTION_YIELD, 0);
 }
 
+
+//int shm_open(int name)
+// Creates or opens a new shared memory object and returns a descriptor (OS identifier) for it.
+// In case of error, it returns -1.
+void emitShmOpen(){
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_open", 0, PROCEDURE, VOID_T, 0, binaryLength);
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0);
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMO);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+	emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmOpen(){
+	//FIXME MORTIS
+}
+
+
+//int shm_size(int id, int shSize)
+// Sets or returns the size (in bytes) of the shm object with identifier id.
+// If the object had size zero, it sets the size to shSize and returns shSize.
+// If the object had some previously set size actSize, then it ignores shSize and simply returns actSize.
+
+void emitShmSize(){
+	createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_size", 0, PROCEDURE, VOID_T, 0, binaryLength);
+  emitIFormat(OP_LW, REG_SP, REG_A1, 0);
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0);
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMS);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+	emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmSize(){
+	//FIXME MORTIS
+}
+
+//int* shm_map(int* addr, int id)
+// Maps the virtual address addr to the start of the shared memory identified by id.
+// If addr is zero, then memory is allocated first, of the size equal to the shared memory size.
+// Returns virtual address actually used for mapping, 0 for error.
+
+void emitShmMap(){
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_map", 0, PROCEDURE, VOID_T, 0, binaryLength);
+  emitIFormat(OP_LW, REG_SP, REG_A1, 0);
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0);
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMM);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+	emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmMap(){
+	//FIXME MORTIS
+}
+
+//int shm_close(int id)
+// Decouples the calling process from the shared memory object with descriptor id.
+// Previously mapped memory is now private to the process.
+// After all processes have closed their access to a shared memory object, the OS should free the resources associated with the object. 
+void emitShmClose(){
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_close", 0, PROCEDURE, VOID_T, 0, binaryLength);
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0);
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMC);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+	emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmClose(){
+	//FIXME MORTIS
+}
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
