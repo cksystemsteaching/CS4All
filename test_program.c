@@ -6,13 +6,9 @@ int main(){
 
 	i = 0;
 	while(i < 10) {
-    printInteger(i);
-		println();
+		shm_write((int*) "a", i);
+		shm_read((int*) "a");
 
-		print((int*) "test!");
-		shm_write((int*) "a",666);
-		shm_read((int*) "b");
-		
 		i = i + 1;
 	}
 	return 1;

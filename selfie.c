@@ -1082,6 +1082,8 @@ int* loadsPerAddress = (int*) 0; // number of executed loads per load operation
 int  stores           = 0;        // total number of executed memory stores
 int* storesPerAddress = (int*) 0; // number of executed stores per store operation
 
+// [EIFLES] address in memory of the shared variable (for now just 1 variable)
+int* SHARED_VARIABLE = 0;
 // ------------------------- INITIALIZATION ------------------------
 
 void initInterpreter() {
@@ -4733,23 +4735,39 @@ void implementShmWrite() {
   int value;
   int* name;
 
-  printSimpleStringEifles("implementShmWrite!");
-
   value = *(registers+REG_A1);
   name = tlb(pt,*(registers+REG_A0));
 
+  if (SHARED_VARIABLE == 0) {
+    printSimpleStringEifles("About to allocate shared variable...");
+    SHARED_VARIABLE = malloc(SIZEOFINT);
+  }
+
+  *(SHARED_VARIABLE) = value;
+
+  print((int*)"Stored value ");
   printInteger(value);
-  printSimpleStringEifles(name);
+  print((int*)" at address ");
+  printBinary(SHARED_VARIABLE,32);
+  print((int*)": ");
+  printInteger(*(SHARED_VARIABLE));
+  println(); 
 }
 
 void implementShmRead() {
   int* name;
-
-  printSimpleStringEifles("implementShmRead!");
-
   name = tlb(pt,*(registers+REG_A0));
 
-  printSimpleStringEifles(name);
+  if (SHARED_VARIABLE == 0) {
+    printSimpleStringEifles("Tried to read empty shared variable!");
+    return;
+  }
+
+  print((int*)"Read shared variable at address ");
+  printBinary(SHARED_VARIABLE,32);
+  print((int*)" with value: ");
+  printInteger(*(SHARED_VARIABLE));
+  println();  
 }
 
 void emitRead() {

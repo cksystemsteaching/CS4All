@@ -55,11 +55,10 @@ assignment3-posix:
 	make clean
 	make
 	./selfie -c test_program.c selfie.c -o test_program.m 
-	./selfie -l test_program.m -m 32
+	./selfie -timeslice 7777 -numprocesses 5 -l test_program.m -m 32
 
 win_assignment3-posix:
 	make win_clean
 	make
 	selfie.exe -c test_program.c selfie.c -o test_program.m 
-	selfie.exe -l test_program.m -m 32
-	
+	selfie.exe -timeslice 7777 -numprocesses 5 -l test_program.m -m 32
