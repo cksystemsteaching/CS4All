@@ -7208,7 +7208,7 @@ void setTimeslice() {
 
 void setNumProcesses() {
   numProcesses = atoi(getArgument());
-  printIntegerEifles("Set numprocesses", numprocesses);
+  printIntegerEifles("Set numProcesses", numProcesses);
 }
 
 // round robin scheduler
