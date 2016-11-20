@@ -835,7 +835,10 @@ void implementMalloc();
 // [EIFLES]
 void emitSchedYield();
 void implementSchedYield();
-
+void emitShmWrite();
+void implementShmWrite();
+void emitShmRead();
+void implementShmRead();
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_read   = 0;
@@ -850,6 +853,8 @@ int SYSCALL_WRITE  = 4004;
 int SYSCALL_OPEN   = 4005;
 // [EIFLES]
 int SYSCALL_SCHED_YIELD = 4006;
+int SYSCALL_SHM_WRITE = 4007;
+int SYSCALL_SHM_READ = 4008;
 
 int SYSCALL_MALLOC = 4045;
 
@@ -1684,6 +1689,13 @@ void print(int* s) {
 
     i = i + 1;
   }
+}
+
+void printSimpleStringEifles(int* message){
+  println();
+  print((int*) "[EIFLES,int*] ");
+  print(message);
+  println();
 }
 
 void println() {
@@ -4037,6 +4049,8 @@ void selfie_compile() {
   emitOpen();
   emitMalloc();
   emitSchedYield();
+  emitShmWrite();
+  emitShmRead();
 
   emitID();
   emitCreate();
@@ -4674,29 +4688,7 @@ void implementExit() {
 }
 
 void emitSchedYield() {
-
-  ////////////
-  //createSymbolTableEntry(LIBRARY_TABLE, (int*) "read", 0, PROCEDURE, INT_T, 0, binaryLength);
-  //emitIFormat(OP_LW, REG_SP, REG_A2, 0); // size
-  //emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
-  //emitIFormat(OP_LW, REG_SP, REG_A1, 0); // *buffer
-  //emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
-  //emitIFormat(OP_LW, REG_SP, REG_A0, 0); // fd
-  //emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
-  //emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_READ);
-  //emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
-  // jump back to caller, return value is in REG_V0
-  //emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
-  ////////////
-
-  //////
-  //createSymbolTableEntry(LIBRARY_TABLE, (int*) "hypster_status", 0, PROCEDURE, INT_T, 0, binaryLength);
-  //emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_STATUS);
-  //emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
-  //emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
-  ///////
-
-  // [EIFLES] correct?
+  // [EIFLES]
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "sched_yield", 0, PROCEDURE, VOID_T, 0, binaryLength);
   emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SCHED_YIELD);
   emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
@@ -4704,10 +4696,60 @@ void emitSchedYield() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
+void emitShmWrite() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_write", 0, PROCEDURE, INT_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A1, 0); // value
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // *name
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_WRITE);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void emitShmRead() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_read", 0, PROCEDURE, INT_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // *name
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_READ);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
 void implementSchedYield() {
 
 
   throwException(EXCEPTION_SCHED_YIELD, 0);
+}
+
+void implementShmWrite() {
+  int value;
+  int* name;
+
+  printSimpleStringEifles("implementShmWrite!");
+
+  value = *(registers+REG_A1);
+  name = tlb(pt,*(registers+REG_A0));
+
+  printInteger(value);
+  printSimpleStringEifles(name);
+}
+
+void implementShmRead() {
+  int* name;
+
+  printSimpleStringEifles("implementShmRead!");
+
+  name = tlb(pt,*(registers+REG_A0));
+
+  printSimpleStringEifles(name);
 }
 
 void emitRead() {
@@ -5586,6 +5628,11 @@ void fct_syscall() {
       implementMap();
     else if (*(registers+REG_V0) == SYSCALL_SCHED_YIELD)
       implementSchedYield();
+    else if (*(registers+REG_V0) == SYSCALL_SHM_WRITE) 
+      implementShmWrite();
+    else if (*(registers+REG_V0) == SYSCALL_SHM_READ) 
+      implementShmRead();
+
     else {
       pc = pc - WORDSIZE;
 

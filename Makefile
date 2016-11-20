@@ -32,6 +32,11 @@ clean:
 	rm -rf *.s
 	rm -rf selfie
 
+win_clean:
+	rm -rf *.m
+	rm -rf *.s
+	rm -rf selfie.exe
+
 # Assignment 1 
 assignment1:
 	make clean
@@ -45,3 +50,16 @@ assignment2:
 	make
 	./selfie -c test_program.c selfie.c -o test_program.m 
 	./selfie -l test_program.m -m 32
+
+assignment3-posix:
+	make clean
+	make
+	./selfie -c test_program.c selfie.c -o test_program.m 
+	./selfie -l test_program.m -m 32
+
+win_assignment3-posix:
+	make win_clean
+	make
+	selfie.exe -c test_program.c selfie.c -o test_program.m 
+	selfie.exe -l test_program.m -m 32
+	

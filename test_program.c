@@ -8,7 +8,11 @@ int main(){
 	while(i < 10) {
     printInteger(i);
 		println();
-		sched_yield();
+
+		print((int*) "test!");
+		shm_write((int*) "a",666);
+		shm_read((int*) "b");
+		
 		i = i + 1;
 	}
 	return 1;
