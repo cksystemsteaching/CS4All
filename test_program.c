@@ -5,9 +5,9 @@ int main(){
 	initLibrary();
 
 	i = 0;
-	while(i < 10) {
+	while(i < 5) {
 		println();
-		//sched_yield();
+		sched_yield();
 		printInteger(i);
 		i = i + 1;
 	}

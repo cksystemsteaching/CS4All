@@ -1701,6 +1701,13 @@ void println() {
   putCharacter(CHAR_LF);
 }
 
+void printSimpleStringEifles(int* message){
+  println();
+  print((int*) "[EIFLES,int*] ");
+  print(message);
+  println();
+}
+
 void printEifles(int* message, int* s) {
   println();
   print((int*) "[EIFLES,int*] ");
@@ -5162,8 +5169,11 @@ int hypster_ID() {
 int selfie_ID() {
   if (mipster)
     return MIPSTER_ID;
-  else
+  //else
+  //  return hypster_ID();
+  else if(hypster){
     return hypster_ID();
+  }
 }
 
 void emitCreate() {
@@ -5343,10 +5353,17 @@ void implementStatus() {
 
 int hypster_status() {
   // this procedure is only executed at boot level zero
+
+  // [EIFLES] same as in mipster case? this can't be right?!
   return doStatus();
 }
 
 int selfie_status() {
+
+  printSimpleStringEifles("in selfie_status()!!!!!");
+  printIntegerEifles("selfie_status() mipster ", mipster);
+  printIntegerEifles("selfie_status() hypster ", hypster);
+
   if (mipster)
     return doStatus();
   else
@@ -5472,12 +5489,44 @@ void implementMap() {
   doMap(*(registers+REG_A0), *(registers+REG_A1), *(registers+REG_A2));
 }
 
+// [EIFLES]
+void hypster_doMap(int ID, int page, int frame){
+  int* mapContext;
+  int* parentContext;
+
+  mapContext = findContext(ID, usedContexts);
+
+  if (mapContext != (int*) 0) {
+    if (getParent(mapContext) != HYPSTER_ID) {
+      parentContext = findContext(getParent(mapContext), usedContexts);
+
+      if (parentContext != (int*) 0)
+        // assert: 0 <= frame < VIRTUALMEMORYSIZE
+        frame = getFrameForPage(getPT(parentContext), frame / PAGESIZE);
+    }
+    else{
+      printSimpleStringEifles("hypster_doMap(): getParent(mapContext) == HYPSTER_ID");
+    }
+
+    // on boot level zero frame may be any signed integer
+    mapPage(getPT(mapContext), page, frame);
+  }
+}
+
 void hypster_map(int ID, int page, int frame) {
   // this procedure is only executed at boot level zero
+
+  // [EIFLES] same thing as in mipster case? again: this can't be right?!
   doMap(ID, page, frame);
+
+  //ypster_doMap(ID, page, frame);
 }
 
 void selfie_map(int ID, int page, int frame) {
+  printSimpleStringEifles("in selfie_map()!!!");
+  printIntegerEifles("selfie_map() mipster", mipster);
+  printIntegerEifles("selfie_map() hypster", hypster);
+
   if (mipster)
     doMap(ID, page, frame);
   else
@@ -6893,17 +6942,33 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
     // assert: fromContext must be in usedContexts (created here)
 
-    printIntegerEifles("getParent(fromContext)", getParent(fromContext));
+    //printIntegerEifles("getParent(fromContext)", getParent(fromContext));
+    //printIntegerEifles("selfie_ID()", selfie_ID());
+
+    // [EIFLES]
+    if(getParent(fromContext) == HYPSTER_ID){
+      printSimpleStringEifles("getParent(fromContext) == HYPSTER");
+    }
+    else if(getParent(fromContext) == MIPSTER_ID){
+      printSimpleStringEifles("getParent(fromContext) == MIPSTER");
+    }
 
     if (getParent(fromContext) != selfie_ID()) {
       // switch to parent which is in charge of handling exceptions
       // [EIFLES] However, we need to check if there even exists a parent! Infinite loop without this check!!
+
+      printSimpleStringEifles("switch to parent!");
+
       toID = getParent(fromContext);
       if(findContext(toID, usedContexts) == (int*) 0) {
         return 0;
       }
     }
     else {
+
+      //printIntegerEifles("getParent(fromContext)", getParent(fromContext));
+      //printSimpleStringEifles("we are the parent in charge of handling exceptions!");
+
       // we are the parent in charge of handling exceptions
       savedStatus = selfie_status();
 
@@ -6911,6 +6976,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
+        printSimpleStringEifles("EXCEPTION_PAGEFAULT");
         frame = (int) palloc();
 
         // TODO: use this table to unmap and reuse frames
@@ -6920,6 +6986,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         selfie_map(fromID, exceptionParameter, frame);
       } 
       else if (exceptionNumber == EXCEPTION_EXIT) {
+        printSimpleStringEifles("EXCEPTION_EXIT");
         doDelete(toID);
         cycles = 0;		// [EIFLES] reset cycles, so the next process gets the full TIMESLICE (fair scheduling)
 
@@ -6933,6 +7000,9 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       }
       else if (exceptionNumber == EXCEPTION_SCHED_YIELD) {
       // else if (exceptionNumber == EXCEPTION_NOEXCEPTION) {
+        
+        printSimpleStringEifles("EXCEPTION_SCHED_YIELD");
+
         toID = runScheduler(fromID);
         cycles = 0;
       }
@@ -6947,6 +7017,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         return -1;
       } 
       else {
+        printSimpleStringEifles("SOME OTHER EXCEPTION");
         toID = runScheduler(fromID);
       } 
     }
@@ -7115,9 +7186,13 @@ int selfie_run(int engine, int machine, int debugger) {
     printProfile((int*) ": loops: ", loops, loopsPerAddress);
     printProfile((int*) ": loads: ", loads, loadsPerAddress);
     printProfile((int*) ": stores: ", stores, storesPerAddress);
-  } else
+  } else{
     // boot hypster
     exitCode = boot(numberOfRemainingArguments(), remainingArguments());
+
+    // [EIFLES]
+    hypster = 0;
+  }
 
   interpret = 0;
 
@@ -7133,9 +7208,7 @@ void setTimeslice() {
 
 void setNumProcesses() {
   numProcesses = atoi(getArgument());
-  print((int*) "Set numProcesses: ");
-  printInteger(numProcesses);
-  println();
+  printIntegerEifles("Set numprocesses", numprocesses);
 }
 
 // round robin scheduler
