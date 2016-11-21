@@ -797,6 +797,7 @@ void selfie_load();
 
 int maxBinaryLength = 131072; // 128KB
 
+
 // ------------------------ GLOBAL VARIABLES -----------------------
 
 int* binary = (int*) 0; // binary of emitted instructions
@@ -839,7 +840,13 @@ void emitShmWrite();
 void implementShmWrite();
 void emitShmRead();
 void implementShmRead();
-// ------------------------ GLOBAL CONSTANTS -----------------------
+
+int* addSharedVariable(int* name, int value);
+int* getSharedVariable(int* name);
+int deleteSharedVariable(int* name);
+int* setSharedVariable(int* name, int value);
+
+// ------------------------ GLOBAL CONSTANTS-----------------------
 
 int debug_read   = 0;
 int debug_write  = 0;
@@ -1082,8 +1089,9 @@ int* loadsPerAddress = (int*) 0; // number of executed loads per load operation
 int  stores           = 0;        // total number of executed memory stores
 int* storesPerAddress = (int*) 0; // number of executed stores per store operation
 
-// [EIFLES] address in memory of the shared variable (for now just 1 variable)
-int* SHARED_VARIABLE = 0;
+// [EIFLES] list of shared variables
+int* sharedVariableList = 0;
+
 // ------------------------- INITIALIZATION ------------------------
 
 void initInterpreter() {
@@ -4734,39 +4742,32 @@ void implementSchedYield() {
 void implementShmWrite() {
   int value;
   int* name;
+  int* target;
 
   value = *(registers+REG_A1);
   name = tlb(pt,*(registers+REG_A0));
 
-  if (SHARED_VARIABLE == 0) {
-    printSimpleStringEifles("About to allocate shared variable...");
-    SHARED_VARIABLE = malloc(SIZEOFINT);
-  }
+  target = setSharedVariable(name, value);
 
-  *(SHARED_VARIABLE) = value;
-
-  print((int*)"Stored value ");
-  printInteger(value);
-  print((int*)" at address ");
-  printBinary(SHARED_VARIABLE,32);
-  print((int*)": ");
-  printInteger(*(SHARED_VARIABLE));
+  print((int*)"Set shared variable, name = ");
+  print((int*) *(target + 1));
+  print((int*)", value = ");
+  printInteger(*(target + 2));
   println(); 
 }
 
 void implementShmRead() {
   int* name;
+  int* target;
+
   name = tlb(pt,*(registers+REG_A0));
 
-  if (SHARED_VARIABLE == 0) {
-    printSimpleStringEifles("Tried to read empty shared variable!");
-    return;
-  }
+  target = getSharedVariable(name);
 
-  print((int*)"Read shared variable at address ");
-  printBinary(SHARED_VARIABLE,32);
-  print((int*)" with value: ");
-  printInteger(*(SHARED_VARIABLE));
+  print((int*)"Read shared variable, name = ");
+  print((int*) *(target + 1));
+  print((int*)", value = ");
+  printInteger(*(target + 2));
   println();  
 }
 
@@ -6564,6 +6565,107 @@ void selfie_disassemble() {
   print(assemblyName);
   println();
 }
+
+// -----------------------------------------------------------------
+// ----------------------- SHARED MEMORY ---------------------------
+// -----------------------------------------------------------------
+
+// shared mem struct:
+// +---+--------+
+// | 0 | next   | pointer to next context
+// | 1 | name   | name of shared variable
+// | 2 | value  | value
+// +---+--------+
+
+int* addSharedVariable(int* name, int value){
+  int* sharedVariable;
+
+  sharedVariable = zalloc(SIZEOFINT + 2 * SIZEOFINTSTAR);
+
+  if(sharedVariableList == (int*) 0){
+    // allocate memory of value + next, previous and id
+    sharedVariableList = sharedVariable;//malloc(SIZEOFINT + 3 * SIZEOFINTSTAR);
+  }
+  else{
+    // apppend shared variable to beginning of the list
+    *(sharedVariable + 0) = sharedVariableList;
+
+    sharedVariableList = sharedVariable;
+  }
+
+  *(sharedVariable + 1) = name;
+  *(sharedVariable + 2) = value;
+
+  return sharedVariableList;
+}
+
+int* setSharedVariable(int* name, int value) {
+
+  int* target;
+  target = getSharedVariable(name);
+
+  if (target == (int*) 0) {
+    printSimpleStringEifles("Add shared variable...");
+    target = addSharedVariable(name, value);
+  } else {
+    printSimpleStringEifles("Found shared variable!");
+    *(target + 2) = value;
+  }
+  return target;
+}
+
+int* getSharedVariable(int* name) {
+
+  int* current;
+
+  if(sharedVariableList == (int*) 0) {
+    return (int*) 0;
+  }
+
+  current = sharedVariableList;
+
+  while (stringCompare((int*) *(current + 1),name) == 0) {
+    current = *(current + 0);
+
+    if(current == (int*) 0){
+      return (int*) 0;
+    }
+  }
+
+  return current;
+}
+
+int deleteSharedVariable (int* name) {
+  int* current;
+  int* previous;
+
+  if(sharedVariableList == (int*) 0) {
+    return 0;
+  }
+
+  current = sharedVariableList;
+
+  while (stringCompare(current + 1,name) == 0) {
+    previous = current;
+    current = *(current + 0);
+
+    if(current == (int*) 0){
+      return 0;
+    }
+  }
+
+  if(previous == (int*) 0) {
+    // found shared variable, only 1 shared variable exists
+    sharedVariableList = (int*) 0;
+  } else {
+    *(previous) = *(current); 
+    previous = (int*) 0;
+  }
+
+  current = (int*) 0;
+  return 1;
+}
+
 
 // -----------------------------------------------------------------
 // ---------------------------- CONTEXTS ---------------------------
