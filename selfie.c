@@ -841,10 +841,15 @@ void implementShmWrite();
 void emitShmRead();
 void implementShmRead();
 
-int* addSharedVariable(int* name, int value);
-int* getSharedVariable(int* name);
-int deleteSharedVariable(int* name);
-int* setSharedVariable(int* name, int value);
+// [EIFLES] SharedMemObjects and file descriptor
+int* addSharedObject(int* sharedObjectName, int value);
+int* getSharedObject(int* sharedObjectName);
+int deleteSharedObject(int* sharedObjectName);
+int* setSharedObject(int* sharedObjectName, int value);
+
+int addFileDescriptor(int* sharedObjectName);
+int* getFileDescriptor(int* sharedObjectName);
+int deleteFileDescriptor(int* sharedObjectName);
 
 // ------------------------ GLOBAL CONSTANTS-----------------------
 
@@ -1089,8 +1094,8 @@ int* loadsPerAddress = (int*) 0; // number of executed loads per load operation
 int  stores           = 0;        // total number of executed memory stores
 int* storesPerAddress = (int*) 0; // number of executed stores per store operation
 
-// [EIFLES] list of shared variables
-int* sharedVariableList = 0;
+// [EIFLES] Assignment3
+int* shared_object_list = 0;
 
 // ------------------------- INITIALIZATION ------------------------
 
@@ -4747,7 +4752,7 @@ void implementShmWrite() {
   value = *(registers+REG_A1);
   name = tlb(pt,*(registers+REG_A0));
 
-  target = setSharedVariable(name, value);
+  target = setSharedObject(name, value);
 
   print((int*)"Set shared variable, name = ");
   print((int*) *(target + 1));
@@ -4762,7 +4767,7 @@ void implementShmRead() {
 
   name = tlb(pt,*(registers+REG_A0));
 
-  target = getSharedVariable(name);
+  target = getSharedObject(name);
 
   print((int*)"Read shared variable, name = ");
   print((int*) *(target + 1));
@@ -6574,57 +6579,80 @@ void selfie_disassemble() {
 // +---+--------+
 // | 0 | next   | pointer to next context
 // | 1 | name   | name of shared variable
-// | 2 | value  | value
+// | 2 | size   | size
+// | 3 | fds    | list of file descriptors
+// | 4 | value  | value
 // +---+--------+
 
-int* addSharedVariable(int* name, int value){
-  int* sharedVariable;
+// file descriptor struct:
+// +---+------------+
+// | 0 | next       | pointer to next FD
+// | 1 | processID  | processID
+// +---+------------+
 
-  sharedVariable = zalloc(SIZEOFINT + 2 * SIZEOFINTSTAR);
+int* addSharedObject(int* name, int value){
+  int* sharedObject;
+  int* file_descriptor_list;
+  int* currentObject;
 
-  if(sharedVariableList == (int*) 0){
+  if(shared_object_list == (int*) 0){
     // allocate memory of value + next, previous and id
-    sharedVariableList = sharedVariable;//malloc(SIZEOFINT + 3 * SIZEOFINTSTAR);
+    sharedObject = zalloc(3 * SIZEOFINTSTAR + 2 * SIZEOFINT);
+    shared_object_list = sharedObject;
   }
   else{
-    // apppend shared variable to beginning of the list
-    *(sharedVariable + 0) = sharedVariableList;
+    currentObject = shared_object_list;
+    while (currentObject != (int*) 0) {
+      if (*(currentObject + 1) == name) {
+        //TODO: Add process so FD list
+        return currentObject;
+      }
+      currentObject = *(currentObject + 0);
+    }
 
-    sharedVariableList = sharedVariable;
+    // [EIFLES] No object with "name" found --> create new one and append to the existing list (at the beginning)
+    sharedObject = zalloc(3 * SIZEOFINTSTAR + 2 * SIZEOFINT);
+    // append shared variable to beginning of the list
+    *(sharedObject + 0) = shared_object_list;
+    *(sharedObject + 1) = name;
+    //size; to be changed
+    *(sharedObject + 2) = SIZEOFINT;
+    //TODO: Initialize FD list for process process
+    *(sharedObject + 3) = file_descriptor_list;
+    *(sharedObject + 4) = value;
+    shared_object_list = sharedObject;
+    return shared_object_list;
   }
-
-  *(sharedVariable + 1) = name;
-  *(sharedVariable + 2) = value;
-
-  return sharedVariableList;
 }
 
-int* setSharedVariable(int* name, int value) {
+int* setSharedObject(int* name, int value) {
 
   int* target;
-  target = getSharedVariable(name);
+  target = getSharedObject(name);
 
   if (target == (int*) 0) {
-    printSimpleStringEifles("Add shared variable...");
-    target = addSharedVariable(name, value);
-  } else {
-    printSimpleStringEifles("Found shared variable!");
-    *(target + 2) = value;
+    printSimpleStringEifles("No object found");
+    return (int*) 0;
+  } 
+  else {
+    printSimpleStringEifles("Found shared object!");
+    *(target + 4) = value;
   }
   return target;
 }
 
-int* getSharedVariable(int* name) {
+int* getSharedObject(int* name) {
 
   int* current;
 
-  if(sharedVariableList == (int*) 0) {
+  // [EIFLES] Empty list
+  if(shared_object_list == (int*) 0) {
     return (int*) 0;
   }
 
-  current = sharedVariableList;
+  current = shared_object_list;
 
-  while (stringCompare((int*) *(current + 1),name) == 0) {
+  while (stringCompare((int*) *(current + 1), name) == 0) {
     current = *(current + 0);
 
     if(current == (int*) 0){
@@ -6635,17 +6663,18 @@ int* getSharedVariable(int* name) {
   return current;
 }
 
-int deleteSharedVariable (int* name) {
+int deleteSharedObject (int* name) {
   int* current;
   int* previous;
 
-  if(sharedVariableList == (int*) 0) {
+  // [EIFLES] Empty list
+  if(shared_object_list == (int*) 0) {
     return 0;
   }
 
-  current = sharedVariableList;
+  current = shared_object_list;
 
-  while (stringCompare(current + 1,name) == 0) {
+  while (stringCompare(current + 1, name) == 0) {
     previous = current;
     current = *(current + 0);
 
@@ -6655,17 +6684,120 @@ int deleteSharedVariable (int* name) {
   }
 
   if(previous == (int*) 0) {
-    // found shared variable, only 1 shared variable exists
-    sharedVariableList = (int*) 0;
-  } else {
-    *(previous) = *(current); 
-    previous = (int*) 0;
+    // [EIFLES] we are at the beginning 
+    if (*(current + 0) == (int*) 0) {
+      // [EIFLES] found shared object, only 1 shared object exists
+      shared_object_list = (int*) 0;
+    }
+    else {
+      shared_object_list = *(current + 0);
+    }
+  } 
+  else {
+    *(previous + 0) = *(current + 0); 
+    //previous = (int*) 0;
   }
 
   current = (int*) 0;
   return 1;
 }
 
+int addFileDescriptor(int* sharedObjectName) {
+  int* currentObject;
+  int* currentFDlist;
+  int* newFD;
+  int* currentFD;
+
+  currentObject = getSharedObject(sharedObjectName);
+
+  currentFDlist = *(currentObject + 3);
+
+  if (currentFDlist == (int*) 0) {
+    newFD = zalloc(SIZEOFINTSTAR + SIZEOFINT);
+    *(newFD + 0) = (int*) 0;
+    *(newFD + 1) = getID(currentContext);
+    return 1;
+  }
+  else {
+    // [EIFLES] a list already exists
+    //getFD(getSharedObject(name));
+    currentFD = currentFDlist;
+    while (currentFD != (int*) 0) {
+      if (*(currentFD + 1) == getID(currentContext)) {
+        return 0;
+      }
+      currentFD = *(currentFD + 0);
+    }
+
+    // [EIFLES] no FD for currentContext found --> append
+    newFD = zalloc(SIZEOFINTSTAR + SIZEOFINT);
+    *(newFD + 0) = currentFDlist;
+    *(newFD + 1) = getID(currentContext);
+    currentFDlist = newFD;
+    return 1;
+  }
+}
+
+int* getFileDescriptor(int* sharedObjectName) {
+  int* currentFD;
+  int* currentObject;
+
+  currentObject = getSharedObject(sharedObjectName);
+
+  // [EIFLES] Empty list
+  if(*(currentObject + 3) == (int*) 0) {
+    return (int*) 0;
+  }
+
+  currentFD = *(currentObject + 3);
+
+  while (*(currentFD + 1) == getID(currentContext)) {
+    currentFD = *(currentFD + 0);
+
+    if(currentFD == (int*) 0){
+      return (int*) 0;
+    }
+  }
+
+  return currentFD;
+}
+
+int deleteFileDescriptor(int* sharedObjectName) {
+  int* currentFD;
+  int* currentObject;
+  int* previousFD;
+
+  currentObject = getSharedObject(sharedObjectName);
+  currentFD = getFileDescriptor(currentObject);
+
+  while (*(currentFD + 1) != getID(currentContext)) {
+    previousFD = currentFD;
+    currentFD = *(currentFD + 0);
+
+    if(currentFD == (int*) 0){
+      return 0;
+    }
+  }
+
+  if(previousFD == (int*) 0) {
+    // [EIFLES] we are at the beginning 
+    if (*(currentFD + 0) == (int*) 0) {
+      // [EIFLES] found shared object, only 1 shared object exists
+      currentFD = (int*) 0;
+    }
+    else {
+      currentFD = *(currentFD + 0);
+    }
+  } 
+  else {
+    *(previousFD + 0) = *(currentFD + 0); 
+    //previous = (int*) 0;
+  }
+
+  currentFD = (int*) 0;
+  return 1;
+
+}
 
 // -----------------------------------------------------------------
 // ---------------------------- CONTEXTS ---------------------------
