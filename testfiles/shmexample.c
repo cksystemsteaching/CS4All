@@ -2,22 +2,15 @@
 int main(int argc, int *argv){
 	int id;
 	int size;
-	int hypsterID;
+	//int hypsterID;
+	int* vaddr;
 
 	id = shm_open("dummyshm");
 	size = shm_size(id,500);
-	hypsterID = hypster_ID();
-	println();
-	println();
-	println();
-	println();
-	printInteger(id);
-	println();
-	printInteger(size);
-	println();
-	printInteger(hypsterID);
-	println();
-	println();
-	println();
+	vaddr = shm_map(0,id);
+	//hypsterID = hypster_ID();
+
+	*(vaddr+4100) = 12345;
+
 	return 0;
 }

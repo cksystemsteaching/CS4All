@@ -4119,7 +4119,6 @@ void selfie_compile() {
 	emitShmClose();
 	emitShmMap();
 
-
   emitID();
   emitCreate();
   emitSwitch();
@@ -5302,13 +5301,12 @@ void implementShmMap(){
 
 	if(cShmObject != (int*)0){
 		if(getShmObjectVaddr(cShmObject)==0){
-
-
+			brk = roundUp(brk, PAGESIZE);
+			setShmObjectVaddr(cShmObject,brk);
+			brk = brk + getShmObjectSize(cShmObject);
 		}
-		else{
-			
-		}
-	*(registers+REG_V0) = getShmObjectVaddr(cShmObject);
+
+		*(registers+REG_V0) = getShmObjectVaddr(cShmObject);
 			
 	}else{
 		*(registers+REG_V0) = 0;
