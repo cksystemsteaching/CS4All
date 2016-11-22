@@ -1267,6 +1267,8 @@ void setShmObjectSize(int* shmObject, int size) 					{ *(shmObject+4) 	=	size; }
 
 int addShmObject(int* name);
 int findOrCreateShmObjectByName(int* name);
+int* findShmObjectById(int id);
+int shmSizeHandling(int* cShmObject, int size);
 
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
@@ -4111,9 +4113,10 @@ void selfie_compile() {
   emitYield();
 
 	emitShmOpen();
-	//emitShmClose();
-	//emitShmMap();
-	//emitShmSize();
+	emitShmSize();
+	emitShmClose();
+	emitShmMap();
+
 
   emitID();
   emitCreate();
@@ -5172,6 +5175,8 @@ void implementShmOpen(){
 	int *name;
 	name= tlb(st,*(registers+REG_A0));
 	shmObjectId=findOrCreateShmObjectByName(name);	
+	printd("ID: ",shmObjectId);
+	printd("name: ",name);
 	*(registers+REG_V0)=shmObjectId;
 }
 
@@ -5196,7 +5201,7 @@ int addShmObject(int *name){
 	setShmObjectId(shmObject,shmObjectCount);
 	shmObjectCount=shmObjectCount+1;
 	setShmObjectName(shmObject,name);
-	setShmObjectSize(shmObject,-1);
+	setShmObjectSize(shmObject,0);
 	
 	if(shmList!= (int*)0){
 		setPrevShmObject(shmList,shmObject);
@@ -5225,7 +5230,46 @@ void emitShmSize(){
 }
 
 void implementShmSize(){
-	//FIXME MORTIS
+	int id;
+	int size;
+	int* cShmObject;	
+	int resultSize;	
+
+	id = *(registers + REG_A0);
+	size = *(registers + REG_A1);
+	
+	cShmObject = findShmObjectById(id);
+
+	if(cShmObject == (int*)0){
+		resultSize = 0;
+	}else{
+		resultSize = shmSizeHandling(cShmObject,size);
+	}
+
+	printd("SIZE: ",resultSize);
+	*(registers+REG_V0) = resultSize;
+}
+
+int* findShmObjectById(int id){
+	int *cShmObject;
+	cShmObject=shmList;
+	
+	while(cShmObject!=(int*)0){
+		if(getShmObjectId(cShmObject) == id){
+			return cShmObject;
+		}
+		cShmObject=getNextShmObject(cShmObject);
+	}
+
+	return cShmObject;
+}
+
+int shmSizeHandling(int* cShmObject, int size){
+	if(getShmObjectSize(cShmObject) == 0){
+		setShmObjectSize(cShmObject, size);
+	}
+
+	return getShmObjectSize(cShmObject);
 }
 
 //int* shm_map(int* addr, int id)
