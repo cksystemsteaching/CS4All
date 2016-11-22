@@ -1223,6 +1223,8 @@ void mapPage(int* table, int page, int frame);
 // | 9 | parent | ID of context that created this context
 // +---+--------+
 
+
+
 int* getNextContext(int* context) { return (int*) *context; }
 int* getPrevContext(int* context) { return (int*) *(context + 1); }
 int  getID(int* context)          { return        *(context + 2); }
@@ -1230,7 +1232,7 @@ int  getPC(int* context)          { return        *(context + 3); }
 int* getRegs(int* context)        { return (int*) *(context + 4); }
 int  getRegHi(int* context)       { return        *(context + 5); }
 int  getRegLo(int* context)       { return        *(context + 6); }
-int* getST(int* context)          { return (int*) *(context+7); 	}
+int* getST(int* context)          { return (int*) *(context + 7); 	}
 int  getBreak(int* context)       { return        *(context + 8); }
 int  getParent(int* context)      { return        *(context + 9); }
 
@@ -1247,6 +1249,23 @@ void setBreak(int* context, int brk)         { *(context + 8) = brk; }
 void setParent(int* context, int id)         { *(context + 9) = id; }
 
 
+// Morties---ShmObjects
+int shmObjectCount=0;
+int* shmList = (int*) 0;
+int* getNextShmObject(int* shmObject) { return (int*) *shmObject; }
+int* getPrevShmObject(int* shmObject) { return (int*) *shmObject+1; }
+int* getShmObjectId(int* shmObject){return (int*) *(shmObject+2); }
+int* getShmObjectName(int* shmObject){return (int*) *(shmObject+3); }
+int* getShmObjectSize(int* shmObject){return (int*) *(shmObject+4); }
+
+void setNextShmObject(int *shmObject, int *nextShmObject)	{ *shmObject=(int)nextShmObject; }
+void setPrevShmObject(int *shmObject, int *prevShmObject) { *(shmObject+1)=(int) prevShmObject; }
+void setShmObjectId(int *shmObject,int id) {	*(shmObject+2)=id;	}
+void setShmObjectName(int *shmObject, int* name) { *(shmObject+3)= (int)name; }
+void setShmObjectSize(int *shmObject, int size) { *(shmObject+4) = size; }
+
+int addShmObject(int *name);
+int findOrCreateShmObjectByName(name);
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
 // -----------------------------------------------------------------
@@ -5142,10 +5161,45 @@ void emitShmOpen(){
 }
 
 void implementShmOpen(){
-	//FIXME MORTIS
+	int shmObjectId;
+	int *name;
+	name= tlb(st,*(registers+REG_A0));
+	shmObjectId=findOrCreateShmObjectByName(name);	
+	*(registers+REG_V0)=shmObjectId;
 }
 
+int findOrCreateShmObjectByName(name){
+	int *cShmObject=shmList;
+	
+	while(cShmObject!=(int*)0){
+		if(stringCompare(getShmObjectName(cShmObject),name)){
+			return getShmObjectId(cShmObject);
+		}
+		cShmObject=getNextShmObject(cShmObject);
+	}
+	return addShmObject(name);
+}
 
+int addShmObject(int *name){
+	int *shmObject;
+	shmObject=malloc(2*SIZEOFINT+3*SIZEOFINTSTAR);
+	setNextShmObject(shmObject,(int*)0);
+	setPrevShmObject(shmObject,(int*)0);
+	setShmObjectId(shmObject,shmObjectCount);
+	shmObjectCount=shmObjectCount+1;
+	setShmObjectName(shmObject,name);
+	setShmObjectSize(shmObject,-1);
+	
+	if(shmList!= (int*)0){
+		setPrevShmObject(shmList,shmObject);
+		setNextShmObject(shmObject,shmList);	
+	}
+
+	shmList=shmObject;
+	
+	return getShmObjectId(shmObject);
+
+}
 //int shm_size(int id, int shSize)
 // Sets or returns the size (in bytes) of the shm object with identifier id.
 // If the object had size zero, it sets the size to shSize and returns shSize.
