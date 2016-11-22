@@ -799,7 +799,8 @@ void selfie_load();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int maxBinaryLength = 131072; // 128KB
+//int maxBinaryLength = 131072; // 128KB
+int maxBinaryLength = 524288;  // 512KB
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1252,20 +1253,21 @@ void setParent(int* context, int id)         { *(context + 9) = id; }
 // Morties---ShmObjects
 int  shmObjectCount=0;
 int* shmList = (int*) 0;
-int* getNextShmObject(int* shmObject) { return (int*) *shmObject; }
-int* getPrevShmObject(int* shmObject) { return (int*) *shmObject+1; }
-int  getShmObjectId(int* shmObject){return  *(shmObject+2); }
-int* getShmObjectName(int* shmObject){return (int*) *(shmObject+3); }
-int  getShmObjectSize(int* shmObject){return *(shmObject+4); }
+int* getNextShmObject(int* shmObject) { return (int*) *shmObject; 		}
+int* getPrevShmObject(int* shmObject) { return (int*) *(shmObject+1); }
+int  getShmObjectId(int* shmObject)		{ return  			*(shmObject+2); }
+int* getShmObjectName(int* shmObject)	{ return (int*) *(shmObject+3); }
+int  getShmObjectSize(int* shmObject)	{ return 				*(shmObject+4); }
 
-void setNextShmObject(int *shmObject, int *nextShmObject)	{ *shmObject=(int)nextShmObject; }
-void setPrevShmObject(int *shmObject, int *prevShmObject) { *(shmObject+1)=(int) prevShmObject; }
-void setShmObjectId(int *shmObject,int id) {	*(shmObject+2)=id;	}
-void setShmObjectName(int *shmObject, int* name) { *(shmObject+3)= (int)name; }
-void setShmObjectSize(int *shmObject, int size) { *(shmObject+4) = size; }
+void setNextShmObject(int* shmObject, int* nextShmObject)	{ *shmObject			=	(int)  nextShmObject; }
+void setPrevShmObject(int* shmObject, int* prevShmObject) { *(shmObject+1)	=	(int)  prevShmObject; }
+void setShmObjectId	 (int* shmObject,	int id) 						{	*(shmObject+2)	=	id;	}
+void setShmObjectName(int* shmObject, int* name) 					{ *(shmObject+3)	= (int)name; }
+void setShmObjectSize(int* shmObject, int size) 					{ *(shmObject+4) 	=	size; }
 
-int addShmObject(int *name);
+int addShmObject(int* name);
 int findOrCreateShmObjectByName(int* name);
+
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
 // -----------------------------------------------------------------
