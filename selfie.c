@@ -1258,12 +1258,14 @@ int* getPrevShmObject(int* shmObject) { return (int*) *(shmObject+1); }
 int  getShmObjectId(int* shmObject)		{ return  			*(shmObject+2); }
 int* getShmObjectName(int* shmObject)	{ return (int*) *(shmObject+3); }
 int  getShmObjectSize(int* shmObject)	{ return 				*(shmObject+4); }
+int  getShmObjectVaddr(int* shmObject) {return 				*(shmObject+5);	}
 
 void setNextShmObject(int* shmObject, int* nextShmObject)	{ *shmObject			=	(int)  nextShmObject; }
 void setPrevShmObject(int* shmObject, int* prevShmObject) { *(shmObject+1)	=	(int)  prevShmObject; }
-void setShmObjectId	 (int* shmObject,	int id) 						{	*(shmObject+2)	=	id;	}
-void setShmObjectName(int* shmObject, int* name) 					{ *(shmObject+3)	= (int)name; }
-void setShmObjectSize(int* shmObject, int size) 					{ *(shmObject+4) 	=	size; }
+void setShmObjectId	 (int* shmObject,	int id) 						{	*(shmObject+2)	=	id;										}
+void setShmObjectName(int* shmObject, int* name) 					{ *(shmObject+3)	= (int)	name; 					}
+void setShmObjectSize(int* shmObject, int size) 					{ *(shmObject+4) 	=	size; 								}
+void setShmObjectVaddr(int* shmObject,int vaddr)					{ *(shmObject+5)  = vaddr;								}
 
 int addShmObject(int* name);
 int findOrCreateShmObjectByName(int* name);
@@ -5202,7 +5204,8 @@ int addShmObject(int *name){
 	shmObjectCount=shmObjectCount+1;
 	setShmObjectName(shmObject,name);
 	setShmObjectSize(shmObject,0);
-	
+	setShmObjectVaddr(shmObject,0);
+
 	if(shmList!= (int*)0){
 		setPrevShmObject(shmList,shmObject);
 		setNextShmObject(shmObject,shmList);	
@@ -5289,7 +5292,28 @@ void emitShmMap(){
 }
 
 void implementShmMap(){
-	//FIXME MORTIS
+	int* cShmObject;
+	int vaddr;
+	int id;
+	id = *(registers + REG_A1);
+	vaddr = *(registers + REG_A0);
+
+	cShmObject=findShmObjectById(id);
+
+	if(cShmObject != (int*)0){
+		if(getShmObjectVaddr(cShmObject)==0){
+
+
+		}
+		else{
+			
+		}
+	*(registers+REG_V0) = getShmObjectVaddr(cShmObject);
+			
+	}else{
+		*(registers+REG_V0) = 0;
+	}
+
 }
 
 //int shm_close(int id)
