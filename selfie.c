@@ -1016,6 +1016,8 @@ int  create_shmo_id();
 int* find_shmo_by_name(int *name);
 int* find_shmo_by_id(int id);
 
+void freeSharedMemoryForContext(int id);
+
 void print_shmo(int *shmo);
 
 
@@ -1060,6 +1062,8 @@ void setNextClient(int *client, int *next);
 void setPrevClient(int *client, int *prev);
 void setClientPID(int *client, int pid);
 void setClientPages(int *client, int *pages);
+
+void deleteClientFromShmo(int* shmo, int* client);
 
 void registerClient(int *shmo, int pid);
 int* findClientByPID(int *shmo, int pid);
@@ -4863,46 +4867,41 @@ void implementShmClose() {
 
       //find right client and remove from the clientList
       client = get_shmo_clients(shmo);
-      while (client != (int*) 0) {
-        if(getID(currentContext) == getClientPID(client)) {
-          //we only need the pages of the client -> store them if found
-          // we should break the while now.. but we ignore the perfomance loses and iterate over all clients
-          clientPageEntry = getClientPages(client);
+        //if last and lonely client --> we don't need to copy frame to make the frame private.
+      if(getNextClient(client) != (int*) 0) {
+          while (client != (int *) 0) {
+              if (getID(currentContext) == getClientPID(client)) {
+                  //we only need the pages of the client -> store them if found
+                  // we should break the while now.. but we ignore the perfomance loses and iterate over all clients
+                  clientPageEntry = getClientPages(client);
 
-          //delete yourself from list
-          if (getPrevClient(client) != (int*) 0) {
-            setNextClient(getPrevClient(client), getNextClient(client));
+                  //delete yourself from list
+                  deleteClientFromShmo(shmo, client);
+              }
+              client = getNextClient(client);
           }
-          // is head of list -> set head Pointer to the next one
-          else {
-            set_shmo_clients(shmo, getNextClient(client));
+
+          pageTable = getPT(currentContext);
+          //iterate over all frames
+          while (frameEntry != (int *) 0) {
+
+              //unmap page in pageTable of the client's context
+              *(pageTable + (*clientPageEntry)) = 0;
+              //create private page
+              privateFrame = palloc();
+              mapPage(pageTable, (*clientPageEntry), (int) privateFrame);
+              //copy shared memory to private page
+              copyFrameToFrame(privateFrame, (int *) getFrame(frameEntry));
+
+              frameEntry = getNextFrame(frameEntry);
           }
-          if (getNextClient(client) != (int*) 0) {
-            setPrevClient(getNextClient(client), getPrevClient(client));
-          }
-        }
-        client = getNextClient(client);
-      }
-
-      pageTable = getPT(currentContext);
-      //iterate over all frames
-      while (frameEntry != (int*) 0){
-
-        //unmap page in pageTable of the client's context
-        *(pageTable + (*clientPageEntry)) = 0;
-        //create private page
-        privateFrame = palloc();
-        mapPage(pageTable, (*clientPageEntry), (int) privateFrame);
-        //copy shared memory to private page
-        copyFrameToFrame(privateFrame, (int*) getFrame(frameEntry));
-
-        frameEntry = getNextFrame(frameEntry);
+      } else {
+          deleteClientFromShmo(shmo, client);
       }
 
       //delete shmo if no clients are existing
       if (get_shmo_clients(shmo) == (int*) 0){
         delete_shmo(shmo);
-        //TODO free the frames & release the krakens ;-)
       }
     }
     returnValue = 0;
@@ -5941,7 +5940,6 @@ void set_shmo_frames(int *shmo, int *frames)   { *(shmo + 5) = (int) frames; }
 void set_shmo_clients(int *shmo, int *clients) { *(shmo + 6) = (int) clients; }
 
 int delete_shmo(int *shmo) {
-
   //delete yourself from list
   if (get_prev_shmo(shmo) != (int*) 0) {
     set_next_shmo(get_prev_shmo(shmo), get_next_shmo(shmo));
@@ -5981,6 +5979,28 @@ int *find_shmo_by_id(int id) {
         shmo = get_next_shmo(shmo);
     }
     return shmo;
+}
+
+void freeSharedMemoryForContext(int id){
+    int *shmo;
+    int *client;
+
+    shmo = shmo_list;
+    while (shmo != (int*) 0) {
+        client = get_shmo_clients(shmo);
+        //find all clients in all shmo which have the id
+        while(client != (int*) 0){
+            if(getClientPID(client) == id){
+                deleteClientFromShmo(shmo, client);
+            }
+            client = getNextClient(clients);
+        }
+        //no clients left using the shmo? -> delete shmo
+        if (get_shmo_clients(shmo) == (int*) 0) {
+            delete_shmo(shmo);
+        }
+        shmo = get_next_shmo(shmo);
+    }
 }
 
 // Create a new shared memory object, initialize it and put
@@ -6111,6 +6131,19 @@ void setNextClient(int *client, int *next)   { *client = (int) next; }
 void setPrevClient(int *client, int *prev)   { *(client + 1) = (int) prev; }
 void setClientPID(int *client, int pid)      { *(client + 2) = pid; }
 void setClientPages(int *client, int *pages) { *(client + 3) = (int) pages; }
+
+void deleteClientFromShmo(int* shmo, int* client){
+    if (getPrevClient(client) != (int*) 0) {
+        setNextClient(getPrevClient(client), getNextClient(client));
+    }
+        // is head of list -> set head Pointer to the next one
+    else {
+        set_shmo_clients(shmo, getNextClient(client));
+    }
+    if (getNextClient(client) != (int*) 0) {
+        setPrevClient(getNextClient(client), getPrevClient(client));
+    }
+}
 
 void registerClient(int *shmo, int pid) {
     int *client;
@@ -7231,6 +7264,9 @@ int* deleteContext(int* context, int* from) {
     setPrevContext(context, (int*) 0);
   } else
     from = getNextContext(context);
+
+  //todo delete shared objects by this thread
+  freeSharedMemoryForContext(getID(context));
 
   freeContext(context);
 
