@@ -1250,13 +1250,13 @@ void setParent(int* context, int id)         { *(context + 9) = id; }
 
 
 // Morties---ShmObjects
-int shmObjectCount=0;
+int  shmObjectCount=0;
 int* shmList = (int*) 0;
 int* getNextShmObject(int* shmObject) { return (int*) *shmObject; }
 int* getPrevShmObject(int* shmObject) { return (int*) *shmObject+1; }
-int* getShmObjectId(int* shmObject){return (int*) *(shmObject+2); }
+int  getShmObjectId(int* shmObject){return  *(shmObject+2); }
 int* getShmObjectName(int* shmObject){return (int*) *(shmObject+3); }
-int* getShmObjectSize(int* shmObject){return (int*) *(shmObject+4); }
+int  getShmObjectSize(int* shmObject){return *(shmObject+4); }
 
 void setNextShmObject(int *shmObject, int *nextShmObject)	{ *shmObject=(int)nextShmObject; }
 void setPrevShmObject(int *shmObject, int *prevShmObject) { *(shmObject+1)=(int) prevShmObject; }
@@ -1265,7 +1265,7 @@ void setShmObjectName(int *shmObject, int* name) { *(shmObject+3)= (int)name; }
 void setShmObjectSize(int *shmObject, int size) { *(shmObject+4) = size; }
 
 int addShmObject(int *name);
-int findOrCreateShmObjectByName(name);
+int findOrCreateShmObjectByName(int* name);
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
 // -----------------------------------------------------------------
@@ -4108,6 +4108,11 @@ void selfie_compile() {
   emitMalloc();
   emitYield();
 
+	emitShmOpen();
+	//emitShmClose();
+	//emitShmMap();
+	//emitShmSize();
+
   emitID();
   emitCreate();
   emitSwitch();
@@ -5168,8 +5173,9 @@ void implementShmOpen(){
 	*(registers+REG_V0)=shmObjectId;
 }
 
-int findOrCreateShmObjectByName(name){
-	int *cShmObject=shmList;
+int findOrCreateShmObjectByName(int* name){
+	int *cShmObject;
+	cShmObject=shmList;
 	
 	while(cShmObject!=(int*)0){
 		if(stringCompare(getShmObjectName(cShmObject),name)){
