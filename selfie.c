@@ -842,14 +842,18 @@ void emitShmRead();
 void implementShmRead();
 
 // [EIFLES] SharedMemObjects and file descriptor
+int* allocateSharedObject();
 int* addSharedObject(int* sharedObjectName, int value);
 int* getSharedObject(int* sharedObjectName);
 int deleteSharedObject(int* sharedObjectName);
 int* setSharedObject(int* sharedObjectName, int value);
 
-int addFileDescriptor(int* sharedObjectName);
-int* getFileDescriptor(int* sharedObjectName);
-int deleteFileDescriptor(int* sharedObjectName);
+int getNewFileDescriptorId();
+
+int* allocateFileDescriptor();
+int* addFileDescriptor(int* sharedObject);
+int* getFileDescriptor(int id);
+int deleteFileDescriptor(int id);
 
 // ------------------------ GLOBAL CONSTANTS-----------------------
 
@@ -1096,6 +1100,8 @@ int* storesPerAddress = (int*) 0; // number of executed stores per store operati
 
 // [EIFLES] Assignment3
 int* shared_object_list = 0;
+int* fd_list = 0;
+int fd_count = 0;
 
 // ------------------------- INITIALIZATION ------------------------
 
@@ -6575,54 +6581,61 @@ void selfie_disassemble() {
 // ----------------------- SHARED MEMORY ---------------------------
 // -----------------------------------------------------------------
 
-// shared mem struct:
+// shared object struct:
 // +---+--------+
-// | 0 | next   | pointer to next context
-// | 1 | name   | name of shared variable
-// | 2 | size   | size
-// | 3 | fds    | list of file descriptors
-// | 4 | value  | value
+// | 0 | next   | pointer to next shared object
+// | 1 | name   | name of shared object
+// | 2 | size   | size of shared object's value
+// | 3 | value  | value
 // +---+--------+
 
 // file descriptor struct:
 // +---+------------+
 // | 0 | next       | pointer to next FD
-// | 1 | processID  | processID
+// | 1 | id         | id of the file descriptor != processID
+// | 2 | object     | pointer to the shared object
 // +---+------------+
+int* getSharedObject_next(int* object)   { return (int*) *(object);    }
+int* getSharedObject_name(int* object)   { return (int*) *(object + 1);}
+int  getSharedObject_size(int* object)   { return *(object + 2);       }
+int  getSharedObject_value(int* object)  { return *(object + 3);       }
+
+void setSharedObject_next(int* object, int* next)   { *(object) = (int) next;     }
+void setSharedObject_name(int* object, int* name)   { *(object + 1) = (int) name; }
+void setSharedObject_size(int* object, int size)    { *(object + 2) = size;       }
+void setSharedObject_value(int* object, int value)  { *(object + 3) = value;      }
+
+int* getFD_next(int* fd)         { return (int*) *(fd);   }
+int  getFD_id(int* fd)           { return *(fd + 1);      }
+int* getFD_object(int* fd)       { return *(fd + 2);      }
+
+void setFD_next(int* fd, int* next)      { *(fd) = (int) next;       }
+void setFD_id(int* fd, int id)           { *(fd + 1) = id;           }
+void setFD_object(int* fd, int* object)  { *(fd + 2) = (int) object; }
+
+int* allocateSharedObject() {
+  int* sharedObject;
+  sharedObject = zalloc(2 * SIZEOFINTSTAR + 2 * SIZEOFINT);
+  return sharedObject;
+}
 
 int* addSharedObject(int* name, int value){
-  int* sharedObject;
-  int* file_descriptor_list;
-  int* currentObject;
+  int* object;
 
-  if(shared_object_list == (int*) 0){
-    // allocate memory of value + next, previous and id
-    sharedObject = zalloc(3 * SIZEOFINTSTAR + 2 * SIZEOFINT);
-    shared_object_list = sharedObject;
+  object = getSharedObject(name);
+  if(object != (int*) 0){
+    setSharedObject_value(object,value);
+    return object;
   }
-  else{
-    currentObject = shared_object_list;
-    while (currentObject != (int*) 0) {
-      if (*(currentObject + 1) == name) {
-        //TODO: Add process so FD list
-        return currentObject;
-      }
-      currentObject = *(currentObject + 0);
-    }
+  object = allocateSharedObject();
+  // append new shared object to beginning of fd list
+  setSharedObject_next(object,shared_object_list);
+  setSharedObject_name(object,name);
+  setSharedObject_size(object,SIZEOFINT);
+  setSharedObject_value(object,value);
 
-    // [EIFLES] No object with "name" found --> create new one and append to the existing list (at the beginning)
-    sharedObject = zalloc(3 * SIZEOFINTSTAR + 2 * SIZEOFINT);
-    // append shared variable to beginning of the list
-    *(sharedObject + 0) = shared_object_list;
-    *(sharedObject + 1) = name;
-    //size; to be changed
-    *(sharedObject + 2) = SIZEOFINT;
-    //TODO: Initialize FD list for process process
-    *(sharedObject + 3) = file_descriptor_list;
-    *(sharedObject + 4) = value;
-    shared_object_list = sharedObject;
-    return shared_object_list;
-  }
+  shared_object_list = object;
+  return shared_object_list;
 }
 
 int* setSharedObject(int* name, int value) {
@@ -6634,10 +6647,9 @@ int* setSharedObject(int* name, int value) {
     printSimpleStringEifles("No object found");
     return (int*) 0;
   } 
-  else {
-    printSimpleStringEifles("Found shared object!");
-    *(target + 4) = value;
-  }
+
+  printSimpleStringEifles("Found shared object, set value.");
+  setSharedObject_value(target,value);
   return target;
 }
 
@@ -6652,8 +6664,8 @@ int* getSharedObject(int* name) {
 
   current = shared_object_list;
 
-  while (stringCompare((int*) *(current + 1), name) == 0) {
-    current = *(current + 0);
+  while (stringCompare((int*) getSharedObject_name(current), name) == 0) {
+    current = getSharedObject_next(current);
 
     if(current == (int*) 0){
       return (int*) 0;
@@ -6669,134 +6681,126 @@ int deleteSharedObject (int* name) {
 
   // [EIFLES] Empty list
   if(shared_object_list == (int*) 0) {
-    return 0;
+    return -1;
   }
 
   current = shared_object_list;
 
-  while (stringCompare(current + 1, name) == 0) {
+  while (stringCompare((int*) getSharedObject_name(current), name) == 0) {
     previous = current;
-    current = *(current + 0);
+    current = getSharedObject_next(current);
 
     if(current == (int*) 0){
-      return 0;
+      return -1;
     }
   }
 
   if(previous == (int*) 0) {
     // [EIFLES] we are at the beginning 
-    if (*(current + 0) == (int*) 0) {
+    if (getSharedObject_next(current) == (int*) 0) {
       // [EIFLES] found shared object, only 1 shared object exists
       shared_object_list = (int*) 0;
     }
     else {
-      shared_object_list = *(current + 0);
+      shared_object_list = getSharedObject_next(current);
     }
   } 
   else {
-    *(previous + 0) = *(current + 0); 
-    //previous = (int*) 0;
+    setSharedObject_next(previous,getSharedObject_next(current)); 
   }
 
   current = (int*) 0;
   return 1;
 }
 
-int addFileDescriptor(int* sharedObjectName) {
-  int* currentObject;
-  int* currentFDlist;
-  int* newFD;
-  int* currentFD;
-
-  currentObject = getSharedObject(sharedObjectName);
-
-  currentFDlist = *(currentObject + 3);
-
-  if (currentFDlist == (int*) 0) {
-    newFD = zalloc(SIZEOFINTSTAR + SIZEOFINT);
-    *(newFD + 0) = (int*) 0;
-    *(newFD + 1) = getID(currentContext);
-    return 1;
-  }
-  else {
-    // [EIFLES] a list already exists
-    //getFD(getSharedObject(name));
-    currentFD = currentFDlist;
-    while (currentFD != (int*) 0) {
-      if (*(currentFD + 1) == getID(currentContext)) {
-        return 0;
-      }
-      currentFD = *(currentFD + 0);
-    }
-
-    // [EIFLES] no FD for currentContext found --> append
-    newFD = zalloc(SIZEOFINTSTAR + SIZEOFINT);
-    *(newFD + 0) = currentFDlist;
-    *(newFD + 1) = getID(currentContext);
-    currentFDlist = newFD;
-    return 1;
-  }
+int getNewFileDescriptorId() {
+  int new;
+  new = fd_count;
+  fd_count = fd_count + 1;
+  return new;
 }
 
-int* getFileDescriptor(int* sharedObjectName) {
-  int* currentFD;
-  int* currentObject;
+int* allocateFileDescriptor() {
+  int* fd;
+  fd = zalloc(2*SIZEOFINTSTAR + SIZEOFINT);
+  return fd;
+}
 
-  currentObject = getSharedObject(sharedObjectName);
+int* addFileDescriptor(int* sharedObject) {
+  int* fd;
+
+  if(fd_list == (int*) 0){
+    fd = allocateFileDescriptor();
+    fd_list = fd;
+    return fd_list;
+  }
+  //add new fd to head of fd list
+  fd = allocateFileDescriptor();
+  setFD_next(fd,fd_list);
+  setFD_id(fd,getNewFileDescriptorId());
+  setFD_object(fd,sharedObject);
+
+  fd_list = fd;
+  return fd_list;
+}
+
+int* getFileDescriptor(int id) {
+  int* current;
 
   // [EIFLES] Empty list
-  if(*(currentObject + 3) == (int*) 0) {
+  if(fd_list == (int*) 0) {
     return (int*) 0;
   }
 
-  currentFD = *(currentObject + 3);
+  current = fd_list;
 
-  while (*(currentFD + 1) == getID(currentContext)) {
-    currentFD = *(currentFD + 0);
+  while (getFD_id(current) != id) {
+    current = getFD_next(current);
 
-    if(currentFD == (int*) 0){
+    if(current == (int*) 0){
       return (int*) 0;
     }
   }
 
-  return currentFD;
+  return current;
 }
 
-int deleteFileDescriptor(int* sharedObjectName) {
-  int* currentFD;
-  int* currentObject;
-  int* previousFD;
+int deleteFileDescriptor(int id) {
+  int* current;
+  int* previous;
 
-  currentObject = getSharedObject(sharedObjectName);
-  currentFD = getFileDescriptor(currentObject);
+  // [EIFLES] Empty list,
+  if(fd_list == (int*) 0) {
+    return -1;
+  }
 
-  while (*(currentFD + 1) != getID(currentContext)) {
-    previousFD = currentFD;
-    currentFD = *(currentFD + 0);
+  current = fd_list;
 
-    if(currentFD == (int*) 0){
-      return 0;
+  while (getFD_id(current) != id) {
+    previous = current;
+    current = getFD_next(current);
+
+    if(current == (int*) 0){
+      return -1;
     }
   }
 
-  if(previousFD == (int*) 0) {
+  if(previous == (int*) 0) {
     // [EIFLES] we are at the beginning 
-    if (*(currentFD + 0) == (int*) 0) {
-      // [EIFLES] found shared object, only 1 shared object exists
-      currentFD = (int*) 0;
+    if (getFD_next(current) == (int*) 0) {
+      // [EIFLES] found fd, only 1 fd exists
+      fd_list = (int*) 0;
     }
     else {
-      currentFD = *(currentFD + 0);
+      fd_list = getFD_next(current);
     }
   } 
   else {
-    *(previousFD + 0) = *(currentFD + 0); 
-    //previous = (int*) 0;
+    setFD_next(previous,getFD_next(current)); 
   }
 
-  currentFD = (int*) 0;
+  current = (int*) 0;
   return 1;
-
 }
 
 // -----------------------------------------------------------------
