@@ -1080,7 +1080,7 @@ int EXCEPTION_YIELD          	 = 8;
 
 int* EXCEPTIONS; // strings representing exceptions
 
-int debug_exception = 1;
+int debug_exception = 0;
 
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
@@ -5349,7 +5349,6 @@ void assignShmObjectFrames(int* cShmObject,int frameSizeNeed){
 	int* frames;
 	int frameCount;
 	int i;
-	int* fresh;
 
 	frames = (int*) 0;
 	frameCount  = frameSizeNeed / PAGESIZE;
@@ -5357,8 +5356,7 @@ void assignShmObjectFrames(int* cShmObject,int frameSizeNeed){
 	i=0;
 
 	while(i<frameCount){
-		fresh = freshFrame();
-		setNextFrame(fresh, frames);
+		setNextFrame(freshFrame(), frames);
 		i = i+1;
 	}
 
@@ -5369,7 +5367,7 @@ void assignShmObjectFrames(int* cShmObject,int frameSizeNeed){
 int* freshFrame(){
 	int* singleFrame;
   singleFrame = malloc(2 * SIZEOFINTSTAR);
-	printd("freshFrame",singleFrame);
+	//printd("freshFrame",singleFrame);
 	setFrameAddr(singleFrame, palloc());
 	return singleFrame;
 }
@@ -5527,6 +5525,7 @@ void implementSwitch() {
   // but some compilers dereference the lvalue *(registers+REG_V1)
   // before evaluating the rvalue doSwitch()
 
+	print("DO SWITCH");
   fromID = doSwitch(*(registers+REG_A0));
 
   // use REG_V1 instead of REG_V0 to avoid race condition with interrupt
@@ -5908,7 +5907,7 @@ void mapAndStoreVirtualMemory(int* segmentTable, int vaddr, int data) {
 		//println();
 		//print("IS VIRTUAL ADDRESS MAPPED SUCCEED");
 		//println();
-			print("virtual mapped ");
+			//print("virtual mapped ");
     mapPage(pageTable, getPageOfVirtualAddress(vaddr), (int) palloc());
 	}
 	
@@ -7382,9 +7381,11 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     // assert: fromContext must be in usedContexts (created here)
 		//print((int*)"PRINT SELFIE ID");
 		//printInteger(selfie_ID());
+		//printd("HYPSTER ID",hypster_ID());
     if (getParent(fromContext) != selfie_ID()){
       // switch to parent which is in charge of handling exceptions
 				
+			
 			toID = getParent(fromContext);
 			
 			parentContext=findContext(toID, usedContexts);
