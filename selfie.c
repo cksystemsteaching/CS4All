@@ -1236,7 +1236,7 @@ int  getRegLo(int* context)       { return        *(context + 6); }
 int* getST(int* context)          { return (int*) *(context + 7); 	}
 int  getBreak(int* context)       { return        *(context + 8); }
 int  getParent(int* context)      { return        *(context + 9); }
-
+int* getContextShm(int* context)  { return        *(context + 10); }
 
 void setNextContext(int* context, int* next) { *context       = (int) next; }
 void setPrevContext(int* context, int* prev) { *(context + 1) = (int) prev; }
@@ -1248,6 +1248,26 @@ void setRegLo(int* context, int reg_lo)      { *(context + 6) = reg_lo; }
 void setST(int* context, int* pt)            { *(context + 7) = (int) pt; }
 void setBreak(int* context, int brk)         { *(context + 8) = brk; }
 void setParent(int* context, int id)         { *(context + 9) = id; }
+void setContextShm(int* context, int* contextShm)    { *(context + 10) = (int) contextShm; }
+
+
+// Morties Contextlist
+
+int* getNextContextShmObject(int* shmObject);
+int  getContextShmObjectID(int* contexts);
+int* getContextShmObjectVaddr(int* contexts);
+
+void setNextContextShmObject(int* shmObject, int* next);
+void setContextShmObjectID		(int* shmObject, int id);
+void setContextShmObjectVaddr	(int* shmObject, int* vaddr);
+
+void setNextContextShmObject(int* shmObject, int* next)		{ *shmObject			=	(int)  next; }
+void setContextShmObjectID	 (int* shmObject,	int id) 			{	*(shmObject+1)	=	id;										}
+void setContextShmObjectVaddr(int* shmObject, int* vaddr) 	{ *(shmObject+2)	= (int)	vaddr; 					}
+
+int* getNextContextShmObject(int* shmObject) 	{ return (int*) *shmObject; 		}
+int  getContextShmObjectID(int* shmObject)			{ return  			*(shmObject+1); }
+int* getContextShmObjectVaddr(int* shmObject)		{ return (int*) *(shmObject+2); }
 
 
 // Morties---ShmObjects
@@ -1268,14 +1288,12 @@ void setShmObjectName(int* shmObject, int* name) 					{ *(shmObject+3)	= (int)	n
 void setShmObjectSize(int* shmObject, int size) 					{ *(shmObject+4) 	=	size; 								}
 void setShmObjectFrames(int* shmObject,int* frames)				{ *(shmObject+5)  = (int) frames;					}
 
-
 // MORTIS SHM
 int addShmObject(int* name);
 int findOrCreateShmObjectByName(int* name);
 int* findShmObjectById(int id);
 int shmSizeHandling(int* cShmObject, int size);
 int* freshFrame();
-
 
 // Frame List
 int* getNextFrame(int* frames);
@@ -1289,6 +1307,8 @@ int* getNextFrame(int* frames) {return (int*) *(frames + 1);}
 
 void setNextFrame(int* frames, int* next)	{	*(frames+1) = (int) next;}
 void setFrameAddr(int* frames, int* frame){	*frames 		= (int) frame;}
+
+
 
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
@@ -5314,6 +5334,7 @@ void implementShmMap(){
 	int vaddr;
 	int id;
 	int frameBegin;
+	int* contextListEntry;
 
 	id = *(registers + REG_A1);
 	vaddr = *(registers + REG_A0);
@@ -5339,8 +5360,20 @@ void implementShmMap(){
 			brk = brk + PAGESIZE;
 			frames = getNextFrame(frames);
 		}
-	}
 
+		contextListEntry = malloc(1 * SIZEOFINTSTAR + 2 * SIZEOFINT);
+		setContextShmObjectVaddr(contextListEntry,frameBegin);
+		setContextShmObjectID(contextListEntry,id);
+
+		if(getContextShm(currentContext)!=(int*)0) {
+			setNextContextShmObject(contextListEntry,getContextShm(currentContext));
+		}else{
+			setNextContextShmObject(contextListEntry,(int*)0);
+		}
+
+		setContextShm(currentContext,contextListEntry);
+
+	}
 	*(registers+REG_V0) = frameBegin;
 
 }
@@ -6921,7 +6954,7 @@ int* allocateContext(int ID, int parentID) {
   int pageCount;
 
   if (freeContexts == (int*) 0)
-    context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
+    context = malloc(5 * SIZEOFINTSTAR + 6 * SIZEOFINT);
   else {
     context = freeContexts;
     freeContexts = getNextContext(freeContexts);
