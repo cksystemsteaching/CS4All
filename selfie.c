@@ -1080,7 +1080,7 @@ int EXCEPTION_YIELD          	 = 8;
 
 int* EXCEPTIONS; // strings representing exceptions
 
-int debug_exception = 0;
+int debug_exception = 1;
 
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
@@ -5354,10 +5354,15 @@ void implementShmMap(){
 		frameBegin = brk;
 
 		frames = getShmObjectFrames(cShmObject);
+		
 
 		while (frames != (int*) 0){
-			mapPage(st,getPageOfVirtualAddress(brk),getFrameAddr(frames));
+			print("Mapping frames");
+			printd("Vaddr Page ",getPageOfVirtualAddress(brk));
+			printd("Vaddr ",brk);
+			mapPage(*(st+1),getPageOfVirtualAddress(brk),getFrameAddr(frames));
 			brk = brk + PAGESIZE;
+			printd("Frame Addr: ",*(frames+0));
 			frames = getNextFrame(frames);
 		}
 
@@ -5382,14 +5387,16 @@ void assignShmObjectFrames(int* cShmObject,int frameSizeNeed){
 	int* frames;
 	int frameCount;
 	int i;
-
+	int* cFrame;
 	frames = (int*) 0;
 	frameCount  = frameSizeNeed / PAGESIZE;
 
 	i=0;
 
 	while(i<frameCount){
-		setNextFrame(freshFrame(), frames);
+		cFrame=freshFrame();
+		setNextFrame(cFrame, frames);
+		frames=cFrame;
 		i = i+1;
 	}
 
@@ -5819,8 +5826,7 @@ int isPageMapped(int* table, int page) {
 }
 
 int isValidVirtualAddress(int vaddr) {
-
-	//printd((int*)"Valid virtual adress:",vaddr);
+	
 
   if (vaddr >= 0)
     if (vaddr < VIRTUALMEMORYSIZE)
@@ -6510,9 +6516,11 @@ void op_lw() {
 
         pc = pc + WORDSIZE;
       } else{
-				pageFaultExceptionAddr=vaddr;
+      	if(vaddr<brk)
+			printd((int*)"Invalid virtual adress:",vaddr);
+		pageFaultExceptionAddr=vaddr;
         throwException(EXCEPTION_PAGEFAULT, vaddr);
-			}
+	}
     } else
       throwException(EXCEPTION_ADDRESSERROR, vaddr);
   }
@@ -6623,9 +6631,11 @@ void op_sw() {
 
         pc = pc + WORDSIZE;
       } else{
+        if(vaddr<brk)
+			printd((int*)"Invalid virtual adress:",vaddr);
 				pageFaultExceptionAddr=vaddr;
         throwException(EXCEPTION_PAGEFAULT,vaddr);
-			}
+		}
     } else
       throwException(EXCEPTION_ADDRESSERROR, vaddr);
   }
@@ -7074,9 +7084,9 @@ int* deleteContext(int* context, int* from) {
 
 void mapPage(int* table, int page, int frame) {
   // assert: 0 <= page < VIRTUALMEMORYSIZE / PAGESIZE
-	//print("Mapping page: ");
-	//printInteger( table + page);
-	//println();
+	print("Mapping page: ");
+	printInteger( page);
+	println();
   *(table + page) = frame;
 }
 
