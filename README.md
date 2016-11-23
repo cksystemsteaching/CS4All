@@ -83,3 +83,20 @@ Be sure reclaim memory from exited processes so that arbitrarily many processes 
 As always, write examples that exercise all the new functionality and finally document the what, the why and any problems encountered.
 
 Use the repositories from Assignment 3.
+
+
+Assignment 5: Synchronization
+----------------------------------
+__Deadline__: November 30, 9am
+
+Play through the [deadlock empire](https://deadlockempire.github.io).
+
+Implement (spin)locks and condition variables in selfie.
+(Notice the plural here, the number of locks and condition variables should only be constrained by the memory.
+Use shared memory/threads for bonus points.)
+
+Use these primitives to implement semaphores as a library completely outside of selfie.
+
+As always, write examples that exercise all the new functionality and finally document the what, the why and any problems encountered.
+
+Again, reuse the repositories from Assignment 3.
