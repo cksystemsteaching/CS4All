@@ -1080,7 +1080,7 @@ int EXCEPTION_YIELD          	 = 8;
 
 int* EXCEPTIONS; // strings representing exceptions
 
-int debug_exception = 0;
+int debug_exception = 1;
 
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
@@ -1258,19 +1258,36 @@ int* getPrevShmObject(int* shmObject) { return (int*) *(shmObject+1); }
 int  getShmObjectId(int* shmObject)		{ return  			*(shmObject+2); }
 int* getShmObjectName(int* shmObject)	{ return (int*) *(shmObject+3); }
 int  getShmObjectSize(int* shmObject)	{ return 				*(shmObject+4); }
-int  getShmObjectVaddr(int* shmObject) {return 				*(shmObject+5);	}
+int* getShmObjectFrames(int* shmObject) {return (int*)*(shmObject+5);	}
 
 void setNextShmObject(int* shmObject, int* nextShmObject)	{ *shmObject			=	(int)  nextShmObject; }
 void setPrevShmObject(int* shmObject, int* prevShmObject) { *(shmObject+1)	=	(int)  prevShmObject; }
 void setShmObjectId	 (int* shmObject,	int id) 						{	*(shmObject+2)	=	id;										}
 void setShmObjectName(int* shmObject, int* name) 					{ *(shmObject+3)	= (int)	name; 					}
 void setShmObjectSize(int* shmObject, int size) 					{ *(shmObject+4) 	=	size; 								}
-void setShmObjectVaddr(int* shmObject,int vaddr)					{ *(shmObject+5)  = vaddr;								}
+void setShmObjectFrames(int* shmObject,int* frames)				{ *(shmObject+5)  = (int) frames;					}
 
+
+// MORTIS SHM
 int addShmObject(int* name);
 int findOrCreateShmObjectByName(int* name);
 int* findShmObjectById(int id);
 int shmSizeHandling(int* cShmObject, int size);
+int* freshFrame();
+
+
+// Frame List
+int* getNextFrame(int* frames);
+int* getFrameAddr(int* frames);
+
+void setNextFrame(int* frames, int* next);
+void setFrameAddr(int* frames, int* frame);
+
+int* getFrameAddr(int* frames) {return (int*) *frames;			 }
+int* getNextFrame(int* frames) {return (int*) *(frames + 1);}
+
+void setNextFrame(int* frames, int* next)	{	*(frames+1) = (int) next;}
+void setFrameAddr(int* frames, int* frame){	*frames 		= (int) frame;}
 
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
@@ -5203,7 +5220,7 @@ int addShmObject(int *name){
 	shmObjectCount=shmObjectCount+1;
 	setShmObjectName(shmObject,name);
 	setShmObjectSize(shmObject,0);
-	setShmObjectVaddr(shmObject,0);
+	setShmObjectFrames(shmObject,(int*)0);
 
 	if(shmList!= (int*)0){
 		setPrevShmObject(shmList,shmObject);
@@ -5292,26 +5309,68 @@ void emitShmMap(){
 
 void implementShmMap(){
 	int* cShmObject;
+	int* frames;
 	int vaddr;
 	int id;
+	int frameBegin;
+
+
 	id = *(registers + REG_A1);
 	vaddr = *(registers + REG_A0);
 
 	cShmObject=findShmObjectById(id);
 
+	// error code for shm_map
+	frameBegin = 0;
+
 	if(cShmObject != (int*)0){
-		if(getShmObjectVaddr(cShmObject)==0){
-			brk = roundUp(brk, PAGESIZE);
-			setShmObjectVaddr(cShmObject,brk);
-			brk = brk + getShmObjectSize(cShmObject);
+
+		if(getShmObjectFrames(cShmObject) == (int*)0){
+				assignShmObjectFrames(cShmObject,roundUp(getShmObjectSize(cShmObject),PAGESIZE));
 		}
 
-		*(registers+REG_V0) = getShmObjectVaddr(cShmObject);
-			
-	}else{
-		*(registers+REG_V0) = 0;
+		brk = roundUp(brk,PAGESIZE);
+		frameBegin = brk;
+
+		frames = getShmObjectFrames(cShmObject);
+
+		while (frames != (int*) 0){
+			mapPage(st,getPageOfVirtualAddress(brk),getFrameAddr(frames));
+			brk = brk + PAGESIZE;
+			frames = getNextFrame(frames);
+		}
 	}
 
+	*(registers+REG_V0) = frameBegin;
+
+}
+
+void assignShmObjectFrames(int* cShmObject,int frameSizeNeed){
+	int* frames;
+	int frameCount;
+	int i;
+
+		
+	frames = (int*) 0;
+	frameCount  = frameSizeNeed / PAGESIZE;
+
+	i=0;
+
+	while(i<frameCount){
+		setNextFrame(freshFrame(), frames);
+		i = i+1;
+	}
+
+	setShmObjectFrames(cShmObject, frames);
+	
+}
+
+int* freshFrame(){
+	int* singleFrame;
+  singleFrame = malloc(2 * SIZEOFINTSTAR);
+	printd("freshFrame",singleFrame);
+	setFrameAddr(singleFrame, palloc());
+	return singleFrame;
 }
 
 //int shm_close(int id)
