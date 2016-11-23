@@ -3,17 +3,32 @@ int main(){
   int i;
   int squared;
 
+  int fd_a;
+  int fd_b;
+
+  int a;
+  int b;
+
 	initLibrary();
 
 	i = 0;
 	while(i < 10) {
 		squared = i*i;
 
-		shm_write((int*) "a", i);
-		shm_read((int*) "a");
+		fd_a = shm_open("a");
+		fd_a = shm_open("b");
 
-		shm_write((int*) "b", squared);
-		shm_read((int*) "b");
+		shm_write(fd_a, i);
+		a = shm_read(fd_a);
+
+		shm_write(fd_b, squared);
+		b = shm_read(fd_b);
+
+		print((int*) "a: ");
+		printInteger(a);
+		print((int*) ", b: ");
+		printInteger(b);
+		println();
 
 		i = i + 1;
 	}

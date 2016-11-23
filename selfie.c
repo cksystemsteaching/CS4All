@@ -836,6 +836,8 @@ void implementMalloc();
 // [EIFLES]
 void emitSchedYield();
 void implementSchedYield();
+void emitShmOpen();
+void implementShmOpen();
 void emitShmWrite();
 void implementShmWrite();
 void emitShmRead();
@@ -882,8 +884,9 @@ int SYSCALL_WRITE  = 4004;
 int SYSCALL_OPEN   = 4005;
 // [EIFLES]
 int SYSCALL_SCHED_YIELD = 4006;
-int SYSCALL_SHM_WRITE = 4007;
-int SYSCALL_SHM_READ = 4008;
+int SYSCALL_SHM_OPEN = 4007;
+int SYSCALL_SHM_WRITE = 4008;
+int SYSCALL_SHM_READ = 4009;
 
 int SYSCALL_MALLOC = 4045;
 
@@ -930,7 +933,7 @@ void selfie_map(int ID, int page, int frame);
 
 int debug_create = 0;
 int debug_switch = 0;
-int debug_status = 1;
+int debug_status = 0;
 int debug_delete = 0;
 int debug_map    = 0;
 
@@ -1727,7 +1730,7 @@ void print(int* s) {
 
 void printSimpleStringEifles(int* message){
   println();
-  print((int*) "[EIFLES,int*] ");
+  print((int*) "[EIFLES] ");
   print(message);
   println();
 }
@@ -4083,6 +4086,7 @@ void selfie_compile() {
   emitOpen();
   emitMalloc();
   emitSchedYield();
+  emitShmOpen();
   emitShmWrite();
   emitShmRead();
 
@@ -4730,13 +4734,25 @@ void emitSchedYield() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
+void emitShmOpen() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_open", 0, PROCEDURE, INT_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // *shared object name
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_OPEN);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
 void emitShmWrite() {
-  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_write", 0, PROCEDURE, INT_T, 0, binaryLength);
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_write", 0, PROCEDURE, VOID_T, 0, binaryLength);
 
   emitIFormat(OP_LW, REG_SP, REG_A1, 0); // value
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
-  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // *name
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // fd_id
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
   emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_WRITE);
@@ -4746,9 +4762,9 @@ void emitShmWrite() {
 }
 
 void emitShmRead() {
-  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_read", 0, PROCEDURE, INT_T, 0, binaryLength);
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_read", 0, PROCEDURE, VOID_T, 0, binaryLength);
 
-  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // *name
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // fd_id
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
   emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_READ);
@@ -4758,58 +4774,85 @@ void emitShmRead() {
 }
 
 void implementSchedYield() {
-
-
   throwException(EXCEPTION_SCHED_YIELD, 0);
+}
+
+void implementShmOpen() {
+  int* sharedObjectName;
+  int* sharedObject;
+  int* fd;
+
+  sharedObjectName = tlb(pt,*(registers+REG_A0));
+
+  sharedObject = addSharedObject(sharedObjectName);
+  fd = addFileDescriptor(sharedObject);
+
+  // set return value
+  *(registers+REG_V0) = (int) getFD_id(fd);
+
+  // printSimpleStringEifles("implementShmOpen");
+  // print((int*) "Added shared object at address:");
+  // printBinary(sharedObject,32);
+  // println();
+  // print((int*) "next: ");
+  // printBinary(getSharedObject_next(sharedObject),32);
+  // print((int*) ", name: ");
+  // print(getSharedObject_name(sharedObject));
+  // print((int*) ", size: ");
+  // printInteger(getSharedObject_size(sharedObject));
+  // print((int*) ", value: ");
+  // printInteger(getSharedObject_value(sharedObject));
+  // println();
+
+  // print((int*) "Added fd for shared object at address: ");
+  // printBinary(fd,32);
+  // println();
+  // print((int*) "next: ");
+  // printBinary(getFD_next(fd),32);
+  // print((int*) ", getFD_id: ");
+  // printInteger(getFD_id(fd));
+  // print((int*) ", getFD_object: ");
+  // printBinary(getFD_object(fd),32);
+  // println();
+
+  // println();
 }
 
 void implementShmWrite() {
   int value;
-  int* name;
-  int* target;
+  int fd_id;
+  int* sharedObject;
   int* fd;
 
   value = *(registers+REG_A1);
-  name = tlb(pt,*(registers+REG_A0));
+  fd_id = *(registers+REG_A0);
 
-  target = addSharedObject(name);
-  setSharedObject_value(target,value);
-
-  fd = addFileDescriptor(target);
-
-  print((int*) "Added shared object at address:");
-  printBinary(target,32);
-  println();
-  print((int*) "next: ");
-  printBinary(getSharedObject_next(target),32);
-  print((int*) ", name: ");
-  print(getSharedObject_name(target));
-  print((int*) ", size: ");
-  printInteger(getSharedObject_size(target));
-  print((int*) ", value: ");
-  printInteger(getSharedObject_value(target));
-  println();
-
-  print((int*) "Added fd for shared object at address: ");
-  printBinary(fd,32);
-  println();
-  print((int*) "next: ");
-  printBinary(getFD_next(fd),32);
-  print((int*) ", getFD_id: ");
-  printInteger(getFD_id(fd));
-  print((int*) ", getFD_object: ");
-  printBinary(getFD_object(fd),32);
-  println();
-
-  println();
+  fd = getFileDescriptor(fd_id);
+  sharedObject = getFD_object(fd);
+  setSharedObject_value(sharedObject, value);
 }
 
 void implementShmRead() {
-  int* name;
-  int* target;
+  int fd_id;
+  int* fd;
+  int* sharedObject;
 
-  name = tlb(pt,*(registers+REG_A0));
+  fd_id = *(registers+REG_A0);
 
+  fd = getFileDescriptor(fd_id);
+  sharedObject = getFD_object(fd);
+
+  // set return value
+  *(registers+REG_V0) = (int) getSharedObject_value(sharedObject);
+
+  // printSimpleStringEifles("implementShmRead");
+  // print((int*) "Read with fd_id:");
+  // printInteger(fd_id);
+  // print((int*) " on shared object name: ");
+  // print(getSharedObject_name(sharedObject));
+  // print((int*) ", value: ");
+  // printInteger(getSharedObject_value(sharedObject));
+  // println();
 }
 
 void emitRead() {
@@ -5688,6 +5731,8 @@ void fct_syscall() {
       implementMap();
     else if (*(registers+REG_V0) == SYSCALL_SCHED_YIELD)
       implementSchedYield();
+    else if (*(registers+REG_V0) == SYSCALL_SHM_OPEN) 
+      implementShmOpen();
     else if (*(registers+REG_V0) == SYSCALL_SHM_WRITE) 
       implementShmWrite();
     else if (*(registers+REG_V0) == SYSCALL_SHM_READ) 
@@ -6365,15 +6410,15 @@ void throwException(int exception, int parameter) {
   else
     status = encodeException(exception, parameter);
 
-  println();
-  print((int*) "------[throwException, exception=");
-  printInteger(exception);
-  print((int*) ", status=");
-  printInteger(status);
-  print((int*) ", parameter=");
-  printInteger(parameter);
-  print((int*) "]------");
-	println();
+ //  println();
+ //  print((int*) "------[throwException, exception=");
+ //  printInteger(exception);
+ //  print((int*) ", status=");
+ //  printInteger(status);
+ //  print((int*) ", parameter=");
+ //  printInteger(parameter);
+ //  print((int*) "]------");
+	// println();
 
   trap = 1;
 
@@ -7095,10 +7140,10 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       exceptionNumber    = decodeExceptionNumber(savedStatus);
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
-      print((int*) "############# caught exception with exceptionNumber: ");
-      printInteger(exceptionNumber);
-      print((int*) " #############");
-      println();
+      // print((int*) "############# caught exception with exceptionNumber: ");
+      // printInteger(exceptionNumber);
+      // print((int*) " #############");
+      // println();
 
 
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
