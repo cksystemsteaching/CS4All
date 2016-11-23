@@ -843,17 +843,30 @@ void implementShmRead();
 
 // [EIFLES] SharedMemObjects and file descriptor
 int* allocateSharedObject();
-int* addSharedObject(int* sharedObjectName, int value);
-int* getSharedObject(int* sharedObjectName);
-int deleteSharedObject(int* sharedObjectName);
-int* setSharedObject(int* sharedObjectName, int value);
-
+int* allocateFileDescriptor();
 int getNewFileDescriptorId();
 
-int* allocateFileDescriptor();
+int* addSharedObject(int* sharedObjectName);
 int* addFileDescriptor(int* sharedObject);
 int* getFileDescriptor(int id);
-int deleteFileDescriptor(int id);
+
+int* getSharedObject_next(int* object);
+int* getSharedObject_name(int* object);
+int  getSharedObject_size(int* object);
+int  getSharedObject_value(int* object);
+
+void setSharedObject_next(int* object, int* next);
+void setSharedObject_name(int* object, int* name);
+void setSharedObject_size(int* object, int size);
+void setSharedObject_value(int* object, int value);
+
+int* getFD_next(int* fd);
+int  getFD_id(int* fd);
+int* getFD_object(int* fd);
+
+void setFD_next(int* fd, int* next);
+void setFD_id(int* fd, int id);
+void setFD_object(int* fd, int* object);
 
 // ------------------------ GLOBAL CONSTANTS-----------------------
 
@@ -4754,17 +4767,41 @@ void implementShmWrite() {
   int value;
   int* name;
   int* target;
+  int* fd;
 
   value = *(registers+REG_A1);
   name = tlb(pt,*(registers+REG_A0));
 
-  target = setSharedObject(name, value);
+  target = addSharedObject(name);
+  setSharedObject_value(target,value);
 
-  print((int*)"Set shared variable, name = ");
-  print((int*) *(target + 1));
-  print((int*)", value = ");
-  printInteger(*(target + 2));
-  println(); 
+  fd = addFileDescriptor(target);
+
+  print((int*) "Added shared object at address:");
+  printBinary(target,32);
+  println();
+  print((int*) "next: ");
+  printBinary(getSharedObject_next(target),32);
+  print((int*) ", name: ");
+  print(getSharedObject_name(target));
+  print((int*) ", size: ");
+  printInteger(getSharedObject_size(target));
+  print((int*) ", value: ");
+  printInteger(getSharedObject_value(target));
+  println();
+
+  print((int*) "Added fd for shared object at address: ");
+  printBinary(fd,32);
+  println();
+  print((int*) "next: ");
+  printBinary(getFD_next(fd),32);
+  print((int*) ", getFD_id: ");
+  printInteger(getFD_id(fd));
+  print((int*) ", getFD_object: ");
+  printBinary(getFD_object(fd),32);
+  println();
+
+  println();
 }
 
 void implementShmRead() {
@@ -4773,13 +4810,6 @@ void implementShmRead() {
 
   name = tlb(pt,*(registers+REG_A0));
 
-  target = getSharedObject(name);
-
-  print((int*)"Read shared variable, name = ");
-  print((int*) *(target + 1));
-  print((int*)", value = ");
-  printInteger(*(target + 2));
-  println();  
 }
 
 void emitRead() {
@@ -6605,9 +6635,9 @@ void setSharedObject_name(int* object, int* name)   { *(object + 1) = (int) name
 void setSharedObject_size(int* object, int size)    { *(object + 2) = size;       }
 void setSharedObject_value(int* object, int value)  { *(object + 3) = value;      }
 
-int* getFD_next(int* fd)         { return (int*) *(fd);   }
-int  getFD_id(int* fd)           { return *(fd + 1);      }
-int* getFD_object(int* fd)       { return *(fd + 2);      }
+int* getFD_next(int* fd)         { return (int*) *(fd);     }
+int  getFD_id(int* fd)           { return *(fd + 1);        }
+int* getFD_object(int* fd)       { return (int*) *(fd + 2); }
 
 void setFD_next(int* fd, int* next)      { *(fd) = (int) next;       }
 void setFD_id(int* fd, int id)           { *(fd + 1) = id;           }
@@ -6619,98 +6649,27 @@ int* allocateSharedObject() {
   return sharedObject;
 }
 
-int* addSharedObject(int* name, int value){
-  int* object;
+int* addSharedObject(int* sharedObjectName) {
+  int* current;
 
-  object = getSharedObject(name);
-  if(object != (int*) 0){
-    setSharedObject_value(object,value);
-    return object;
+  current = shared_object_list;
+
+  while (current != (int*) 0) {
+    if(stringCompare(getSharedObject_name(current),sharedObjectName) != 0){
+      return current;
+    }
+    current = getSharedObject_next(current);
   }
-  object = allocateSharedObject();
-  // append new shared object to beginning of fd list
-  setSharedObject_next(object,shared_object_list);
-  setSharedObject_name(object,name);
-  setSharedObject_size(object,SIZEOFINT);
-  setSharedObject_value(object,value);
 
-  shared_object_list = object;
+  // [EIFLES] object not found, create new one and append shared object list (can be (int*) 0 if empty - thats ok)
+  current = allocateSharedObject();
+  setSharedObject_next(current,shared_object_list);
+  setSharedObject_name(current,sharedObjectName);
+  setSharedObject_size(current,SIZEOFINT);
+
+  shared_object_list = current;
+
   return shared_object_list;
-}
-
-int* setSharedObject(int* name, int value) {
-
-  int* target;
-  target = getSharedObject(name);
-
-  if (target == (int*) 0) {
-    printSimpleStringEifles("No object found");
-    return (int*) 0;
-  } 
-
-  printSimpleStringEifles("Found shared object, set value.");
-  setSharedObject_value(target,value);
-  return target;
-}
-
-int* getSharedObject(int* name) {
-
-  int* current;
-
-  // [EIFLES] Empty list
-  if(shared_object_list == (int*) 0) {
-    return (int*) 0;
-  }
-
-  current = shared_object_list;
-
-  while (stringCompare((int*) getSharedObject_name(current), name) == 0) {
-    current = getSharedObject_next(current);
-
-    if(current == (int*) 0){
-      return (int*) 0;
-    }
-  }
-
-  return current;
-}
-
-int deleteSharedObject (int* name) {
-  int* current;
-  int* previous;
-
-  // [EIFLES] Empty list
-  if(shared_object_list == (int*) 0) {
-    return -1;
-  }
-
-  current = shared_object_list;
-
-  while (stringCompare((int*) getSharedObject_name(current), name) == 0) {
-    previous = current;
-    current = getSharedObject_next(current);
-
-    if(current == (int*) 0){
-      return -1;
-    }
-  }
-
-  if(previous == (int*) 0) {
-    // [EIFLES] we are at the beginning 
-    if (getSharedObject_next(current) == (int*) 0) {
-      // [EIFLES] found shared object, only 1 shared object exists
-      shared_object_list = (int*) 0;
-    }
-    else {
-      shared_object_list = getSharedObject_next(current);
-    }
-  } 
-  else {
-    setSharedObject_next(previous,getSharedObject_next(current)); 
-  }
-
-  current = (int*) 0;
-  return 1;
 }
 
 int getNewFileDescriptorId() {
@@ -6727,24 +6686,19 @@ int* allocateFileDescriptor() {
 }
 
 int* addFileDescriptor(int* sharedObject) {
-  int* fd;
+  int* current;
 
-  if(fd_list == (int*) 0){
-    fd = allocateFileDescriptor();
-    fd_list = fd;
-    return fd_list;
-  }
-  //add new fd to head of fd list
-  fd = allocateFileDescriptor();
-  setFD_next(fd,fd_list);
-  setFD_id(fd,getNewFileDescriptorId());
-  setFD_object(fd,sharedObject);
+  current = allocateFileDescriptor();
+  setFD_next(current,fd_list);
+  setFD_id(current,getNewFileDescriptorId());
+  setFD_object(current,sharedObject);
 
-  fd_list = fd;
+  fd_list = current;
+
   return fd_list;
 }
 
-int* getFileDescriptor(int id) {
+int* getFileDescriptor(int fd_id) {
   int* current;
 
   // [EIFLES] Empty list
@@ -6754,53 +6708,16 @@ int* getFileDescriptor(int id) {
 
   current = fd_list;
 
-  while (getFD_id(current) != id) {
+  while (current != (int*) 0) {
+    if (getFD_id(current) == fd_id) {
+      // found fd with fd_id, return
+      return current;
+    }
     current = getFD_next(current);
-
-    if(current == (int*) 0){
-      return (int*) 0;
-    }
   }
 
-  return current;
-}
-
-int deleteFileDescriptor(int id) {
-  int* current;
-  int* previous;
-
-  // [EIFLES] Empty list,
-  if(fd_list == (int*) 0) {
-    return -1;
-  }
-
-  current = fd_list;
-
-  while (getFD_id(current) != id) {
-    previous = current;
-    current = getFD_next(current);
-
-    if(current == (int*) 0){
-      return -1;
-    }
-  }
-
-  if(previous == (int*) 0) {
-    // [EIFLES] we are at the beginning 
-    if (getFD_next(current) == (int*) 0) {
-      // [EIFLES] found fd, only 1 fd exists
-      fd_list = (int*) 0;
-    }
-    else {
-      fd_list = getFD_next(current);
-    }
-  } 
-  else {
-    setFD_next(previous,getFD_next(current)); 
-  }
-
-  current = (int*) 0;
-  return 1;
+  // no fd with fd_id found
+  return (int*) 0;
 }
 
 // -----------------------------------------------------------------
