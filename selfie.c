@@ -1253,6 +1253,7 @@ void setParent(int* context, int id)         { *(context + 9) = id; }
 // Morties---ShmObjects
 int  shmObjectCount=0;
 int* shmList = (int*) 0;
+
 int* getNextShmObject(int* shmObject) { return (int*) *shmObject; 		}
 int* getPrevShmObject(int* shmObject) { return (int*) *(shmObject+1); }
 int  getShmObjectId(int* shmObject)		{ return  			*(shmObject+2); }
@@ -5213,7 +5214,7 @@ int findOrCreateShmObjectByName(int* name){
 
 int addShmObject(int *name){
 	int *shmObject;
-	shmObject=malloc(2*SIZEOFINT+3*SIZEOFINTSTAR);
+	shmObject=malloc(2*SIZEOFINT+4*SIZEOFINTSTAR);
 	setNextShmObject(shmObject,(int*)0);
 	setPrevShmObject(shmObject,(int*)0);
 	setShmObjectId(shmObject,shmObjectCount);
@@ -5314,7 +5315,6 @@ void implementShmMap(){
 	int id;
 	int frameBegin;
 
-
 	id = *(registers + REG_A1);
 	vaddr = *(registers + REG_A0);
 
@@ -5349,15 +5349,16 @@ void assignShmObjectFrames(int* cShmObject,int frameSizeNeed){
 	int* frames;
 	int frameCount;
 	int i;
+	int* fresh;
 
-		
 	frames = (int*) 0;
 	frameCount  = frameSizeNeed / PAGESIZE;
 
 	i=0;
 
 	while(i<frameCount){
-		setNextFrame(freshFrame(), frames);
+		fresh = freshFrame();
+		setNextFrame(fresh, frames);
 		i = i+1;
 	}
 
