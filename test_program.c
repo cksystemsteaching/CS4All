@@ -16,7 +16,7 @@ int main(){
 		squared = i*i;
 
 		fd_a = shm_open("a");
-		fd_a = shm_open("b");
+		fd_b = shm_open("b");
 
 		shm_write(fd_a, i);
 		a = shm_read(fd_a);
