@@ -5425,8 +5425,52 @@ void emitShmClose(){
 	emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
+
+int* getShmObjectOfContextById(int shmObjectId){
+	int* shmObjectsOfContext;
+	shmObjectsOfContext=getContextShm(currentContext);
+	while(shmObjectsOfContext !=(int*) 0 ){
+		if(getContextShmObjectID(shmObjectsOfContext)==shmObjectId){
+			return shmObjectsOfContext;	
+		}
+		shmObjectsOfContext=getNextContextShmObject(shmObjectsOfContext);			
+	}
+	return shmObjectsOfContext;	
+}
+
 void implementShmClose(){
-	//FIXME MORTIS
+	int shmObjectId;
+	int* shmObject;
+	int returnCode;
+	int* shmObjectOfContext;
+	int vaddrOfShmObject;
+	int cId=-1;
+	shmObjectId= *(registers+REG_A0);
+	shmObject=findShmObjectById(shmObjectId);
+	if (shmObject!= (int*) 0){
+		if(getShmObjectFrames(shmObject)!=(int*) 0){
+			shmObjectOfContext=getShmObjectOfContextById(shmObjectId);	
+			if(shmObjectOfContext!=(int*)0){
+				//current context has shm object with specified id
+				vaddrOfShmObject=getContextShmObjectVaddr(shmObjectOfContext);
+				
+			}
+			else{
+				returnCode=-1;			
+			}
+			
+		}
+		else{
+			returnCode=-1;
+		}
+		
+		
+		
+	}
+	else{
+		returnCode=-1;
+		
+	}
 }
 
 // -----------------------------------------------------------------
