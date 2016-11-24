@@ -7476,16 +7476,24 @@ void setNumProcesses() {
 int runScheduler(int thisID) {
   int *thisContext;
   int *nextContext;
+  int* current;
 
-  // [EIFLES] print((int*) "DEBUG: runScheduler() called");
-  // [EIFLES] println();
+  // print((int*) "DEBUG: runScheduler() called, return ");
 
   thisContext = findContext(thisID, usedContexts);
   nextContext = getNextContext(thisContext);
 
-  if (nextContext != (int *) 0) {  
+  if (nextContext != (int *) 0) {
     return getID(nextContext);
   } else {
+    if (thisID == getID(thisContext)) {
+      // at the end of context list, go to beginning
+      current = thisContext;
+      while (getPrevContext(current) != (int*) 0) {
+        current = getPrevContext(current);
+      }
+      return getID(current);
+    }
     return getID(thisContext);
   }
 }
