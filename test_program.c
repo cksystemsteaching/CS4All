@@ -40,6 +40,18 @@ int main(){
 		printInteger(b);
 		println();
 
+		shm_close(fd_a);
+		shm_close(fd_b);
+
+		a = shm_read(fd_a);
+		b = shm_read(fd_b);
+
+		print((int*) "[AFTER CLOSE] a: ");
+		printInteger(a);
+		print((int*) ", b: ");
+		printInteger(b);
+		println();
+
 		i = i + 1;
 	}
 	return 1;

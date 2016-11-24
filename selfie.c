@@ -839,6 +839,8 @@ void emitSchedYield();
 void implementSchedYield();
 void emitShmOpen();
 void implementShmOpen();
+void emitShmClose();
+void implementShmClose();
 void emitShmWrite();
 void implementShmWrite();
 void emitShmRead();
@@ -851,7 +853,8 @@ int getNewFileDescriptorId();
 
 int* addSharedObject(int* sharedObjectName);
 int* addFileDescriptor(int* sharedObject);
-int* getFileDescriptor(int id);
+int* getFileDescriptor(int fd_id);
+int removeFileDescriptor(int fd_id);
 
 int* getSharedObject_next(int* object);
 int* getSharedObject_name(int* object);
@@ -883,11 +886,13 @@ int SYSCALL_EXIT   = 4001;
 int SYSCALL_READ   = 4003;
 int SYSCALL_WRITE  = 4004;
 int SYSCALL_OPEN   = 4005;
-// [EIFLES]
+// [EIFLES] yield, so a different process (context) can go on
 int SYSCALL_SCHED_YIELD = 4006;
+// [EIFLES] shared memory operations
 int SYSCALL_SHM_OPEN = 4007;
-int SYSCALL_SHM_WRITE = 4008;
-int SYSCALL_SHM_READ = 4009;
+int SYSCALL_SHM_CLOSE = 4008;
+int SYSCALL_SHM_WRITE = 4009;
+int SYSCALL_SHM_READ = 4010;
 
 int SYSCALL_MALLOC = 4045;
 
@@ -4088,6 +4093,7 @@ void selfie_compile() {
   emitMalloc();
   emitSchedYield();
   emitShmOpen();
+  emitShmClose();
   emitShmWrite();
   emitShmRead();
 
@@ -4747,6 +4753,18 @@ void emitShmOpen() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
+void emitShmClose() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_close", 0, PROCEDURE, INT_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // fd_id
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_CLOSE);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
 void emitShmWrite() {
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_write", 0, PROCEDURE, VOID_T, 0, binaryLength);
 
@@ -4819,6 +4837,18 @@ void implementShmOpen() {
   // println();
 }
 
+void implementShmClose() {
+  int fd_id;
+  int successful;
+
+  fd_id = *(registers+REG_A0);
+
+  successful = removeFileDescriptor(fd_id);
+
+  // set return value
+  *(registers+REG_V0) = successful;
+}
+
 void implementShmWrite() {
   int value;
   int fd_id;
@@ -4841,8 +4871,17 @@ void implementShmRead() {
   fd_id = *(registers+REG_A0);
 
   fd = getFileDescriptor(fd_id);
+  if (fd == (int*) 0) {
+    // fd does not exist
+    *(registers+REG_V0) = (int) 0;
+    return;
+  }
   sharedObject = getFD_object(fd);
-
+  if (sharedObject == (int*) 0) {
+    // no shared object yet / shm_write not called yet!
+    *(registers+REG_V0) = (int) 0;
+    return;
+  }
   // set return value
   *(registers+REG_V0) = (int) getSharedObject_value(sharedObject);
 
@@ -5734,6 +5773,8 @@ void fct_syscall() {
       implementSchedYield();
     else if (*(registers+REG_V0) == SYSCALL_SHM_OPEN) 
       implementShmOpen();
+    else if (*(registers+REG_V0) == SYSCALL_SHM_CLOSE) 
+      implementShmClose();
     else if (*(registers+REG_V0) == SYSCALL_SHM_WRITE) 
       implementShmWrite();
     else if (*(registers+REG_V0) == SYSCALL_SHM_READ) 
@@ -6707,7 +6748,8 @@ int* addSharedObject(int* sharedObjectName) {
     current = getSharedObject_next(current);
   }
 
-  // [EIFLES] object not found, create new one and append shared object list (can be (int*) 0 if empty - thats ok)
+  // [EIFLES] object not found, create new one and append shared object list 
+  // (can be (int*) 0 if empty - thats ok)
   current = allocateSharedObject();
   setSharedObject_next(current,shared_object_list);
   setSharedObject_name(current,sharedObjectName);
@@ -6764,6 +6806,57 @@ int* getFileDescriptor(int fd_id) {
 
   // no fd with fd_id found
   return (int*) 0;
+}
+
+void printListOfFDs() {
+  int* current;
+
+  print((int*) "fd_list: ");
+  current = fd_list;
+  while (current != (int*) 0) {
+    printInteger(getFD_id(current));
+    print((int*) " -> ");
+    current = getFD_next(current);
+  }
+  println();
+}
+
+int removeFileDescriptor(int fd_id) {
+  int* current;
+  int* previous;
+
+  printListOfFDs();
+  print((int*) " now close fd with id: ");
+  printInteger(fd_id);
+  println();
+
+  // [EIFLES] Empty list, nothing to delete
+  if(fd_list == (int*) 0) {
+    return 0;
+  }
+
+  previous =  (int*) 0;
+  current = fd_list;
+
+  while (current != (int*) 0) {
+    if (getFD_id(current) == fd_id) {
+      println();
+      // found fd with fd_id, delete
+      if (previous == (int*) 0) {
+        // the found fd is right at the head of the list
+        fd_list = getFD_next(current);
+      }
+      else {
+        setFD_next(previous,getFD_next(current));
+      }
+      return 1;
+    }
+    previous = current;
+    current = getFD_next(current);
+  }
+
+  // no fd with fd_id found
+  return 0;  
 }
 
 // -----------------------------------------------------------------
