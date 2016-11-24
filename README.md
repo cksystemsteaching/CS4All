@@ -123,3 +123,9 @@ All interrupts, traps or exceptions must be handled by the OS process instead of
 // After all processes have closed their access to a shared memory object, the OS should free the resources associated  with the object.   
 
 * Demonstrate the usage of shared memory between at least 2 user processes.
+* __Deadline__: Nov 28, 8pm (hard, no extensions)
+
+-----------
+
+[Lecture 6](https://myfiles.sbg.ac.at/index.php/s/tOfYlWfhcm8HSQc)
+-----------
