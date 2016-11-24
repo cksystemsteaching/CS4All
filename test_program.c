@@ -37,8 +37,8 @@ int main(){
 		printInteger(b);
 		println();
 
-		// shm_close(fd_a);
-		// shm_close(fd_b);
+		shm_close(fd_a);
+		shm_close(fd_b);
 
 		a = shm_read(fd_a);
 		b = shm_read(fd_b);
@@ -54,8 +54,8 @@ int main(){
 		sched_yield();
 	}
 
-	shm_close(99);
-	shm_close(98);
+	// shm_close(26);
+	// shm_close(98);
 
 	return 1;
 }
