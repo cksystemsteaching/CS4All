@@ -868,10 +868,12 @@ void setSharedObject_value(int* object, int value);
 
 int* getFD_next(int* fd);
 int  getFD_id(int* fd);
+int  getFD_processId(int* fd);
 int* getFD_object(int* fd);
 
 void setFD_next(int* fd, int* next);
 void setFD_id(int* fd, int id);
+void setFD_processId(int* fd, int processId);
 void setFD_object(int* fd, int* object);
 
 // ------------------------ GLOBAL CONSTANTS-----------------------
@@ -4830,6 +4832,8 @@ void implementShmOpen() {
   // printBinary(getFD_next(fd),32);
   // print((int*) ", getFD_id: ");
   // printInteger(getFD_id(fd));
+  // print((int*) ", getFD_processId: ");
+  // printInteger(getFD_processId(fd));
   // print((int*) ", getFD_object: ");
   // printBinary(getFD_object(fd),32);
   // println();
@@ -4842,7 +4846,6 @@ void implementShmClose() {
   int successful;
 
   fd_id = *(registers+REG_A0);
-
   successful = removeFileDescriptor(fd_id);
 
   // set return value
@@ -6710,7 +6713,8 @@ void selfie_disassemble() {
 // +---+------------+
 // | 0 | next       | pointer to next FD
 // | 1 | id         | id of the file descriptor != processID
-// | 2 | object     | pointer to the shared object
+// | 2 | processId  | id of the process, which opened this FD (which is checked on calling close())
+// | 3 | object     | pointer to the shared object
 // +---+------------+
 int* getSharedObject_next(int* object)   { return (int*) *(object);    }
 int* getSharedObject_name(int* object)   { return (int*) *(object + 1);}
@@ -6724,11 +6728,13 @@ void setSharedObject_value(int* object, int value)  { *(object + 3) = value;    
 
 int* getFD_next(int* fd)         { return (int*) *(fd);     }
 int  getFD_id(int* fd)           { return *(fd + 1);        }
-int* getFD_object(int* fd)       { return (int*) *(fd + 2); }
+int  getFD_processId(int* fd)    { return *(fd + 2);        }
+int* getFD_object(int* fd)       { return (int*) *(fd + 3); }
 
-void setFD_next(int* fd, int* next)      { *(fd) = (int) next;       }
-void setFD_id(int* fd, int id)           { *(fd + 1) = id;           }
-void setFD_object(int* fd, int* object)  { *(fd + 2) = (int) object; }
+void setFD_next(int* fd, int* next)         { *(fd) = (int) next;       }
+void setFD_id(int* fd, int id)              { *(fd + 1) = id;           }
+void setFD_processId(int* fd, int processId){ *(fd + 2) = processId;    }
+void setFD_object(int* fd, int* object)     { *(fd + 3) = (int) object; }
 
 int* allocateSharedObject() {
   int* sharedObject;
@@ -6769,19 +6775,32 @@ int getNewFileDescriptorId() {
 
 int* allocateFileDescriptor() {
   int* fd;
-  fd = zalloc(2*SIZEOFINTSTAR + SIZEOFINT);
+  fd = zalloc(2*SIZEOFINTSTAR + 2*SIZEOFINT);
   return fd;
 }
 
 int* addFileDescriptor(int* sharedObject) {
   int* current;
+  int processId;
+  int fd_id;
+
+  fd_id = getNewFileDescriptorId();
+  processId = getID(currentContext);
 
   current = allocateFileDescriptor();
   setFD_next(current,fd_list);
-  setFD_id(current,getNewFileDescriptorId());
+  setFD_id(current,fd_id);
+  setFD_processId(current,processId);
   setFD_object(current,sharedObject);
 
   fd_list = current;
+
+  print((int*) "New FD [fd_id: ");
+  printInteger(fd_id);
+  print((int*) ", processId: ");
+  printInteger(processId);
+  print((int*) "]");
+  println();
 
   return fd_list;
 }
@@ -6841,7 +6860,20 @@ int removeFileDescriptor(int fd_id) {
   while (current != (int*) 0) {
     if (getFD_id(current) == fd_id) {
       println();
-      // found fd with fd_id, delete
+      // found fd with fd_id
+      if (getFD_processId(current) != getID(currentContext)) {
+        // calling process is not the process which opened the FD
+        // not allowed, return.
+        print((int*) "Process with id: ");
+        printInteger(getID(currentContext));
+        print((int*) " tried to close fd with id: ");
+        printInteger(fd_id);
+        print((int*) ", opened by process with id: ");
+        printInteger(getFD_processId(current));
+        print((int*) " --> Abort close.");
+        println();
+        return 0;
+      }
       if (previous == (int*) 0) {
         // the found fd is right at the head of the list
         fd_list = getFD_next(current);

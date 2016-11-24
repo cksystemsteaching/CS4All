@@ -1,7 +1,6 @@
 int main(){
 
   int i;
-  int squared;
 
   int fd_a;
   int fd_b;
@@ -13,8 +12,6 @@ int main(){
 
 	i = 0;
 	while(i < 10) {
-		squared = i*i;
-
 		fd_a = shm_open("a");
 		fd_b = shm_open("b");
 
@@ -27,10 +24,10 @@ int main(){
 		printInteger(b);
 		println();
 
-		shm_write(fd_a, i);
-		a = shm_read(fd_a);
+		shm_write(fd_a, a + 1);
+		shm_write(fd_b, 2*(a+1));
 
-		shm_write(fd_b, squared);
+		a = shm_read(fd_a);
 		b = shm_read(fd_b);
 
 
@@ -40,8 +37,8 @@ int main(){
 		printInteger(b);
 		println();
 
-		shm_close(fd_a);
-		shm_close(fd_b);
+		// shm_close(fd_a);
+		// shm_close(fd_b);
 
 		a = shm_read(fd_a);
 		b = shm_read(fd_b);
@@ -53,6 +50,12 @@ int main(){
 		println();
 
 		i = i + 1;
+
+		sched_yield();
 	}
+
+	shm_close(99);
+	shm_close(98);
+
 	return 1;
 }
