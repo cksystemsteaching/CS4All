@@ -1,25 +1,40 @@
 
 int main(int argc, int *argv){
-	int id;
-	int size;
-	//int hypsterID;
-	int* vaddr;
+	int firstShmId;
+	int firstShmSize;
+	int* firstShmVaddr;
 	int j;
-  	initLibrary();
-	id = shm_open("dummyshm");
-	size = shm_size(id,5000);
-	vaddr = shm_map(0,id);
-	//hypsterID = hypster_ID();
+	int unsharedOff;
+	int pagesize;
+	int wordsize;
 
-	//*(vaddr) = 0;
+	initLibrary();
+	pagesize=4096;
+	wordsize=4;
+	
+	firstShmId = shm_open("dummyshm");
+	firstShmSize = shm_size(firstShmSize,1);
+	firstShmVaddr = shm_map(0,firstShmId);
+	
+	print((int*)"Writing/Reading to/from shared memory");
 	j=10;
 	while(j>0){
-		printd("Vaddr ",*(vaddr+1));
-		*(vaddr+1) = *(vaddr+1) + 1;
+		printd("Vaddr ",*(firstShmVaddr+1));
+		*(firstShmVaddr+1) = *(firstShmVaddr+1) + 1;
 		j=j-1;
 	}
+	unsharedOff=pagesize/wordsize;
 
+	//now lets write to a non shared variable
+	print((int*)"Writing/Reading to/from unshared memory");
+	while(j<10){
+		printd("Vaddr ",*(firstShmVaddr+unsharedOff));
+		*(firstShmVaddr+unsharedOff) = *(firstShmVaddr+unsharedOff) + 1;
+		j=j+1;
+	}
+	shm_close(firstShmId);
 
+	
 
 	//printd("SHMEXAMPLE vaddrsegfault",*(vaddr+17000));
 

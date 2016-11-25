@@ -1251,23 +1251,27 @@ void setParent(int* context, int id)         { *(context + 9) = id; }
 void setContextShm(int* context, int* contextShm)    { *(context + 10) = (int) contextShm; }
 
 
-// Morties Contextlist
+// Morties Context ShmObjectlist
 
 int* getNextContextShmObject(int* shmObject);
+int* getPrevContextShmObject(int* shmObject);
 int  getContextShmObjectID(int* contexts);
 int* getContextShmObjectVaddr(int* contexts);
 
 void setNextContextShmObject(int* shmObject, int* next);
+void setPrevContextShmObject(int* shmObject, int* prev);
 void setContextShmObjectID		(int* shmObject, int id);
 void setContextShmObjectVaddr	(int* shmObject, int* vaddr);
 
-void setNextContextShmObject(int* shmObject, int* next)		{ *shmObject			=	(int)  next; }
-void setContextShmObjectID	 (int* shmObject,	int id) 			{	*(shmObject+1)	=	id;										}
-void setContextShmObjectVaddr(int* shmObject, int* vaddr) 	{ *(shmObject+2)	= (int)	vaddr; 					}
+void setNextContextShmObject(int* shmObject, int* next)		{ *shmObject		 =	(int)  next; 	}
+void setPrevContextShmObject(int* shmObject, int* prev)		{	*(shmObject+1) = (int) prev;		}
+void setContextShmObjectID	 (int* shmObject,	int id) 		{	*(shmObject+2) =	id;					}
+void setContextShmObjectVaddr(int* shmObject, int* vaddr) { *(shmObject+3) = (int)	vaddr;	}
 
-int* getNextContextShmObject(int* shmObject) 	{ return (int*) *shmObject; 		}
-int  getContextShmObjectID(int* shmObject)			{ return  			*(shmObject+1); }
-int* getContextShmObjectVaddr(int* shmObject)		{ return (int*) *(shmObject+2); }
+int* getNextContextShmObject(int* shmObject) 		{ return (int*) 	*shmObject; 		}
+int* getPrevContextShmObject(int* shmObject)		{ return (int*) 	*(shmObject+1);	}
+int  getContextShmObjectID(int* shmObject)			{ return  				*(shmObject+2); }
+int* getContextShmObjectVaddr(int* shmObject)		{ return (int*) 	*(shmObject+3); }
 
 
 // Morties---ShmObjects
@@ -1290,6 +1294,8 @@ void setShmObjectFrames(int* shmObject,int* frames)				{ *(shmObject+5)  = (int)
 
 // MORTIS SHM
 int addShmObject(int* name);
+void addShmObjectToContext(int id, int vaddr);
+void removeShmObjectOfContextById(int id);
 int findOrCreateShmObjectByName(int* name);
 int* findShmObjectById(int id);
 int shmSizeHandling(int* cShmObject, int size);
@@ -5212,7 +5218,7 @@ void emitShmOpen(){
 void implementShmOpen(){
 	int shmObjectId;
 	int *name;
-	name= tlb(st,*(registers+REG_A0));
+	name = tlb(st,*(registers+REG_A0));
 	shmObjectId=findOrCreateShmObjectByName(name);	
 	printd("ID: ",shmObjectId);
 	printd("name: ",name);
@@ -5247,7 +5253,7 @@ int addShmObject(int *name){
 		setPrevShmObject(shmList,shmObject);
 		setNextShmObject(shmObject,shmList);	
 	}
-
+	//new shmObject will be new head
 	shmList=shmObject;
 	
 	return getShmObjectId(shmObject);
@@ -5303,6 +5309,8 @@ int* findShmObjectById(int id){
 
 	return cShmObject;
 }
+
+
 
 int shmSizeHandling(int* cShmObject, int size){
 	if(getShmObjectSize(cShmObject) == 0){
@@ -5365,21 +5373,27 @@ void implementShmMap(){
 			printd("Frame Addr: ",*(frames+0));
 			frames = getNextFrame(frames);
 		}
-
-		contextListEntry = malloc(1 * SIZEOFINTSTAR + 2 * SIZEOFINT);
-		setContextShmObjectVaddr(contextListEntry,frameBegin);
-		setContextShmObjectID(contextListEntry,id);
-
-		if(getContextShm(currentContext)!=(int*)0) {
-			setNextContextShmObject(contextListEntry,getContextShm(currentContext));
-		}else{
-			setNextContextShmObject(contextListEntry,(int*)0);
-		}
-
-		setContextShm(currentContext,contextListEntry);
+		//each shmContextObject has: pointer to next, pointer to previous, the id of the the shmObject and
+		// and its start address in virtual memory
+		addShmObjectToContext(id,frameBegin);
 
 	}
 	*(registers+REG_V0) = frameBegin;
+}
+
+void addShmObjectToContext(int id, int vaddr){
+	int *shmContextObject;
+	int *contextShmList;
+	shmContextObject = malloc(3 * SIZEOFINTSTAR + 1 * SIZEOFINT);
+	setContextShmObjectID(shmContextObject,id);
+	setContextShmObjectVaddr(shmContextObject,vaddr);
+	contextShmList=getContextShm(currentContext);	
+	
+	if(contextShmList!= (int*)0){
+		setPrevContextShmObject(contextShmList,shmContextObject);
+		setNextContextShmObject(shmContextObject,contextShmList);	
+	}
+	setContextShm(currentContext,shmContextObject);
 
 }
 
@@ -5426,17 +5440,49 @@ void emitShmClose(){
 }
 
 
+
 int* getShmObjectOfContextById(int shmObjectId){
 	int* shmObjectsOfContext;
 	shmObjectsOfContext=getContextShm(currentContext);
+
 	while(shmObjectsOfContext !=(int*) 0 ){
 		if(getContextShmObjectID(shmObjectsOfContext)==shmObjectId){
+			printInteger(getContextShmObjectID(shmObjectsOfContext));
 			return shmObjectsOfContext;	
 		}
 		shmObjectsOfContext=getNextContextShmObject(shmObjectsOfContext);			
 	}
 	return shmObjectsOfContext;	
 }
+void removeShmObjectOfContextById(int shmObjectId){
+	int* delShmObject;
+	int* prevShmObject;
+	int* nextShmObject;
+	print((int*)"Deleting Shm Object");
+	delShmObject=getShmObjectOfContextById(shmObjectId);
+	
+	prevShmObject=getPrevContextShmObject(delShmObject);
+	nextShmObject=getNextContextShmObject(delShmObject);
+
+	if(prevShmObject==(int*) 0){
+		//is head
+		if(nextShmObject!=(int*)0)
+			setPrevContextShmObject(nextShmObject,(int*)0);
+		setContextShm(currentContext,nextShmObject);
+	}
+	if(nextShmObject!=(int*)0){ 
+		//not last node
+		setPrevContextShmObject(nextShmObject,prevShmObject);
+	}
+	if(prevShmObject!=(int*)0){
+		//not first node
+		setNextContextShmObject(prevShmObject,nextShmObject);
+	}
+		
+
+}
+
+
 
 void implementShmClose(){
 	int shmObjectId;
@@ -5444,16 +5490,22 @@ void implementShmClose(){
 	int returnCode;
 	int* shmObjectOfContext;
 	int vaddrOfShmObject;
-	
+	print((int*)"Shm Close");
 	shmObjectId= *(registers+REG_A0);
 	shmObject=findShmObjectById(shmObjectId);
 	if (shmObject!= (int*) 0){
+		print((int*)"Shm Found");
 		if(getShmObjectFrames(shmObject)!=(int*) 0){
+			print((int*)"Frames for Shm found");
 			shmObjectOfContext=getShmObjectOfContextById(shmObjectId);	
 			if(shmObjectOfContext!=(int*)0){
+					print((int*)"Shm Found in Context");
+					println();
 				//current context has shm object with specified id
 				vaddrOfShmObject=getContextShmObjectVaddr(shmObjectOfContext);
-				
+				//remove the shmoObject from the contexts ShmObjectList; 
+				removeShmObjectOfContextById(shmObjectId);
+				//check if there are other contexts using this object
 			}
 			else{
 				returnCode=-1;			
