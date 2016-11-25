@@ -52,3 +52,22 @@ storing the mapped pages in the client structs will be necessary when shm_close(
 Then, these pages have to be re-mapped to other frames in order to make the former shared memory "private" for
 each process  (TODO)
 
+
+
+Assign3:
+******* -u param **************************
+Switch nur erlaubt vom Hypster:
+Wie ist der generelle Ablauf?
+1. userprocess wirft exception
+2. mipster/hardware fängt es auf mit #runUntilException() und setzt trap
+3. daraufhin kommt man wieder in die runOrHostUntilExitWithPageFaultHandling() vom mipster
+3.1.   "if (getParent(fromContext) != selfie_ID())" wird kontrolliert
+3.1.1. da mipster läuft, merkt dieser, dass er nicht das OS ist, sondern nur handware-> geh zum OS. Dieser wird alles regeln
+3.2.   er scheduled zu dem OS aka den parent. Hier muss kontrolliert werden, ob parent == OS == hypster_ID();
+3.2.1. hier wird also gschaut werden ob der User-Process vom OS gestartet wurde (-u param). Ansonsten fail
+
+******* -k param **************************
+
+
+
+

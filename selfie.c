@@ -1150,6 +1150,14 @@ int TIMESLICE = 10000000;
 
 int INSTANCE_COUNT = 1;
 
+// tells the mipster to pass (ake let him handle) all interrupts and exceptions to the underlying OS(aka hypster)
+// 0 = false; 1 = true;
+int OS_MUST_HANDLE_EXCEPTIONS_AND_INTERRUPT = 0;
+
+// tells a user process to exit immediately on exceptions occurrence if no OS is running on the hardware (aka mipster)
+// 0 = false; 1 = true;
+int EXIT_ON_NO_OS_PROCESS_EXISTING = 0;
+
 // ------------------------ GLOBAL VARIABLES -----------------------
 
 int* registers = (int*) 0; // general purpose registers
@@ -1357,6 +1365,10 @@ void setTimeslice();
 
 void setInstanceCount();
 
+void setFlag_OSHandlesInterruptAndException();
+
+void setFlag_ExitAtExceptionInterruptIfNoOSRunning();
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int MINSTER = 1;
@@ -1388,6 +1400,8 @@ void setArgument(int* argv);
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int USAGE = 1;
+// is an internal error. OS is not parent, hence the hardware/mipster would handle the stuff, which is wrong.
+int OS_IS_NOT_PARENT = 2;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -5993,7 +6007,7 @@ void freeSharedMemoryForContext(int id){
             if(getClientPID(client) == id){
                 deleteClientFromShmo(shmo, client);
             }
-            client = getNextClient(clients);
+            client = getNextClient(client);
         }
         //no clients left using the shmo? -> delete shmo
         if (get_shmo_clients(shmo) == (int*) 0) {
@@ -7510,6 +7524,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   // works with mipsters and hypsters
   int fromID;
   int* fromContext;
+  int* context;
   int savedStatus;
   int exceptionNumber;
   int exceptionParameter;
@@ -7526,10 +7541,18 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         toID = getParent(fromContext);
 
         if (findContext(toID, usedContexts) == (int *) 0)
-            return 42;
+            return 1;
     }
     else {
-        // we are the parent in charge of handling exceptions
+      // we are the parent in charge of handling exceptions
+        //if the parent isn't the OS, then we have done something wrong... -> error
+        if (EXIT_ON_NO_OS_PROCESS_EXISTING == 1) {
+          if(getID(currentContext) != hypster_ID()) {
+            return OS_IS_NOT_PARENT;
+          }
+        }
+
+
         savedStatus = selfie_status();
         exceptionNumber = decodeExceptionNumber(savedStatus);
         exceptionParameter = decodeExceptionParameter(savedStatus);
@@ -7718,6 +7741,14 @@ void setInstanceCount() {
         INSTANCE_COUNT = instanceCount;
 }
 
+void setFlag_OSHandlesInterruptAndException(){
+  OS_MUST_HANDLE_EXCEPTIONS_AND_INTERRUPT = 1;
+}
+
+void setFlag_ExitAtExceptionInterruptIfNoOSRunning(){
+  EXIT_ON_NO_OS_PROCESS_EXISTING = 1;
+}
+
 int selfie_run(int engine, int machine, int debugger) {
   int exitCode;
 
@@ -7834,8 +7865,14 @@ int selfie() {
       else if (stringCompare(option, (int*) "-t"))
         setTimeslice();
       else if (stringCompare(option, (int*) "-n"))
-          setInstanceCount();
-      else if (stringCompare(option, (int*) "-m"))
+        setInstanceCount();
+      else if (stringCompare(option, (int*) "-k")) {
+        setFlag_OSHandlesInterruptAndException();
+        return selfie_run(MIPSTER, MIPSTER, 0);
+      } else if (stringCompare(option, (int*) "-u")) {
+        setFlag_ExitAtExceptionInterruptIfNoOSRunning();
+        return selfie_run(HYPSTER, MIPSTER, 0);
+      } else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
         return selfie_run(MIPSTER, MIPSTER, 1);
