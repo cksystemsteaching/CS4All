@@ -849,27 +849,27 @@ void emitShmRead();
 void implementShmRead();
 
 // [EIFLES] SharedMemObjects and file descriptor
-int* allocateSharedObject();
-int* allocateFileDescriptor();
-int getNewFileDescriptorId();
+int* allocateShObj();
+int* allocateFD();
+int getNewFDId();
 
-int* addSharedObject(int* sharedObjectName);
-int removeSharedObject(int* sharedObject);
-int* addFileDescriptor(int* sharedObject);
-int* getFileDescriptor(int fd_id);
-int removeFileDescriptor(int fd_id);
+int* addShObj(int* shObjName);
+int removeShObj(int* shObj);
+int* addFD(int* shObj);
+int* getFD(int fd_id);
+int removeFD(int fd_id);
 
-int* getSharedObject_next(int* object);
-int* getSharedObject_name(int* object);
-int  getSharedObject_size(int* object);
-int  getSharedObject_fd_count(int* object);
-int* getSharedObject_value(int* object);
+int* getShObj_next(int* object);
+int* getShObj_name(int* object);
+int  getShObj_size(int* object);
+int  getShObj_fd_count(int* object);
+int* getShObj_value(int* object);
 
-void setSharedObject_next(int* object, int* next);
-void setSharedObject_name(int* object, int* name);
-void setSharedObject_size(int* object, int size);
-void setSharedObject_fd_count(int* object, int fd_count);
-void setSharedObject_value(int* object, int* value);
+void setShObj_next(int* object, int* next);
+void setShObj_name(int* object, int* name);
+void setShObj_size(int* object, int size);
+void setShObj_fd_count(int* object, int fd_count);
+void setShObj_value(int* object, int* value);
 
 int* getFD_next(int* fd);
 int  getFD_id(int* fd);
@@ -4821,14 +4821,14 @@ void implementSchedYield() {
 }
 
 void implementShmOpen() {
-  int* sharedObjectName;
-  int* sharedObject;
+  int* shObjName;
+  int* shObj;
   int* fd;
 
-  sharedObjectName = tlb(pt,*(registers+REG_A0));
+  shObjName = tlb(pt,*(registers+REG_A0));
 
-  sharedObject = addSharedObject(sharedObjectName);
-  fd = addFileDescriptor(sharedObject);
+  shObj = addShObj(shObjName);
+  fd = addFD(shObj);
 
   // set return value
   *(registers+REG_V0) = (int) getFD_id(fd);
@@ -4836,18 +4836,18 @@ void implementShmOpen() {
   // printSimpleStringEifles("implementShmOpen");
   print((int*) "Open shared object ");
   // print((int*) " at address:");
-  // printBinary(sharedObject,32);
+  // printBinary(shObj,32);
   // println();
   // print((int*) "next: ");
-  // printBinary(getSharedObject_next(sharedObject),32);
+  // printBinary(getShObj_next(shObj),32);
   print((int*) ", name: ");
-  print(getSharedObject_name(sharedObject));
+  print(getShObj_name(shObj));
   print((int*) ", size: ");
-  printInteger(getSharedObject_size(sharedObject));
+  printInteger(getShObj_size(shObj));
   print((int*) ", fd_count: ");
-  printInteger(getSharedObject_fd_count(sharedObject));
+  printInteger(getShObj_fd_count(shObj));
   print((int*) ", value*: ");
-  printBinary(getSharedObject_value(sharedObject),32);
+  printBinary(getShObj_value(shObj),32);
   println();
 
   // print((int*) "Added fd for shared object at address: ");
@@ -4871,7 +4871,7 @@ void implementShmClose() {
   int successful;
 
   fd_id = *(registers+REG_A0);
-  successful = removeFileDescriptor(fd_id);
+  successful = removeFD(fd_id);
 
   // set return value
   *(registers+REG_V0) = successful;
@@ -4881,13 +4881,13 @@ void implementShmSize() {
   int fd_id;
   int size;
   int* fd;
-  int* sharedObject;
-  int* sharedObject_value;
+  int* shObj;
+  int* shObj_value;
 
   size = *(registers+REG_A1);
   fd_id = *(registers+REG_A0);
 
-  fd = getFileDescriptor(fd_id);
+  fd = getFD(fd_id);
 
   if (fd == (int*) 0) {
     // fd does not exist
@@ -4895,74 +4895,74 @@ void implementShmSize() {
     return;
   }
 
-  sharedObject = getFD_object(fd);
-  if (getSharedObject_size(sharedObject) == 0) {
+  shObj = getFD_object(fd);
+  if (getShObj_size(shObj) == 0) {
     // no size set yet, now set size
-    setSharedObject_size(sharedObject,size);
+    setShObj_size(shObj,size);
     // allocate 
-    sharedObject_value = zalloc(size);
-    setSharedObject_value(sharedObject,sharedObject_value);
+    shObj_value = zalloc(size);
+    setShObj_value(shObj,shObj_value);
     //TODO, for now only initialize int value to 0
-    *(getSharedObject_value(sharedObject)) = (int) 0;
+    *(getShObj_value(shObj)) = (int) 0;
   }
 
   // set return value
-  *(registers+REG_V0) = (int) getSharedObject_size(sharedObject);
+  *(registers+REG_V0) = (int) getShObj_size(shObj);
 
   print((int*) "Called shm_size to set size of fd id: ");
   printInteger(fd_id);
   print((int*) " to: ");
   printInteger(size);
   print((int*) " bytes. Size now: ");
-  printInteger(getSharedObject_size(sharedObject));
+  printInteger(getShObj_size(shObj));
   print((int*) " bytes. value*:");
-  printBinary(getSharedObject_value(sharedObject),32);
+  printBinary(getShObj_value(shObj),32);
   println();
 }
 
 void implementShmWrite() {
   int value;
   int fd_id;
-  int* sharedObject;
+  int* shObj;
   int* fd;
 
   value = *(registers+REG_A1);
   fd_id = *(registers+REG_A0);
 
-  fd = getFileDescriptor(fd_id);
-  sharedObject = getFD_object(fd);
+  fd = getFD(fd_id);
+  shObj = getFD_object(fd);
 
   print((int*) "Write on fd_id: ");
   printInteger(fd_id);
   print((int*) ", shared object value*: ");
-  printBinary(getSharedObject_value(sharedObject),32);
+  printBinary(getShObj_value(shObj),32);
   print((int*) ", shared object value: ");
-  printInteger(*(getSharedObject_value(sharedObject)));
+  printInteger(*(getShObj_value(shObj)));
 
   // for now, only writes 4 Bytes(SIZEOFINT) to *(value)
   // TODO
-  *(getSharedObject_value(sharedObject)) = value;
+  *(getShObj_value(shObj)) = value;
 
   print((int*) ", new value: ");
-  printInteger(*(getSharedObject_value(sharedObject)));
+  printInteger(*(getShObj_value(shObj)));
   println();
 }
 
 void implementShmRead() {
   int fd_id;
   int* fd;
-  int* sharedObject;
+  int* shObj;
 
   fd_id = *(registers+REG_A0);
 
-  fd = getFileDescriptor(fd_id);
+  fd = getFD(fd_id);
   if (fd == (int*) 0) {
     // fd does not exist
     *(registers+REG_V0) = (int) 0;
     return;
   }
-  sharedObject = getFD_object(fd);
-  if (sharedObject == (int*) 0) {
+  shObj = getFD_object(fd);
+  if (shObj == (int*) 0) {
     // no shared object yet / shm_write not called yet!
     *(registers+REG_V0) = (int) 0;
     return;
@@ -4971,15 +4971,15 @@ void implementShmRead() {
   // for now, only reads 4 Bytes(SIZEOFINT) from *(value)
   // TODO
   // set return value
-  *(registers+REG_V0) = (int) *(getSharedObject_value(sharedObject));
+  *(registers+REG_V0) = (int) *(getShObj_value(shObj));
 
   // printSimpleStringEifles("implementShmRead");
   // print((int*) "Read with fd_id:");
   // printInteger(fd_id);
   // print((int*) " on shared object name: ");
-  // print(getSharedObject_name(sharedObject));
+  // print(getShObj_name(shObj));
   // print((int*) ", value: ");
-  // printBinary(getSharedObject_value(sharedObject),32);
+  // printBinary(getShObj_value(shObj),32);
   // println();
 }
 
@@ -6804,17 +6804,17 @@ void selfie_disassemble() {
 // | 2 | int   | processId| id of the process, which opened this FD (which is checked on calling close())
 // | 3 | int*  | object   | pointer to the shared object
 // +---+------------+
-int* getSharedObject_next(int* object)      { return (int*) *(object);        }
-int* getSharedObject_name(int* object)      { return (int*) *(object + 1);    }
-int  getSharedObject_size(int* object)      { return *(object + 2);           }
-int  getSharedObject_fd_count(int* object)  { return *(object + 3);           }
-int* getSharedObject_value(int* object)     { return (int*) *(object + 4);    }
+int* getShObj_next(int* object)      { return (int*) *(object);        }
+int* getShObj_name(int* object)      { return (int*) *(object + 1);    }
+int  getShObj_size(int* object)      { return *(object + 2);           }
+int  getShObj_fd_count(int* object)  { return *(object + 3);           }
+int* getShObj_value(int* object)     { return (int*) *(object + 4);    }
 
-void setSharedObject_next(int* object, int* next)         { *(object) = (int) next;         }
-void setSharedObject_name(int* object, int* name)         { *(object + 1) = (int) name;     }
-void setSharedObject_size(int* object, int size)          { *(object + 2) = size;           }
-void setSharedObject_fd_count(int* object, int fd_count)  { *(object + 3) = fd_count;       }
-void setSharedObject_value(int* object, int* value)       { *(object + 4) = (int) value;    }
+void setShObj_next(int* object, int* next)         { *(object) = (int) next;         }
+void setShObj_name(int* object, int* name)         { *(object + 1) = (int) name;     }
+void setShObj_size(int* object, int size)          { *(object + 2) = size;           }
+void setShObj_fd_count(int* object, int fd_count)  { *(object + 3) = fd_count;       }
+void setShObj_value(int* object, int* value)       { *(object + 4) = (int) value;    }
 
 int* getFD_next(int* fd)         { return (int*) *(fd);     }
 int  getFD_id(int* fd)           { return *(fd + 1);        }
@@ -6826,92 +6826,92 @@ void setFD_id(int* fd, int id)              { *(fd + 1) = id;           }
 void setFD_processId(int* fd, int processId){ *(fd + 2) = processId;    }
 void setFD_object(int* fd, int* object)     { *(fd + 3) = (int) object; }
 
-int* allocateSharedObject() {
-  int* sharedObject;
-  sharedObject = zalloc(3 * SIZEOFINTSTAR + 2 * SIZEOFINT);
-  return sharedObject;
+int* allocateShObj() {
+  int* shObj;
+  shObj = zalloc(3 * SIZEOFINTSTAR + 2 * SIZEOFINT);
+  return shObj;
 }
 
-int* addSharedObject(int* sharedObjectName) {
+int* addShObj(int* shObjName) {
   int* current;
 
   current = shared_object_list;
 
   while (current != (int*) 0) {
-    if(stringCompare(getSharedObject_name(current),sharedObjectName) != 0){
+    if(stringCompare(getShObj_name(current),shObjName) != 0){
       // found shared object, return
       return current;
     }
-    current = getSharedObject_next(current);
+    current = getShObj_next(current);
   }
 
   // [EIFLES] object not found, create new one and append shared object list 
   // (can be (int*) 0 if empty - thats ok)
-  current = allocateSharedObject();
-  setSharedObject_next(current,shared_object_list);
-  setSharedObject_name(current,sharedObjectName);
+  current = allocateShObj();
+  setShObj_next(current,shared_object_list);
+  setShObj_name(current,shObjName);
   // initialize size and value with 0, must be set on calling shm_size
-  setSharedObject_size(current,0);
-  setSharedObject_value(current,0);
+  setShObj_size(current,0);
+  setShObj_value(current,0);
 
   shared_object_list = current;
 
   return shared_object_list;
 }
 
-int removeSharedObject(int* sharedObject) {
+int removeShObj(int* shObj) {
   int* current;
   int* previous;
 
   previous = (int*) 0;
   current = shared_object_list;
   while (current != (int*) 0) {
-    if (current == sharedObject) {
+    if (current == shObj) {
       // found shared object, delete
       if (previous == (int*) 0) {
         // the found shared object is right at the head of the list
-        shared_object_list = getSharedObject_next(current);
+        shared_object_list = getShObj_next(current);
       }
       else {
-        setSharedObject_next(previous,getSharedObject_next(current));
+        setShObj_next(previous,getShObj_next(current));
       }
       return 1;
     }
     previous = current;
-    current = getSharedObject_next(current);
+    current = getShObj_next(current);
   }
   return 0;
 }
 
-int getNewFileDescriptorId() {
+int getNewFDId() {
   int new;
   new = fd_count;
   fd_count = fd_count + 1;
   return new;
 }
 
-int* allocateFileDescriptor() {
+int* allocateFD() {
   int* fd;
   fd = zalloc(2*SIZEOFINTSTAR + 2*SIZEOFINT);
   return fd;
 }
 
-int* addFileDescriptor(int* sharedObject) {
+int* addFD(int* shObj) {
   int* current;
   int processId;
   int fd_id;
 
-  fd_id = getNewFileDescriptorId();
+  fd_id = getNewFDId();
   processId = getID(currentContext);
 
-  current = allocateFileDescriptor();
+  current = allocateFD();
   setFD_next(current,fd_list);
   setFD_id(current,fd_id);
   setFD_processId(current,processId);
-  setFD_object(current,sharedObject);
+  setFD_object(current,shObj);
 
   //increment number of FDs in shared object
-  setSharedObject_fd_count(sharedObject,getSharedObject_fd_count(sharedObject) + 1);
+  setShObj_fd_count(shObj,getShObj_fd_count(shObj) + 1);
 
   fd_list = current;
 
@@ -6925,7 +6925,7 @@ int* addFileDescriptor(int* sharedObject) {
   return fd_list;
 }
 
-int* getFileDescriptor(int fd_id) {
+int* getFD(int fd_id) {
   int* current;
 
   // [EIFLES] Empty list
@@ -6960,10 +6960,10 @@ void printListOfFDs() {
   println();
 }
 
-int removeFileDescriptor(int fd_id) {
+int removeFD(int fd_id) {
   int* current;
   int* previous;
-  int* sharedObject;
+  int* shObj;
   int fd_count_new;
 
   printListOfFDs();
@@ -7001,21 +7001,21 @@ int removeFileDescriptor(int fd_id) {
         setFD_next(previous,getFD_next(current));
       }
       //decrement number of FDs in shared object
-      sharedObject = getFD_object(current);
-      fd_count_new = getSharedObject_fd_count(sharedObject) - 1;
-      setSharedObject_fd_count(sharedObject,fd_count_new);
+      shObj = getFD_object(current);
+      fd_count_new = getShObj_fd_count(shObj) - 1;
+      setShObj_fd_count(shObj,fd_count_new);
       
       print((int*) "Close fd with id: ");
       printInteger(fd_id);
       print((int*) ". ");
-      printInteger(getSharedObject_fd_count(sharedObject));
+      printInteger(getShObj_fd_count(shObj));
       print((int*) " remaining FDs on shared object ");
-      print(getSharedObject_name(sharedObject));
+      print(getShObj_name(shObj));
       println();
 
       if (fd_count_new == 0) {
         // no FDs on shared object, delete this object.
-        removeSharedObject(sharedObject);
+        removeShObj(shObj);
       }
 
       return 1;
