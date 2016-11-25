@@ -1080,7 +1080,7 @@ int EXCEPTION_YIELD          	 = 8;
 
 int* EXCEPTIONS; // strings representing exceptions
 
-int debug_exception = 1;
+int debug_exception = 0;
 
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
@@ -5444,7 +5444,7 @@ void implementShmClose(){
 	int returnCode;
 	int* shmObjectOfContext;
 	int vaddrOfShmObject;
-	int cId=-1;
+	
 	shmObjectId= *(registers+REG_A0);
 	shmObject=findShmObjectById(shmObjectId);
 	if (shmObject!= (int*) 0){
@@ -6560,11 +6560,9 @@ void op_lw() {
 
         pc = pc + WORDSIZE;
       } else{
-      	if(vaddr<brk)
-			printd((int*)"Invalid virtual adress:",vaddr);
-		pageFaultExceptionAddr=vaddr;
+			  pageFaultExceptionAddr=vaddr;
         throwException(EXCEPTION_PAGEFAULT, vaddr);
-	}
+	    }
     } else
       throwException(EXCEPTION_ADDRESSERROR, vaddr);
   }
@@ -6675,11 +6673,9 @@ void op_sw() {
 
         pc = pc + WORDSIZE;
       } else{
-        if(vaddr<brk)
-			printd((int*)"Invalid virtual adress:",vaddr);
 				pageFaultExceptionAddr=vaddr;
         throwException(EXCEPTION_PAGEFAULT,vaddr);
-		}
+		  }
     } else
       throwException(EXCEPTION_ADDRESSERROR, vaddr);
   }
@@ -7128,9 +7124,9 @@ int* deleteContext(int* context, int* from) {
 
 void mapPage(int* table, int page, int frame) {
   // assert: 0 <= page < VIRTUALMEMORYSIZE / PAGESIZE
-	print("Mapping page: ");
-	printInteger( page);
-	println();
+	//print("Mapping page: ");
+	//printInteger( page);
+	//println();
   *(table + page) = frame;
 }
 
