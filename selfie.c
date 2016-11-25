@@ -4792,9 +4792,10 @@ void emitShmSize() {
 void emitShmWrite() {
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_write", 0, PROCEDURE, VOID_T, 0, binaryLength);
 
-  emitIFormat(OP_LW, REG_SP, REG_A1, 0); // value
+  emitIFormat(OP_LW, REG_SP, REG_A2, 0); // bytes to write
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);  
+  emitIFormat(OP_LW, REG_SP, REG_A1, 0); // *buf
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
-
   emitIFormat(OP_LW, REG_SP, REG_A0, 0); // fd_id
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
@@ -4807,6 +4808,10 @@ void emitShmWrite() {
 void emitShmRead() {
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_read", 0, PROCEDURE, VOID_T, 0, binaryLength);
 
+  emitIFormat(OP_LW, REG_SP, REG_A2, 0); // bytes to read
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);  
+  emitIFormat(OP_LW, REG_SP, REG_A1, 0); // *buf
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
   emitIFormat(OP_LW, REG_SP, REG_A0, 0); // fd_id
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
@@ -4921,38 +4926,74 @@ void implementShmSize() {
 }
 
 void implementShmWrite() {
-  int value;
   int fd_id;
-  int* shObj;
-  int* fd;
+  int* buf;
+  int size;
 
-  value = *(registers+REG_A1);
+  int* fd;
+  int* shObj;
+  int* shObj_value;
+  int bytesActuallyWritten;
+  int bytesToWrite;
+
+  size = *(registers+REG_A2);
+  buf = tlb(pt,*(registers+REG_A1));
   fd_id = *(registers+REG_A0);
 
   fd = getFD(fd_id);
   shObj = getFD_object(fd);
 
-  print((int*) "Write on fd_id: ");
-  printInteger(fd_id);
-  print((int*) ", shared object value*: ");
-  printBinary(getShObj_value(shObj),32);
-  print((int*) ", shared object value: ");
-  printInteger(*(getShObj_value(shObj)));
-
+  // print((int*) "Write on fd_id: ");
+  // printInteger(fd_id);
+  // print((int*) ", shared object value*: ");
+  // printBinary(getShObj_value(shObj),32);
+  // print((int*) ", shared object value: ");
+  // printInteger(*(getShObj_value(shObj)));
+  // println();
   // for now, only writes 4 Bytes(SIZEOFINT) to *(value)
   // TODO
-  *(getShObj_value(shObj)) = value;
+  // *(getShObj_value(shObj)) = value;
 
-  print((int*) ", new value: ");
-  printInteger(*(getShObj_value(shObj)));
+  // print((int*) ", new value: ");
+  // printInteger(*(getShObj_value(shObj)));
+  // println();
+
+  // now write bytesWrite from buf and store in shared object with fd
+
+  print((int*) "Write on fd_id: ");
+  printInteger(fd_id);
+  print((int*) ", buf*: ");
+  printBinary(buf,32);
+  print((int*) ", size: ");
+  printInteger(size);
   println();
+  shObj_value = getShObj_value(shObj);
+
+  bytesActuallyWritten = 0;
+
+  while (bytesActuallyWritten < size) {
+    *(shObj_value + bytesActuallyWritten) = *(buf + bytesActuallyWritten);
+    bytesActuallyWritten = bytesActuallyWritten + WORDSIZE;
+    printInteger(bytesActuallyWritten);
+  }
+    
+  // set return value
+  *(registers+REG_V0) = (int) bytesActuallyWritten;
 }
 
 void implementShmRead() {
   int fd_id;
+  int* buf;
+  int size;
+
   int* fd;
   int* shObj;
+  int* shObj_value;
+  int bytesActuallyRead;
+  int bytesToRead;
 
+  size = *(registers+REG_A2);
+  buf = tlb(pt,*(registers+REG_A1));
   fd_id = *(registers+REG_A0);
 
   fd = getFD(fd_id);
@@ -4962,25 +5003,30 @@ void implementShmRead() {
     return;
   }
   shObj = getFD_object(fd);
+
   if (shObj == (int*) 0) {
     // no shared object yet / shm_write not called yet!
     *(registers+REG_V0) = (int) 0;
     return;
   }
-
   // for now, only reads 4 Bytes(SIZEOFINT) from *(value)
   // TODO
   // set return value
-  *(registers+REG_V0) = (int) *(getShObj_value(shObj));
+  // *(registers+REG_V0) = (int) *(getShObj_value(shObj));
 
-  // printSimpleStringEifles("implementShmRead");
-  // print((int*) "Read with fd_id:");
-  // printInteger(fd_id);
-  // print((int*) " on shared object name: ");
-  // print(getShObj_name(shObj));
-  // print((int*) ", value: ");
-  // printBinary(getShObj_value(shObj),32);
-  // println();
+  // now read bytesToRead from fd and store in buf
+  shObj_value = getShObj_value(shObj);
+
+  bytesActuallyRead = 0;
+
+  while (bytesActuallyRead < size) {
+    *(buf + bytesActuallyRead) = *(shObj_value + bytesActuallyRead);
+    bytesActuallyRead = bytesActuallyRead + WORDSIZE;
+    printInteger(bytesActuallyRead);
+  }
+    
+  // set return value
+  *(registers+REG_V0) = (int) bytesActuallyRead;
 }
 
 void emitRead() {
