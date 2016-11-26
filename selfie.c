@@ -5712,7 +5712,6 @@ void implementSwitch() {
   // but some compilers dereference the lvalue *(registers+REG_V1)
   // before evaluating the rvalue doSwitch()
 
-	print("DO SWITCH");
   fromID = doSwitch(*(registers+REG_A0));
 
   // use REG_V1 instead of REG_V0 to avoid race condition with interrupt
