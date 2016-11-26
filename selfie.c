@@ -792,12 +792,9 @@ int* touch(int* memory, int length);
 
 void selfie_load();
 
-
-
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-//int maxBinaryLength = 131072; // 128KB
-int maxBinaryLength = 524288;  // 512KB
+int maxBinaryLength =  524288;  // 512KB
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -817,6 +814,7 @@ int  assemblyFD   = 0;        // file descriptor of open assembly file
 // -----------------------------------------------------------------
 // ----------------------- MIPSTER SYSCALLS ------------------------
 // -----------------------------------------------------------------
+
 void emitExit();
 void implementExit();
 
@@ -885,7 +883,6 @@ int SYSCALL_SHMO  = 4047;
 int SYSCALL_SHMS  = 4048;
 int SYSCALL_SHMM  = 4049;
 int SYSCALL_SHMC  = 4050;
-
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
 // -----------------------------------------------------------------
@@ -924,16 +921,6 @@ void doMap(int ID, int page, int frame);
 void implementMap();
 
 void selfie_map(int ID, int page, int frame);
-
-// MORTIS
-int schedule(int* fromContext);
-
-void setConcurrentCount();
-void setInstructionTimer();
-void setHypsterID();
-
-void setOSExceptionHandling();
-void setUserProcess();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -1069,8 +1056,7 @@ int EXCEPTION_HEAPOVERFLOW       = 4;
 int EXCEPTION_EXIT               = 5;
 int EXCEPTION_TIMER              = 6;
 int EXCEPTION_PAGEFAULT          = 7;
-int EXCEPTION_YIELD          	 = 8;
-
+int EXCEPTION_YIELD          	 		= 8;
 int* EXCEPTIONS; // strings representing exceptions
 
 int debug_exception = 0;
@@ -1120,8 +1106,6 @@ int* loadsPerAddress = (int*) 0; // number of executed loads per load operation
 int  stores           = 0;        // total number of executed memory stores
 int* storesPerAddress = (int*) 0; // number of executed stores per store operation
 
-
-
 int processCallNumber = 1;
 int hypsterIDValue = 0;
 
@@ -1132,9 +1116,7 @@ int userProcess = 0;
 // ------------------------- INITIALIZATION ------------------------
 
 void initInterpreter() {
-
-  // 9 because of the yield exception
-  EXCEPTIONS = malloc(9 * SIZEOFINTSTAR);
+  EXCEPTIONS = malloc(8 * SIZEOFINTSTAR);
 
   *(EXCEPTIONS + EXCEPTION_NOEXCEPTION)        = (int) "no exception";
   *(EXCEPTIONS + EXCEPTION_UNKNOWNINSTRUCTION) = (int) "unknown instruction";
@@ -1143,7 +1125,7 @@ void initInterpreter() {
   *(EXCEPTIONS + EXCEPTION_HEAPOVERFLOW)       = (int) "heap overflow";
   *(EXCEPTIONS + EXCEPTION_EXIT)               = (int) "exit";
   *(EXCEPTIONS + EXCEPTION_TIMER)              = (int) "timer interrupt";
-  *(EXCEPTIONS + EXCEPTION_PAGEFAULT)          = (int) "page fault";
+  *(EXCEPTIONS + EXCEPTION_PAGEFAULT)          = (int) "page fault";	
   *(EXCEPTIONS + EXCEPTION_YIELD)              = (int) "yield";
 }
 
@@ -1215,8 +1197,6 @@ void mapPage(int* table, int page, int frame);
 // | 9 | parent | ID of context that created this context
 // +---+--------+
 
-
-
 int* getNextContext(int* context) { return (int*) *context; }
 int* getPrevContext(int* context) { return (int*) *(context + 1); }
 int  getID(int* context)          { return        *(context + 2); }
@@ -1240,7 +1220,6 @@ void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
 void setBreak(int* context, int brk)         { *(context + 8) = brk; }
 void setParent(int* context, int id)         { *(context + 9) = id; }
 void setContextShm(int* context, int* contextShm)    { *(context + 10) = (int) contextShm; }
-
 
 // Morties Context ShmObjectlist
 
@@ -1296,13 +1275,11 @@ int* getFrameAddr(int* frames);
 void setNextFrame(int* frames, int* next);
 void setFrameAddr(int* frames, int* frame);
 
-int* getFrameAddr(int* frames) {return (int*) *frames;			 }
-int* getNextFrame(int* frames) {return (int*) *(frames + 1);}
+int* getFrameAddr(int* frames) {return (int*) *frames;			}
+int* getNextFrame(int* frames) {return (int*) *(frames + 1);	}
 
 void setNextFrame(int* frames, int* next)	{	*(frames+1) = (int) next;}
 void setFrameAddr(int* frames, int* frame){	*frames 		= (int) frame;}
-
-
 
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
@@ -1322,8 +1299,6 @@ int* currentContext = (int*) 0; // context currently running
 
 int* usedContexts = (int*) 0; // doubly-linked list of used contexts
 int* freeContexts = (int*) 0; // singly-linked list of free contexts
-
-
 
 // ------------------------- INITIALIZATION ------------------------
 
@@ -4143,7 +4118,7 @@ void selfie_compile() {
   emitWrite();
   emitOpen();
   emitMalloc();
-  emitYield();
+	emitYield();
 
 	emitShmOpen();
 	emitShmSize();
@@ -4932,7 +4907,7 @@ void implementWrite() {
   size  = *(registers+REG_A2);
   vaddr = *(registers+REG_A1);
   fd    = *(registers+REG_A0);
-	
+
   if (debug_write) {
     print(binaryName);
     print((int*) ": trying to write ");
@@ -5160,10 +5135,6 @@ void implementMalloc() {
 
     brk = bump + size;
 
-		//printd((int*)"BREAK",brk);
-		//printd((int*)"bump",bump);
-		//printd((int*)"size",size);
-
     if (debug_malloc) {
       print(binaryName);
       print((int*) ": actually mallocating ");
@@ -5189,6 +5160,9 @@ void implementYield() {
   throwException(EXCEPTION_YIELD, 0);
 }
 
+// -----------------------------------------------------------------
+// ----------------------- SHM_OPEN SYSCALLS ------------------------
+// -----------------------------------------------------------------
 
 //int shm_open(int name)
 // Creates or opens a new shared memory object and returns a descriptor (OS identifier) for it.
@@ -5472,8 +5446,6 @@ void removeShmObjectOfContextById(int shmObjectId){
 	
 }
 
-
-
 void implementShmClose(){
 	int shmObjectId;
 	int* shmObject;
@@ -5575,7 +5547,6 @@ void removeShmObject(int* delShmObject){
 	
 }
 
-
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
 // -----------------------------------------------------------------
@@ -5627,8 +5598,6 @@ int doCreate(int parentID) {
       print(binaryName);
       print((int*) ": selfie_create context ");
       printInteger(bumpID);
-			print((int*) " by hypster with ID: ");
-			printInteger(hypsterIDValue);
       println();
     }
 
@@ -5712,7 +5681,6 @@ void implementSwitch() {
   // but some compilers dereference the lvalue *(registers+REG_V1)
   // before evaluating the rvalue doSwitch()
 
-	print("DO SWITCH");
   fromID = doSwitch(*(registers+REG_A0));
 
   // use REG_V1 instead of REG_V0 to avoid race condition with interrupt
@@ -5804,39 +5772,24 @@ void emitDelete() {
 
 void doDelete(int ID) {
   int* context;
-	int* nextContext;
-	int* previousContext;
+
   context = findContext(ID, usedContexts);
-	
+
   if (context != (int*) 0) {
-		//print((int*)"Next Contexts:");
-		//nextContext=getNextContext(context);
-		//while(nextContext!=(int*)0){
-		//	printInteger(getID(nextContext));
-		//	print((int*)",");
-		//	nextContext=getNextContext(nextContext);
-		//}
-		//println();
-		//print((int*)"Previous Contexts:");
-		//previousContext=getPrevContext(context);
-		//while(previousContext!=(int*)0){
-		//	printInteger(getID(previousContext));
-		//	print((int*)",");
-		//	previousContext=getPrevContext(previousContext);
-		//}
-		//println();
     usedContexts = deleteContext(context, usedContexts);
-		
+
     if (debug_delete) {
       print(binaryName);
       print((int*) ": selfie_delete context ");
       printInteger(ID);
-			print((int*) " by hypster with ID: ");
-			printInteger(hypsterIDValue);
       println();
     }
   } else if (debug_delete) {
-    printd("selfie_delete context ",ID);
+    print(binaryName);
+    print((int*) ": selfie_delete context ");
+    printInteger(ID);
+    print((int*) " not found");
+    println();
   }
 }
 
@@ -6067,16 +6020,6 @@ void fct_syscall() {
       implementOpen();
     else if (*(registers+REG_V0) == SYSCALL_MALLOC)
       implementMalloc();
-    else if (*(registers+REG_V0) == SYSCALL_YIELD)
-      implementYield();
-    else if (*(registers+REG_V0) == SYSCALL_SHMO)
-      implementShmOpen();
-    else if (*(registers+REG_V0) == SYSCALL_SHMM)
-      implementShmMap();
-    else if (*(registers+REG_V0) == SYSCALL_SHMS)
-      implementShmSize();
-    else if (*(registers+REG_V0) == SYSCALL_SHMC)
-      implementShmClose();
     else if (*(registers+REG_V0) == SYSCALL_ID)
       implementID();
     else if (*(registers+REG_V0) == SYSCALL_CREATE)
@@ -7006,7 +6949,7 @@ int* allocateContext(int ID, int parentID) {
   int* context;
 
   if (freeContexts == (int*) 0)
-    context = malloc(5 * SIZEOFINTSTAR + 6 * SIZEOFINT);
+    context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
   else {
     context = freeContexts;
     freeContexts = getNextContext(freeContexts);
@@ -7300,7 +7243,6 @@ int runUntilExitWithoutExceptionHandling(int toID) {
   int savedStatus;
   int exceptionNumber;
 
-
   while (1) {
     fromID = mipster_switch(toID);
 
@@ -7317,12 +7259,9 @@ int runUntilExitWithoutExceptionHandling(int toID) {
 
       exceptionNumber = decodeExceptionNumber(savedStatus);
 
-      if (exceptionNumber == EXCEPTION_EXIT){
+      if (exceptionNumber == EXCEPTION_EXIT)
         // TODO: only return if all contexts have exited
         return decodeExceptionParameter(savedStatus);
-			}else if(exceptionNumber == EXCEPTION_YIELD){
-				toID=fromID;
-			}
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
@@ -7338,47 +7277,27 @@ int runUntilExitWithoutExceptionHandling(int toID) {
   }
 }
 
-
-
 int runOrHostUntilExitWithPageFaultHandling(int toID) {
   // works with mipsters and hypsters
   int fromID;
   int* fromContext;
-	//new
-	int* nextContext;	
-	int* next;
-	int* prev;
   int savedStatus;
   int exceptionNumber;
   int exceptionParameter;
   int frame;
-	int* parentContext;
 
-	//fromID = toID;
   while (1) {
-    
     fromID = selfie_switch(toID);
-			
+
     fromContext = findContext(fromID, usedContexts);
-//		println();
-//		print((int*)"USED CONTEXT");
-//		printInteger(fromID);
-//		println();
+
     // assert: fromContext must be in usedContexts (created here)
-		//print((int*)"PRINT SELFIE ID");
-		//printInteger(selfie_ID());
+
     if (getParent(fromContext) != selfie_ID()){
+      print((int*)"Switching to parent to Parent");
       // switch to parent which is in charge of handling exceptions
-			toID = getParent(fromContext);
-			
-			
-			parentContext=findContext(toID, usedContexts);
-			if(parentContext==(int*)0)
-				return 0;
-      
-	
+      toID = getParent(fromContext);
     }else {
-			
       // we are the parent in charge of handling exceptions
       savedStatus = selfie_status();
 
@@ -7393,80 +7312,24 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT){
+      } else if (exceptionNumber == EXCEPTION_EXIT)
         // TODO: only return if all contexts have exited
-				print((int*)"EXIT of: ");
-				printInteger(fromID);
-				//print((int*)"by: ");
-				//printInteger(hypsterIDValue);
-			
-				println();
-
-				next=getNextContext(fromContext);
-				if(next!=(int*)0){
-							doDelete(fromID);
-							fromContext=next;
-				}else{
-					prev=getPrevContext(fromContext);
-					doDelete(fromID);
-			
-					if(prev==(int*)0)
-		     		return exceptionParameter;
-		
-					fromContext=prev;			
-				}
-				
-				toID = getID(fromContext);
-				//println();
-				//print((int*)"AFTER DELETE ID");
-				//printInteger(toID);
-				//println();
-			}else if(exceptionNumber == EXCEPTION_YIELD){
-			  toID=schedule(fromContext);
-        cycles=0;
-			}else if(exceptionNumber == EXCEPTION_TIMER){
-			  toID=schedule(fromContext);
-			}
-      else {
+        return exceptionParameter;
+      else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
         printInteger(getID(fromContext));
         print((int*) " throws uncaught ");
         printStatus(savedStatus);
         println();
+
         return -1;
       }
 
-			
       // TODO: scheduler should go here
-      //toID = fromID;
+      toID = fromID;
     }
   }
-}
-//triggered by timer exception at the moment 
-int schedule(int* fromContext){
-	int* nextContext;
-	int nextContextID;
-	int* cContext;
-
-	nextContext = getPrevContext(fromContext);
-	if((nextContext)!=(int*)0)
-			nextContextID=getID(nextContext);
-	else{
-		nextContext=fromContext;
-		while(nextContext!=(int*)0){
-			cContext=nextContext;
-			nextContext = getNextContext(nextContext);
-		}
-		nextContextID=getID(cContext);		
-	}
-
-//	print((int*) "Current CONTEXT ");
-//	printInteger(nextContextID);
-//	println();
-
-	return nextContextID;
-
 }
 
 int bootminmob(int argc, int* argv, int machine) {
@@ -7522,13 +7385,12 @@ int bootminmob(int argc, int* argv, int machine) {
 
   return exitCode;
 }
+
 int boot(int argc, int* argv) {
   // works with mipsters and hypsters
   int initID;
   int exitCode;
-	int count;
-	int firstID;
-	count=0;
+
   print(selfieName);
   print((int*) ": this is selfie's ");
   if (mipster)
@@ -7541,34 +7403,29 @@ int boot(int argc, int* argv) {
   printInteger(pageFrameMemory / MEGABYTE);
   print((int*) "MB of physical memory");
   println();
-	// resetting interpreter is only necessary for mipsters
+
+  // resetting interpreter is only necessary for mipsters
   resetInterpreter();
 
   resetMicrokernel();
-		
-	while(count < processCallNumber){
-		// create initial context on microkernel boot level
-		initID = selfie_create();
-		if(count==0)
-			firstID=initID;
-		if (usedContexts == (int*) 0)
-		  // create duplicate of the initial context on our boot level
-		  usedContexts = createContext(initID, selfie_ID(), (int*) 0);
 
-		up_loadBinary(getPT(usedContexts));
-	
-		up_loadArguments(getPT(usedContexts), argc, argv);
+  // create initial context on microkernel boot level
+  initID = selfie_create();
 
-		// propagate page table of initial context to microkernel boot level
-		down_mapPageTable(usedContexts);
+  if (usedContexts == (int*) 0)
+    // create duplicate of the initial context on our boot level
+    usedContexts = createContext(initID, selfie_ID(), (int*) 0);
 
-		count = count + 1;
-	}
-	
+  up_loadBinary(getPT(usedContexts));
+
+  up_loadArguments(getPT(usedContexts), argc, argv);
+
+  // propagate page table of initial context to microkernel boot level
+  down_mapPageTable(usedContexts);
 
   // mipsters and hypsters handle page faults
-  exitCode = runOrHostUntilExitWithPageFaultHandling(firstID);
-	
+  exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
+
   print(selfieName);
   print((int*) ": this is selfie's ");
   if (mipster)
@@ -7589,8 +7446,7 @@ int boot(int argc, int* argv) {
 
 int selfie_run(int engine, int machine, int debugger) {
   int exitCode;
-	
-  
+
   if (binaryLength == 0) {
     print(selfieName);
     print((int*) ": nothing to run, debug, or host");
@@ -7598,8 +7454,9 @@ int selfie_run(int engine, int machine, int debugger) {
 
     exit(-1);
   }
+
   initMemory(atoi(peekArgument()));
-	
+
   // pass binary name as first argument by replacing memory size
   setArgument(binaryName);
 
@@ -7612,12 +7469,11 @@ int selfie_run(int engine, int machine, int debugger) {
     if (debugger)
       debug = 1;
 
-    if (machine == MIPSTER){		
-      	exitCode = boot(numberOfRemainingArguments(), remainingArguments());		
-		}
-    else{
+    if (machine == MIPSTER)
+      exitCode = boot(numberOfRemainingArguments(), remainingArguments());
+    else
       exitCode = bootminmob(numberOfRemainingArguments(), remainingArguments(), machine);
-		}
+
     debug   = 0;
     mipster = 0;
 
@@ -7678,8 +7534,7 @@ void setArgument(int* argv) {
 
 int selfie() {
   int* option;
-	int c;
-	c=0;
+
   if (numberOfRemainingArguments() == 0)
     return USAGE;
   else {
@@ -7700,26 +7555,15 @@ int selfie() {
         selfie_output();
       else if (stringCompare(option, (int*) "-s"))
         selfie_disassemble();
-      else if (stringCompare(option, (int*) "-l"))		
-        	selfie_load();	
-      else if (stringCompare(option, (int*) "-conc"))
-        setConcurrentCount();
-      else if (stringCompare(option, (int*) "-freq"))
-        setInstructionTimer();
-      else if (stringCompare(option, (int*) "-hyd"))
-        setHypsterID();
-      else if (stringCompare(option, (int*) "-u"))
-        setUserProcess();
+      else if (stringCompare(option, (int*) "-l"))
+        selfie_load();
       else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
         return selfie_run(MIPSTER, MIPSTER, 1);
       else if (stringCompare(option, (int*) "-y"))
         return selfie_run(HYPSTER, MIPSTER, 0);
-      else if (stringCompare(option, (int*) "-k")){
-				setOSExceptionHandling();
-        return selfie_run(HYPSTER, MIPSTER, 0);
-      }else if (stringCompare(option, (int*) "-min"))
+      else if (stringCompare(option, (int*) "-min"))
         return selfie_run(MIPSTER, MINSTER, 0);
       else if (stringCompare(option, (int*) "-mob"))
         return selfie_run(MIPSTER, MOBSTER, 0);
@@ -7731,68 +7575,27 @@ int selfie() {
   return 0;
 }
 
-
-void setConcurrentCount(){
-  print((int*) "Number of concurrent processes:");
-  processCallNumber = atoi(getArgument());
-  printInteger(processCallNumber);
-  println();
-}
-
-void setHypsterID(){
-  print((int*) "Set hypster ID:");
-  hypsterIDValue = atoi(getArgument());
-  printInteger(hypsterIDValue);
-  println();
-}
-
-void setOSExceptionHandling(){
-	exceptionHandlingOS = 1;
-}
-
-void setUserProcess(){
-	userProcess = 1;
-}
-
-void setInstructionTimer(){
-  print((int*) "Timer interrupt frequency:");
-  TIMESLICE = atoi(getArgument());
-  printInteger(TIMESLICE);
-  println();
-}
-
-
 int main(int argc, int* argv) {
   int exitCode;
 
   initSelfie(argc, (int*) argv);
 
   initLibrary();
-  print((int*) "This is the Morties Selfie!!");
-  println();
 
   exitCode = selfie();
- 
-  if (exitCode == USAGE) {
 
+  if (exitCode == USAGE) {
     print(selfieName);
-    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary }");
-		print((int*) " [-conc number[freq number]] -u [-m | -d | -y | -k | -min | -mob ) size ... ] ");
+    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary } [ (-m | -d | -y | -min | -mob ) size ... ] ");
     println();
 
     return 0;
   } else
     return exitCode;
 }
-
 void printd(int* text, int value) {
   print(text);
 	print(":  ");
 	printInteger(value);
 	println();
 }
-
-
-
-
-
