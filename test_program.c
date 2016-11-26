@@ -4,24 +4,29 @@ int main(){
 
   int fd_a;
   int fd_b;
+  int fd_map;
 
   int a_name;
   int b_name;
+  int map_name;
 
   int a_size;
   int b_size;
 
   int* write_a;
   int* write_b;
+  int* toMap;
 
   int* read_before_a;
   int* read_before_b;
 
   int* read_after_a;
   int* read_after_b;
+  int* read_map;
 
   int bytes_a;
   int bytes_b;
+  int bytes_map;
 
 	a_name = (int*) "a";
 	b_name = (int*) "b";
@@ -103,6 +108,28 @@ int main(){
 
 	shm_close(fd_a);		//after loop, close FDs
 	shm_close(fd_b);
+
+	//finally, test shm_map
+	map_name = (int*) "map";
+  toMap = (int*) "MAP";
+  bytes_map = 4;
+
+	fd_map = shm_open(map_name);
+	shm_size(fd_map,bytes_map);
+	shm_map(toMap, fd_map);
+	shm_read(fd_map,read_map,bytes_map);
+
+	print((int*) "Test shm_map: ");
+	printString(map_name);
+	print((int*) " | value to be mapped:");
+	printString(toMap);
+	print((int*) "  to fd id:");
+	printInteger(fd_map);
+	print((int*) ", read from fd:");
+	printString(read_map);
+	println();
+
+	shm_close(fd_map);
 
 	return 1;
 }

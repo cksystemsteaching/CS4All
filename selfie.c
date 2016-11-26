@@ -843,6 +843,8 @@ void emitShmClose();
 void implementShmClose();
 void emitShmSize();
 void implementShmSize();
+void emitShmMap();
+void implementShmMap();
 void emitShmWrite();
 void implementShmWrite();
 void emitShmRead();
@@ -900,8 +902,9 @@ int SYSCALL_SCHED_YIELD = 4006;
 int SYSCALL_SHM_OPEN = 4007;
 int SYSCALL_SHM_CLOSE = 4008;
 int SYSCALL_SHM_SIZE= 4009;
-int SYSCALL_SHM_WRITE = 4010;
-int SYSCALL_SHM_READ = 4011;
+int SYSCALL_SHM_MAP= 4010;
+int SYSCALL_SHM_WRITE = 4011;
+int SYSCALL_SHM_READ = 4012;
 
 int SYSCALL_MALLOC = 4045;
 
@@ -4104,6 +4107,7 @@ void selfie_compile() {
   emitShmOpen();
   emitShmClose();
   emitShmSize();
+  emitShmMap();
   emitShmWrite();
   emitShmRead();
 
@@ -4790,6 +4794,21 @@ void emitShmSize() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
+void emitShmMap() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_map", 0, PROCEDURE, INT_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A1, 0); // fd_id
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // addr
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_MAP);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
 void emitShmWrite() {
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_write", 0, PROCEDURE, VOID_T, 0, binaryLength);
 
@@ -4892,12 +4911,11 @@ void implementShmSize() {
 
   if (old_size != 0) {
     //size already set, return size
-    *(registers+REG_V0) = (int) getShObj_size(shObj);
+    *(registers+REG_V0) = old_size;
     return;
   }
 
   // no size set yet, now set size
-  old_size = getShObj_size(shObj);
   setShObj_size(shObj,size);
   // allocate 
   shObj_value = zalloc(size);
@@ -4922,6 +4940,58 @@ void implementShmSize() {
   }
 }
 
+void implementShmMap() {
+  int fd_id;
+  int addr_param;
+
+  int* addr;
+  int old_size;
+  int* fd;
+  int* shObj;
+  int* shObj_value;
+
+  fd_id = *(registers+REG_A1);
+  addr_param = *(registers+REG_A0);
+
+  fd = getFD(fd_id);
+
+  if (fd == (int*) 0) {
+    // fd does not exist
+    *(registers+REG_V0) = -1;
+    return;
+  }
+
+  shObj = getFD_object(fd);
+
+  if (addr_param == 0) {
+    if (debug_shm) {
+      print((int*) "[shm_map] vaddr is 0, allocate size: ");
+      printInteger(getShObj_size(shObj));
+      print((int*) "B.");
+      println();
+    }
+    // if addr is 0, allocate memory of shared object's size
+    shObj_value = zalloc(getShObj_size(shObj));
+    setShObj_value(shObj,shObj_value);
+    //initialize int value to 0
+    *(getShObj_value(shObj)) = (int) 0;
+  } else {
+    addr = tlb(pt,addr_param);
+    // map address
+    setShObj_value(shObj, addr);
+  }
+
+  // return mapped addr of value
+  *(registers+REG_V0) = (int) getShObj_value(shObj);
+
+  if (debug_shm) {
+    print((int*) "[shm_map] (fd_id:");
+    printInteger(fd_id);
+    print((int*) ")");
+    println();
+  }
+}
+
 void implementShmWrite() {
   int fd_id;
   int* buf;
@@ -4939,6 +5009,18 @@ void implementShmWrite() {
 
   fd = getFD(fd_id);
   shObj = getFD_object(fd);
+
+  if (getShObj_size(shObj) == 0) {
+    print((int*) "[ERROR] Writing ");
+    printInteger(size);
+    print((int*) "B to fd with id: ");
+    printInteger(fd_id);
+    print((int*) " - No size set yet - call shm_size first");
+    println();
+
+    *(registers+REG_V0) = -1;
+    return;
+  }
 
   if (size > getShObj_size(shObj)) {
     print((int*) "[ERROR] Writing ");
@@ -5003,15 +5085,17 @@ void implementShmRead() {
   }
   shObj = getFD_object(fd);
 
-  if (shObj == (int*) 0) {
-    // no shared object yet / shm_write not called yet!
+  if (getShObj_size(shObj) == 0) {
+    print((int*) "[ERROR] Read ");
+    printInteger(size);
+    print((int*) "B from fd with id: ");
+    printInteger(fd_id);
+    print((int*) " - No size set yet - call shm_size first");
+    println();
+
     *(registers+REG_V0) = -1;
     return;
   }
-  // for now, only reads 4 Bytes(SIZEOFINT) from *(value)
-  // TODO
-  // set return value
-  // *(registers+REG_V0) = (int) *(getShObj_value(shObj));
 
   if (size > getShObj_size(shObj)) {
     print((int*) "[ERROR] Reading ");
@@ -5931,6 +6015,8 @@ void fct_syscall() {
       implementShmClose();
     else if (*(registers+REG_V0) == SYSCALL_SHM_SIZE) 
       implementShmSize();    
+    else if (*(registers+REG_V0) == SYSCALL_SHM_MAP) 
+      implementShmMap();   
     else if (*(registers+REG_V0) == SYSCALL_SHM_WRITE) 
       implementShmWrite();
     else if (*(registers+REG_V0) == SYSCALL_SHM_READ) 
