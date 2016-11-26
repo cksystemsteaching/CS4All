@@ -7338,8 +7338,6 @@ int runUntilExitWithoutExceptionHandling(int toID) {
   }
 }
 
-
-
 int runOrHostUntilExitWithPageFaultHandling(int toID) {
   // works with mipsters and hypsters
   int fromID;
@@ -7368,6 +7366,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 		//print((int*)"PRINT SELFIE ID");
 		//printInteger(selfie_ID());
     if (getParent(fromContext) != selfie_ID()){
+
       // switch to parent which is in charge of handling exceptions
 			toID = getParent(fromContext);
 			
@@ -7395,8 +7394,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         selfie_map(fromID, exceptionParameter, frame);
       } else if (exceptionNumber == EXCEPTION_EXIT){
         // TODO: only return if all contexts have exited
-				print((int*)"EXIT of: ");
-				printInteger(fromID);
+				printd("EXIT of: ",fromID);
 				//print((int*)"by: ");
 				//printInteger(hypsterIDValue);
 			
@@ -7449,21 +7447,31 @@ int schedule(int* fromContext){
 	int nextContextID;
 	int* cContext;
 
+	int fromID;
+	int* toContext;
+
 	nextContext = getPrevContext(fromContext);
-	if((nextContext)!=(int*)0)
+	if((nextContext)!=(int*)0){
 			nextContextID=getID(nextContext);
-	else{
+			toContext = nextContext;
+	}else{
 		nextContext=fromContext;
 		while(nextContext!=(int*)0){
 			cContext=nextContext;
 			nextContext = getNextContext(nextContext);
 		}
-		nextContextID=getID(cContext);		
+		nextContextID=getID(cContext);
+		toContext = cContext;
 	}
 
+	fromID = getID(fromContext);
+	
 //	print((int*) "Current CONTEXT ");
 //	printInteger(nextContextID);
 //	println();
+	if(getParent(toContext) == fromID){
+		nextContextID = fromID;
+	}
 
 	return nextContextID;
 
