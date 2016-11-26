@@ -1227,7 +1227,7 @@ int  getRegLo(int* context)       { return        *(context + 6); }
 int* getPT(int* context)          { return (int*) *(context + 7); }
 int  getBreak(int* context)       { return        *(context + 8); }
 int  getParent(int* context)      { return        *(context + 9); }
-int* getContextShm(int* context)  { return        *(context + 10); }
+int* getContextShm(int* context)  { return (int*) *(context + 10); }
 
 void setNextContext(int* context, int* next) { *context       = (int) next; }
 void setPrevContext(int* context, int* prev) { *(context + 1) = (int) prev; }
@@ -1248,12 +1248,12 @@ void setContextShm(int* context, int* contextShm)    { *(context + 10) = (int) c
 void setNextContextShmObject(int* shmObject, int* next)		{ *shmObject		 =	(int)  next; 	}
 void setPrevContextShmObject(int* shmObject, int* prev)		{	*(shmObject+1) = (int) prev;		}
 void setContextShmObjectID	 (int* shmObject,	int id) 		{	*(shmObject+2) =	id;					}
-void setContextShmObjectVaddr(int* shmObject, int* vaddr) { *(shmObject+3) = (int)	vaddr;	}
+void setContextShmObjectVaddr(int* shmObject, int vaddr) { *(shmObject+3) = 	vaddr;	}
 
 int* getNextContextShmObject(int* shmObject) 		{ return (int*) 	*shmObject; 		}
 int* getPrevContextShmObject(int* shmObject)		{ return (int*) 	*(shmObject+1);	}
 int  getContextShmObjectID(int* shmObject)			{ return  				*(shmObject+2); }
-int* getContextShmObjectVaddr(int* shmObject)		{ return (int*) 	*(shmObject+3); }
+int getContextShmObjectVaddr(int* shmObject)		{ return 				 	*(shmObject+3); }
 
 
 // Morties---ShmObjects
@@ -1286,6 +1286,8 @@ int* findShmObjectById(int id);
 int shmSizeHandling(int* cShmObject, int size);
 int* freshFrame();
 void removeShmObject(int* delShmObject);
+void assignShmObjectFrames(int* cShmObject,int frameSizeNeed);
+void copyFrameToFrame(int* from, int* to);
 
 // Frame List
 int* getNextFrame(int* frames);
@@ -5480,8 +5482,8 @@ void implementShmClose(){
 	int vaddrOfShmObject;
 	int page;
 	int firstVAddr;
-	int newFrame;
-	int oldFrame;
+	int* newFrame;
+	int* oldFrame;
 
 	shmObjectId= *(registers+REG_A0);
 	shmObject=findShmObjectById(shmObjectId);
@@ -5496,7 +5498,7 @@ void implementShmClose(){
 				while(vaddrOfShmObject < (firstVAddr + roundUp(getShmObjectSize(shmObject),PAGESIZE))){
 					page = getPageOfVirtualAddress(vaddrOfShmObject);
 					
-					oldFrame = getFrameForPage(pt, page);
+					oldFrame = (int*)getFrameForPage(pt, page);
 					newFrame = palloc();
 					
 					copyFrameToFrame(oldFrame,newFrame);
@@ -5834,11 +5836,7 @@ void doDelete(int ID) {
       println();
     }
   } else if (debug_delete) {
-    print(binaryName);
-    print((int*) ": selfie_delete context ");
-    printInteger(ID);
-    print((int*) " not found");
-    println();
+    printd("selfie_delete context ",ID);
   }
 }
 
@@ -7011,7 +7009,6 @@ int* allocateContext(int ID, int parentID) {
     context = malloc(5 * SIZEOFINTSTAR + 6 * SIZEOFINT);
   else {
     context = freeContexts;
-
     freeContexts = getNextContext(freeContexts);
   }
 
@@ -7020,8 +7017,6 @@ int* allocateContext(int ID, int parentID) {
 
   setID(context, ID);
   setPC(context, 0);
-
-
 
   // allocate zeroed memory for general purpose registers
   // TODO: reuse memory
