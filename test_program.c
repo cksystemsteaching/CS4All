@@ -7,8 +7,9 @@ int main(){
 	i = 0;
 	while(i < 5) {
 		println();
-		sched_yield();
 		printInteger(i);
+		sched_yield();
+		println();
 		i = i + 1;
 	}
 	return 1;

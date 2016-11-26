@@ -66,21 +66,34 @@ winAssignment2:
 	selfie.exe -c test_program.c selfie.c -o test_program.m 
 	selfie.exe -l test_program.m -min 32
 
-# Assignment 3: shared memory
-assignment3:
+# Assignment 3: -k/-u options
+assignment3-no-exit:
 	make clean
 	make
 	./selfie -c selfie.c -o selfie.m # create selfie mipster binary
 	./selfie -c test_program.c selfie.c -o test_program.m # create test program
-	#./selfie -l selfie.m -k 4 -l test_program.m -numprocesses 1# -u 1
-	./selfie -l selfie.m -numprocesses 1 -u 1 -l test_program.m -k 4
+	./selfie -l selfie.m -numprocesses 1 -u 1 -l test_program.m -k 4 # command from assignment 3 (modified to run properly)
 
-winAssignment3:
+assignment3-exit:
+	make clean
+	make
+	./selfie -c selfie.c -o selfie.m # create selfie mipster binary
+	./selfie -c test_program.c selfie.c -o test_program.m # create test program
+	./selfie -l test_program.m -numprocesses 1 -u 1 -m 4 # do not compile with selfie's compiler -> will trigger exit because the hypster will not exist to handle it
+
+winAssignment3-no-exit:
 	make winClean
 	make
 	selfie.exe -c selfie.c -o selfie.m # create selfie mipster binary
 	selfie.exe -c test_program.c selfie.c -o test_program.m # create test program
-	selfie.exe -l selfie.m -k 4 -l test_program.m -numprocesses 2 -u 1
+	selfie.exe -l selfie.m -numprocesses 1 -u 1 -l test_program.m -k 4 # command from assignment 3 (modified to run properly)
+
+winAssignment3-exit:
+	make winClean
+	make
+	selfie.exe -c selfie.c -o selfie.m # create selfie mipster binary
+	selfie.exe -c test_program.c selfie.c -o test_program.m # create test program
+	./selfie -l test_program.m -numprocesses 1 -u 1
 
 
 

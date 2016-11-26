@@ -1072,6 +1072,9 @@ int use_hypster = 0; // flag for forcing hypster rather than mipster
 // [EIFLES]
 int is_user_process = 0;  // flag for setting a process as user process
 
+// [EIFLES]
+int NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING = -7;
+
 int interpret = 0; // flag for executing or disassembling code
 
 int debug = 0; // flag for logging code execution
@@ -1207,9 +1210,6 @@ void resetMicrokernel();
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int MIPSTER_ID = -1;
-
-// [EIFLES]
-int HYPSTER_ID = -2;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -6965,18 +6965,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     printInteger(currentID);
     println();
 
-    if(use_hypster){
-      // switch to hypster if use_hypster flag was set using '-k' option
-      println();
-      print((int*) "=> switch to hypster because use_hypster was set!");
-      println();
-
-      fromID = hypster_switch(toID);
-      fromContext = findContext(fromID, usedContexts);
-    }
-
     // ------------------------------------------------------------
-
 
     if (getParent(fromContext) != selfie_ID()) {
       // switch to parent which is in charge of handling exceptions
@@ -6990,13 +6979,6 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       }
     }
     else {
-
-      //if(use_hypster){
-      //  toID = getParent(fromContext);
-      //}
-      //printIntegerEifles("getParent(fromContext)", getParent(fromContext));
-      //printSimpleStringEifles("we are the parent in charge of handling exceptions!");
-
       // we are the parent in charge of handling exceptions
       savedStatus = selfie_status();
 
@@ -7005,6 +6987,9 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
         printSimpleStringEifles("EXCEPTION_PAGEFAULT");
+
+        checkIfHypsterIsHandlingExceptionOrExit();
+
         frame = (int) palloc();
 
         // TODO: use this table to unmap and reuse frames
@@ -7015,6 +7000,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       } 
       else if (exceptionNumber == EXCEPTION_EXIT) {
         printSimpleStringEifles("EXCEPTION_EXIT");
+
         doDelete(toID);
         cycles = 0;		// [EIFLES] reset cycles, so the next process gets the full TIMESLICE (fair scheduling)
 
@@ -7030,20 +7016,14 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       // else if (exceptionNumber == EXCEPTION_NOEXCEPTION) {
         printSimpleStringEifles("EXCEPTION_SCHED_YIELD");
 
-        println();
-        print((int*) "  ---> ID of current user process = ");
-        printInteger(getID(fromContext));
-        println();
-
-        println();
-        print((int*) "  ---> parent ID of current user process = ");
-        printInteger(getParent(fromContext));
-        println();
+        checkIfHypsterIsHandlingExceptionOrExit();
 
         toID = runScheduler(fromID);
         cycles = 0;
       }
       else if (exceptionNumber != EXCEPTION_TIMER) {
+        checkIfHypsterIsHandlingExceptionOrExit();
+
         print(binaryName);
         print((int*) ": context ");
         printInteger(getID(fromContext));
@@ -7055,9 +7035,37 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       } 
       else {
         printSimpleStringEifles("SOME OTHER EXCEPTION");
+
+        checkIfHypsterIsHandlingExceptionOrExit();
+
         toID = runScheduler(fromID);
       } 
     }
+  }
+}
+
+int checkIfHypsterIsHandlingExceptionOrExit(){
+  println();
+  print((int*) "checkIfHypsterIsHandlingExceptionOrExit() called");
+  println();
+
+  if(is_user_process){
+    if(selfie_ID() == hypster_ID()){
+      println();
+      print((int*) "  ---> selfie_ID = hypster_ID() ----> DO NOT EXIT!");
+      println();
+    }
+    else{
+      println();
+      print((int*) "  ---> selfie_ID != hypster_ID() ----> EXIT!");
+      println();
+      return NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING;
+    }
+  }
+  else{
+    println();
+    print((int*) "is_user_process NOT SET");
+    println();
   }
 }
 
@@ -7322,18 +7330,17 @@ int selfie() {
         setTimeslice();
       else if (stringCompare(option, (int*) "-numprocesses"))
         setNumProcesses();  
+      else if (stringCompare(option, (int*) "-k")) {
+        use_hypster = 1;
+        return selfie_run(HYPSTER, MIPSTER, 0);
+        //return selfie_run(MIPSTER, MIPSTER, 0);
+      }
       else if (stringCompare(option, (int*) "-u")) {
         // [EIFLES] Indicates user process
         option = getArgument();
         is_user_process = 1;
-        //return selfie_run(MIPSTER, MIPSTER, 0);
-        //return 0;
+        //return selfie_run(HYPSTER, MIPSTER, 0);
       }
-      else if (stringCompare(option, (int*) "-k")) {
-        use_hypster = 1;
-        return selfie_run(HYPSTER, MIPSTER, 0);
-      } // [EIFLES] Handover interrupts, etc to the OS process, NOT the emulator
-  
       else if (stringCompare(option, (int*) "-o"))
         selfie_output();
       else if (stringCompare(option, (int*) "-s"))
