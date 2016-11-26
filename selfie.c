@@ -316,6 +316,8 @@ int SYM_NOTEQ        = 24; // !=
 int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
+int SYM_PLUSPLUS     = 28; // ++
+int SYM_MINUSMINUS   = 29; // --
 
 int* SYMBOLS; // strings representing symbols
 
@@ -352,7 +354,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(28 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(30 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -382,6 +384,8 @@ void initScanner () {
   *(SYMBOLS + SYM_MOD)          = (int) "%";
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
+  *(SYMBOLS + SYM_PLUSPLUS)     = (int) "++";
+  *(SYMBOLS + SYM_MINUSMINUS)   = (int) "--";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -2126,12 +2130,22 @@ void getSymbol() {
       } else if (character == CHAR_PLUS) {
         getCharacter();
 
-        symbol = SYM_PLUS;
+        if (character == CHAR_PLUS) {
+          getCharacter();
+
+          symbol = SYM_PLUSPLUS;
+        } else
+          symbol = SYM_PLUS;
 
       } else if (character == CHAR_DASH) {
         getCharacter();
 
-        symbol = SYM_MINUS;
+        if (character == CHAR_DASH) {
+          getCharacter();
+
+          symbol = SYM_MINUSMINUS;
+        } else
+          symbol = SYM_MINUS;
 
       } else if (character == CHAR_ASTERISK) {
         getCharacter();
@@ -2419,6 +2433,24 @@ int isComparison() {
     return 0;
 }
 
+int isLvalue() {
+  if (symbol == SYM_ASTERISK)
+    return 1;
+  else if (symbol == SYM_IDENTIFIER)
+    return 1;
+  else
+    return 0;
+}
+
+int isIncrementOrDecrement() {
+  if (symbol == SYM_PLUSPLUS)
+    return 1;
+  else if (symbol == SYM_MINUSMINUS)
+    return 1;
+  else
+    return 0;
+}
+
 int lookForFactor() {
   if (symbol == SYM_LPARENTHESIS)
     return 0;
@@ -2431,6 +2463,10 @@ int lookForFactor() {
   else if (symbol == SYM_CHARACTER)
     return 0;
   else if (symbol == SYM_STRING)
+    return 0;
+  else if (symbol == SYM_PLUSPLUS)
+    return 0;
+  else if (symbol == SYM_MINUSMINUS)
     return 0;
   else if (symbol == SYM_EOF)
     return 0;
@@ -2819,6 +2855,10 @@ int gr_factor() {
   int hasCast;
   int cast;
   int type;
+  int hasPrefixOperator;
+  int operator;
+  int isExpression;
+  int* entry;
 
   int* variableOrProcedureName;
 
@@ -2867,6 +2907,20 @@ int gr_factor() {
     }
   }
 
+  hasPrefixOperator = 0;
+  isExpression = 0;
+
+  // increment/decrement?
+  if (isIncrementOrDecrement()) {
+    operator = symbol;
+    getSymbol();
+
+    if (isLvalue())
+      hasPrefixOperator = 1;
+    else
+      syntaxErrorMessage((int*) "increment/decrement operator only with lvalues");
+  }
+
   // dereference?
   if (symbol == SYM_ASTERISK) {
     getSymbol();
@@ -2881,6 +2935,8 @@ int gr_factor() {
     } else if (symbol == SYM_LPARENTHESIS) {
       getSymbol();
 
+      isExpression = 1;
+
       type = gr_expression();
 
       if (symbol == SYM_RPARENTHESIS)
@@ -2894,7 +2950,39 @@ int gr_factor() {
       typeWarning(INTSTAR_T, type);
 
     // dereference
-    emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+    if (hasPrefixOperator) {
+      talloc();
+      emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
+      emitIFormat(OP_LW, previousTemporary(), previousTemporary(), 0);
+      if (operator == SYM_PLUSPLUS)
+        emitIFormat(OP_ADDIU, previousTemporary(), previousTemporary(), 1);
+      else
+        emitIFormat(OP_ADDIU, previousTemporary(), previousTemporary(), -1);
+      emitIFormat(OP_SW, currentTemporary(), previousTemporary(), 0);
+      tfree(1);
+    }
+    else
+      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
+    if (isIncrementOrDecrement()) {
+      if (isExpression) {
+        syntaxErrorMessage((int*) "expression is not assignable");
+
+        getSymbol();
+      } else {
+        load_variable(identifier);
+        if (symbol == SYM_PLUSPLUS)
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), WORDSIZE);
+        else
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -WORDSIZE);
+        entry = getVariable(identifier);
+
+        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+        tfree(1);
+
+        getSymbol();
+      }
+    }
 
     type = INT_T;
 
@@ -2905,6 +2993,9 @@ int gr_factor() {
     getSymbol();
 
     if (symbol == SYM_LPARENTHESIS) {
+      if (hasPrefixOperator)
+        syntaxErrorMessage((int*) "increment/decrement operator only with lvalues");
+
       getSymbol();
 
       // procedure call: identifier "(" ... ")"
@@ -2918,9 +3009,38 @@ int gr_factor() {
       // reset return register to initial return value
       // for missing return expressions
       emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
-    } else
+    } else {
       // variable access: identifier
       type = load_variable(variableOrProcedureName);
+
+      if (hasPrefixOperator) {
+        if (operator == SYM_PLUSPLUS)
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        else
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+
+        entry = getVariable(variableOrProcedureName);
+
+        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+      }
+
+      if (isIncrementOrDecrement()) {
+        talloc();
+        emitIFormat(OP_ADDIU, previousTemporary(), currentTemporary(), 0);
+
+        if (symbol == SYM_PLUSPLUS)
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        else
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+
+        entry = getVariable(variableOrProcedureName);
+
+        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+        tfree(1);
+
+        getSymbol();
+      }
+    }
 
   // integer?
   } else if (symbol == SYM_INTEGER) {
@@ -7062,11 +7182,67 @@ int selfie() {
 }
 
 int main(int argc, int* argv) {
-  int exitCode;
+  int  exitCode;
+  int  a;
+  int  b;
+  int  c;
+  int* pointer;
 
   initSelfie(argc, (int*) argv);
 
   initLibrary();
+
+  print((int*) "This is RSQ Selfie");
+  println();
+
+  a = 1;
+  print((int*) "a = ");
+  printInteger(a);
+  println();
+  b = a++;   // b = 1, a = 2
+  print((int*) "b = a++ = ");
+  printInteger(b);
+  println();
+  print((int*) "a = ");
+  printInteger(a);
+  println();
+  c = ++a;   // c = 3, a = 3
+  print((int*) "c = a++ = ");
+  printInteger(c);
+  println();
+  print((int*) "a = ");
+  printInteger(a);
+  println();
+
+  c = --b + a--;
+  print((int*) "c = --b + a-- = ");
+  printInteger(c);
+  println();
+  print((int*) "b = ");
+  printInteger(b);
+  println();
+  print((int*) "a = ");
+  printInteger(a);
+  println();
+  print((int*) "------");
+  println();
+
+  // pointer tests
+  pointer = malloc(2 * SIZEOFINT);
+  *pointer = 3;
+  *(pointer + 1) = 5;
+  print((int*) "*pointer = ");
+  printInteger(*pointer);
+  println();print((int*) "*(pointer + 1) = ");
+  printInteger(*(pointer + 1));
+  println();
+  a = *pointer++;
+  print((int*) "a = *pointer++ = ");
+  printInteger(a);
+  println();
+  print((int*) "*pointer = ");
+  printInteger(*pointer);
+  println();
 
   exitCode = selfie();
 
