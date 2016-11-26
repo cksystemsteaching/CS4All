@@ -115,7 +115,7 @@ void putCharacter(int c);
 
 void print(int* s);
 void println();
-void printd(int* text, int value);
+<Zusammenführungskonflikt>
 
 void printCharacter(int c);
 void printString(int* s);
@@ -203,6 +203,7 @@ int numberOfWrittenCharacters = 0;
 
 int* outputName = (int*) 0;
 int  outputFD   = 1;
+
 
 // ------------------------- INITIALIZATION ------------------------
 
@@ -972,10 +973,12 @@ int isValidVirtualAddress(int vaddr);
 int getPageOfVirtualAddress(int vaddr);
 int isVirtualAddressMapped(int* table, int vaddr);
 
+
 int* tlb(int* table, int vaddr);
 
 int  loadVirtualMemory(int* table, int vaddr);
 void storeVirtualMemory(int* table, int vaddr, int data);
+
 
 void mapAndStoreVirtualMemory(int* table, int vaddr, int data);
 
@@ -1188,6 +1191,7 @@ void resetInterpreter() {
 // -----------------------------------------------------------------
 
 int createID(int seed);
+
 
 int* allocateContext(int ID, int parentID);
 int* createContext(int ID, int parentID, int* in);
@@ -1863,6 +1867,7 @@ int roundUp(int n, int m) {
 }
 
 int* zalloc(int size) {
+
   // this procedure is only executed at boot level zero
   // zalloc allocates size bytes rounded up to word size
   // and then zeroes that memory, similar to calloc, but
@@ -5203,7 +5208,7 @@ void emitShmOpen(){
 void implementShmOpen(){
 	int shmObjectId;
 	int *name;
-	name = tlb(pt,*(registers+REG_A0));
+	name = tlb(st,*(registers+REG_A0));
 	shmObjectId=findOrCreateShmObjectByName(name);	
 	printd("ID: ",shmObjectId);
 	printd("name: ",name);
@@ -5354,7 +5359,7 @@ void implementShmMap(){
 			print("Mapping frames");
 			printd("Vaddr Page ",getPageOfVirtualAddress(brk));
 			printd("Vaddr ",brk);
-			mapPage(pt,getPageOfVirtualAddress(brk),getFrameAddr(frames));
+			mapPage(*(st+1),getPageOfVirtualAddress(brk),getFrameAddr(frames));
 			brk = brk + PAGESIZE;
 			printd("Frame Addr: ",*(frames+0));
 			frames = getNextFrame(frames);
@@ -5496,13 +5501,13 @@ void implementShmClose(){
 				while(vaddrOfShmObject < (firstVAddr + roundUp(getShmObjectSize(shmObject),PAGESIZE))){
 					page = getPageOfVirtualAddress(vaddrOfShmObject);
 					
-					oldFrame = getFrameForPage(pt, page);
+					oldFrame = getFrameForPage(loadSegmentFromVirtual(st,vaddrOfShmObject), page);
 					newFrame = palloc();
 					
 					copyFrameToFrame(oldFrame,newFrame);
 
 					//*(*(st+3) + page) = 0;
-					mapPage(pt,page,(int)newFrame);	
+					mapPage(st,page,(int)newFrame);	
 
 					vaddrOfShmObject = vaddrOfShmObject + PAGESIZE;
 				}
@@ -5957,6 +5962,7 @@ void storePhysicalMemory(int* paddr, int data) {
 }
 
 int getFrameForPage(int* table, int page) {
+
   return *(table + page);
 }
 
@@ -5968,6 +5974,7 @@ int isPageMapped(int* table, int page) {
 }
 
 int isValidVirtualAddress(int vaddr) {
+
   if (vaddr >= 0)
     if (vaddr < VIRTUALMEMORYSIZE)
       // memory must be word-addressed for lack of byte-sized data type
@@ -5978,11 +5985,14 @@ int isValidVirtualAddress(int vaddr) {
 }
 
 int getPageOfVirtualAddress(int vaddr) {
+
   return vaddr / PAGESIZE;
+
 }
 
 int isVirtualAddressMapped(int* table, int vaddr) {
   // assert: isValidVirtualAddress(vaddr) == 1
+
 
   return isPageMapped(table, getPageOfVirtualAddress(vaddr));
 }
@@ -6588,6 +6598,7 @@ void op_lw() {
   if (interpret) {
     vaddr = *(registers+rs) + signExtend(immediate);
 
+
     if (isValidVirtualAddress(vaddr)) {
       if (isVirtualAddressMapped(pt, vaddr)) {
         *(registers+rt) = loadVirtualMemory(pt, vaddr);
@@ -6600,6 +6611,7 @@ void op_lw() {
         pc = pc + WORDSIZE;
       } else
         throwException(EXCEPTION_PAGEFAULT, vaddr);
+
     } else
       throwException(EXCEPTION_ADDRESSERROR, vaddr);
   }
@@ -6686,6 +6698,7 @@ void op_sw() {
   if (interpret) {
     vaddr = *(registers+rs) + signExtend(immediate);
 
+
     if (isValidVirtualAddress(vaddr)) {
       if (isVirtualAddressMapped(pt, vaddr)) {
         storeVirtualMemory(pt, vaddr, *(registers+rt));
@@ -6698,6 +6711,7 @@ void op_sw() {
         pc = pc + WORDSIZE;
       } else
         throwException(EXCEPTION_PAGEFAULT, vaddr);
+
     } else
       throwException(EXCEPTION_ADDRESSERROR, vaddr);
   }
@@ -6784,6 +6798,7 @@ void fetch() {
 }
 
 void execute() {
+
   if (debug) {
     if (interpret) {
       print(binaryName);
@@ -7004,8 +7019,10 @@ int createID(int seed) {
   return seed + 1;
 }
 
+
 int* allocateContext(int ID, int parentID) {
   int* context;
+
 
   if (freeContexts == (int*) 0)
     context = malloc(5 * SIZEOFINTSTAR + 6 * SIZEOFINT);
@@ -7030,9 +7047,11 @@ int* allocateContext(int ID, int parentID) {
   setRegHi(context, 0);
   setRegLo(context, 0);
 
+
   // allocate zeroed memory for page table
   // TODO: save and reuse memory for page table
   setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
+
 
   // heap starts where it is safe to start
   setBreak(context, maxBinaryLength);
@@ -7109,6 +7128,7 @@ int* deleteContext(int* context, int* from) {
 
 void mapPage(int* table, int page, int frame) {
   // assert: 0 <= page < VIRTUALMEMORYSIZE / PAGESIZE
+
   *(table + page) = frame;
 }
 
@@ -7124,6 +7144,7 @@ int pavailable() {
   else
     return 0;
 }
+
 
 int pused() {
   return usedPageFrameMemory - freePageFrameMemory;
@@ -7181,16 +7202,20 @@ void up_loadBinary(int* table) {
   // binaries start at lowest virtual address
   vaddr = 0;
 
+
   while (vaddr < binaryLength) {
     mapAndStoreVirtualMemory(table, vaddr, loadBinary(vaddr));
 
+
     vaddr = vaddr + WORDSIZE;
   }
+
 }
 
 int up_loadString(int* table, int* s, int SP) {
   int bytes;
   int i;
+
 
   bytes = roundUp(stringLength(s) + 1, WORDSIZE);
 
@@ -7200,6 +7225,7 @@ int up_loadString(int* table, int* s, int SP) {
   i = 0;
 
   while (i < bytes) {
+
     mapAndStoreVirtualMemory(table, SP + i, *s);
 
     s = s + 1;
@@ -7231,11 +7257,15 @@ void up_loadArguments(int* table, int argc, int* argv) {
   i_vargv = vargv;
   i_argc  = argc;
 
+
   while (i_argc > 0) {
+
     SP = up_loadString(table, (int*) *argv, SP);
+
 
     // store pointer to string in virtual *argv
     mapAndStoreVirtualMemory(table, i_vargv, SP);
+
 
     argv = argv + 1;
 
@@ -7256,12 +7286,15 @@ void up_loadArguments(int* table, int argc, int* argv) {
   // push virtual argv
   mapAndStoreVirtualMemory(table, SP, vargv);
 
+
   // store stack pointer at highest virtual address for binary to retrieve
   mapAndStoreVirtualMemory(table, VIRTUALMEMORYSIZE - WORDSIZE, SP);
+
 }
 
 void mapUnmappedPages(int* table) {
   int page;
+
   // assert: page table is only mapped from beginning up and end down
 
   page = 0;
@@ -7269,25 +7302,35 @@ void mapUnmappedPages(int* table) {
   while (isPageMapped(table, page))
     page = page + 1;
 
+
+
   while (pavailable()) {
     mapPage(table, page, (int) palloc());
 
+
     page = page + 1;
+
   }
+
 }
 
 void down_mapPageTable(int* context) {
   int page;
 
+
   // assert: context page table is only mapped from beginning up and end down
 
+
   page = 0;
+
 
   while (isPageMapped(getPT(context), page)) {
     selfie_map(getID(context), page, getFrameForPage(getPT(context), page));
 
+
     page = page + 1;
   }
+
 
   page = (VIRTUALMEMORYSIZE - WORDSIZE) / PAGESIZE;
 
@@ -7295,8 +7338,11 @@ void down_mapPageTable(int* context) {
     selfie_map(getID(context), page, getFrameForPage(getPT(context), page));
 
     page = page - 1;
+
   }
+
 }
+
 
 int runUntilExitWithoutExceptionHandling(int toID) {
   // works only with mipsters
@@ -7372,8 +7418,10 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     // assert: fromContext must be in usedContexts (created here)
 		//print((int*)"PRINT SELFIE ID");
 		//printInteger(selfie_ID());
+
     if (getParent(fromContext) != selfie_ID()){
       // switch to parent which is in charge of handling exceptions
+
 			toID = getParent(fromContext);
 			
 			
@@ -7391,6 +7439,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
+
         frame = (int) palloc();
 
         // TODO: use this table to unmap and reuse frames
@@ -7533,6 +7582,7 @@ int boot(int argc, int* argv) {
   int exitCode;
 	int count;
 	int firstID;
+
 	count=0;
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -7553,12 +7603,15 @@ int boot(int argc, int* argv) {
 		
 	while(count < processCallNumber){
 		// create initial context on microkernel boot level
+
 		initID = selfie_create();
+
 		if(count==0)
 			firstID=initID;
 		if (usedContexts == (int*) 0)
 		  // create duplicate of the initial context on our boot level
 		  usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+
 
 		up_loadBinary(getPT(usedContexts));
 	
@@ -7567,9 +7620,11 @@ int boot(int argc, int* argv) {
 		// propagate page table of initial context to microkernel boot level
 		down_mapPageTable(usedContexts);
 
+
 		count = count + 1;
 	}
 	
+
 
   // mipsters and hypsters handle page faults
   exitCode = runOrHostUntilExitWithPageFaultHandling(firstID);
@@ -7776,9 +7831,12 @@ int main(int argc, int* argv) {
   print((int*) "This is the Morties Selfie!!");
   println();
 
+
   exitCode = selfie();
  
   if (exitCode == USAGE) {
+int pageFaultExceptionAddr = 0;
+int pageFaultExceptionSegment = 0;
     print(selfieName);
     print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary }");
 		print((int*) " [-conc number[freq number]] -u [-m | -d | -y | -k | -min | -mob ) size ... ] ");
@@ -7795,6 +7853,7 @@ void printd(int* text, int value) {
 	printInteger(value);
 	println();
 }
+
 
 
 
