@@ -900,7 +900,7 @@ void selfie_map(int ID, int page, int frame);
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_create = 1;
-int debug_switch = 0;
+int debug_switch = 1;
 int debug_status = 0;
 int debug_delete = 0;
 int debug_map    = 0;
@@ -1067,7 +1067,10 @@ int timer = 0; // counter for timer interrupt
 int mipster = 0; // flag for forcing to use mipster rather than hypster
 
 // [EIFLES]
-int hypster = 0; // flag for forcing hypster rather than mipster
+int use_hypster = 0; // flag for forcing hypster rather than mipster
+
+// [EIFLES]
+int is_user_process = 0;  // flag for setting a process as user process
 
 int interpret = 0; // flag for executing or disassembling code
 
@@ -5162,18 +5165,15 @@ void implementID() {
 
 int hypster_ID() {
   // this procedure is only executed at boot level zero
-  //return MIPSTER_ID;
-  return HYPSTER_ID;
+  // again: selvies' compiler will point to "hypster_ID" (see above) instead of doint the following (returning MIPSTER_ID)
+  return MIPSTER_ID;
 }
 
 int selfie_ID() {
   if (mipster)
     return MIPSTER_ID;
-  //else
-  //  return hypster_ID();
-  else if(hypster){
+  else
     return hypster_ID();
-  }
 }
 
 void emitCreate() {
@@ -5354,15 +5354,16 @@ void implementStatus() {
 int hypster_status() {
   // this procedure is only executed at boot level zero
 
-  // [EIFLES] same as in mipster case? this can't be right?!
+  // [EIFLES] same as in mipster case? NO! because depending on the compiler, this will lead to a different implementation
+  // compiling this code with selfie's compiler will generate a symbol table entry "hypster_status" and treat it like a syscall
   return doStatus();
 }
 
 int selfie_status() {
 
-  printSimpleStringEifles("in selfie_status()!!!!!");
-  printIntegerEifles("selfie_status() mipster ", mipster);
-  printIntegerEifles("selfie_status() hypster ", hypster);
+  //printSimpleStringEifles("in selfie_status()!!!!!");
+  //printIntegerEifles("selfie_status() mipster ", mipster);
+  //printIntegerEifles("selfie_status() hypster ", hypster);
 
   if (mipster)
     return doStatus();
@@ -5489,43 +5490,17 @@ void implementMap() {
   doMap(*(registers+REG_A0), *(registers+REG_A1), *(registers+REG_A2));
 }
 
-// [EIFLES]
-void hypster_doMap(int ID, int page, int frame){
-  int* mapContext;
-  int* parentContext;
-
-  mapContext = findContext(ID, usedContexts);
-
-  if (mapContext != (int*) 0) {
-    if (getParent(mapContext) != HYPSTER_ID) {
-      parentContext = findContext(getParent(mapContext), usedContexts);
-
-      if (parentContext != (int*) 0)
-        // assert: 0 <= frame < VIRTUALMEMORYSIZE
-        frame = getFrameForPage(getPT(parentContext), frame / PAGESIZE);
-    }
-    else{
-      printSimpleStringEifles("hypster_doMap(): getParent(mapContext) == HYPSTER_ID");
-    }
-
-    // on boot level zero frame may be any signed integer
-    mapPage(getPT(mapContext), page, frame);
-  }
-}
-
 void hypster_map(int ID, int page, int frame) {
   // this procedure is only executed at boot level zero
 
-  // [EIFLES] same thing as in mipster case? again: this can't be right?!
+  // [EIFLES] same thing as in mipster case? YES: same as in hypster_status() -> selfie's compiler will lead to a syscall
   doMap(ID, page, frame);
-
-  //ypster_doMap(ID, page, frame);
 }
 
 void selfie_map(int ID, int page, int frame) {
-  printSimpleStringEifles("in selfie_map()!!!");
-  printIntegerEifles("selfie_map() mipster", mipster);
-  printIntegerEifles("selfie_map() hypster", hypster);
+  //printSimpleStringEifles("in selfie_map()!!!");
+  //printIntegerEifles("selfie_map() mipster", mipster);
+  //printIntegerEifles("selfie_map() hypster", hypster);
 
   if (mipster)
     doMap(ID, page, frame);
@@ -6631,6 +6606,8 @@ int* allocateContext(int ID, int parentID) {
 int* createContext(int ID, int parentID, int* in) {
   int* context;
 
+  printIntegerEifles("createContext() with ID: ", ID);
+
   context = allocateContext(ID, parentID);
 
   setNextContext(context, in);
@@ -6925,6 +6902,22 @@ int runUntilExitWithoutExceptionHandling(int toID) {
   }
 }
 
+void printAllContexts() {
+  int* current;
+  //int* previous;
+
+  //previous = (int*) 0;
+  current = usedContexts;
+
+  print((int*) "Contexts: ");
+  while(current != (int*) 0) {
+    printInteger(getID(current));
+    print((int*) " -> ");
+    current = getNextContext(current);
+  }
+
+}
+
 int runOrHostUntilExitWithPageFaultHandling(int toID) {
   // works with mipsters and hypsters
   int fromID;
@@ -6934,6 +6927,11 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int exceptionParameter;
   int frame;
 
+  int currentID;
+  int parentID;
+  int grandParentID;
+  int* tempContext;
+
   while (1) {
     // [EIFLES] Context switch is handled in here!
     fromID = selfie_switch(toID);
@@ -6942,16 +6940,43 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
     // assert: fromContext must be in usedContexts (created here)
 
-    //printIntegerEifles("getParent(fromContext)", getParent(fromContext));
-    //printIntegerEifles("selfie_ID()", selfie_ID());
+    // ------------------------------------------------------------
+    if(use_hypster){
+      println();
+      print((int*) "flag use_hypster is activated!!");
+      println();
+    }
 
-    // [EIFLES]
-    if(getParent(fromContext) == HYPSTER_ID){
-      printSimpleStringEifles("getParent(fromContext) == HYPSTER");
+    if(is_user_process){
+      println();
+      print((int*) "flag is_user_process is activated!!");
+      println();
     }
-    else if(getParent(fromContext) == MIPSTER_ID){
-      printSimpleStringEifles("getParent(fromContext) == MIPSTER");
+
+    println();
+    print((int*) "parent of current user process = ");
+    printInteger(getParent(fromContext));
+    println();
+
+    currentID = getID(fromContext);
+
+    println();
+    print((int*) "current user process ID = ");
+    printInteger(currentID);
+    println();
+
+    if(use_hypster){
+      // switch to hypster if use_hypster flag was set using '-k' option
+      println();
+      print((int*) "=> switch to hypster because use_hypster was set!");
+      println();
+
+      fromID = hypster_switch(toID);
+      fromContext = findContext(fromID, usedContexts);
     }
+
+    // ------------------------------------------------------------
+
 
     if (getParent(fromContext) != selfie_ID()) {
       // switch to parent which is in charge of handling exceptions
@@ -6966,6 +6991,9 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     }
     else {
 
+      //if(use_hypster){
+      //  toID = getParent(fromContext);
+      //}
       //printIntegerEifles("getParent(fromContext)", getParent(fromContext));
       //printSimpleStringEifles("we are the parent in charge of handling exceptions!");
 
@@ -7000,8 +7028,17 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       }
       else if (exceptionNumber == EXCEPTION_SCHED_YIELD) {
       // else if (exceptionNumber == EXCEPTION_NOEXCEPTION) {
-        
         printSimpleStringEifles("EXCEPTION_SCHED_YIELD");
+
+        println();
+        print((int*) "  ---> ID of current user process = ");
+        printInteger(getID(fromContext));
+        println();
+
+        println();
+        print((int*) "  ---> parent ID of current user process = ");
+        printInteger(getParent(fromContext));
+        println();
 
         toID = runScheduler(fromID);
         cycles = 0;
@@ -7191,7 +7228,7 @@ int selfie_run(int engine, int machine, int debugger) {
     exitCode = boot(numberOfRemainingArguments(), remainingArguments());
 
     // [EIFLES]
-    hypster = 0;
+    use_hypster = 0;
   }
 
   interpret = 0;
@@ -7287,10 +7324,13 @@ int selfie() {
         setNumProcesses();  
       else if (stringCompare(option, (int*) "-u")) {
         // [EIFLES] Indicates user process
-        return selfie_run(MIPSTER, MIPSTER, 0);
+        option = getArgument();
+        is_user_process = 1;
+        //return selfie_run(MIPSTER, MIPSTER, 0);
+        //return 0;
       }
       else if (stringCompare(option, (int*) "-k")) {
-        hypster = 1;
+        use_hypster = 1;
         return selfie_run(HYPSTER, MIPSTER, 0);
       } // [EIFLES] Handover interrupts, etc to the OS process, NOT the emulator
   

@@ -72,7 +72,8 @@ assignment3:
 	make
 	./selfie -c selfie.c -o selfie.m # create selfie mipster binary
 	./selfie -c test_program.c selfie.c -o test_program.m # create test program
-	./selfie -l selfie.m -k 4 -l test_program.m -numprocesses 2 -u 1
+	#./selfie -l selfie.m -k 4 -l test_program.m -numprocesses 1# -u 1
+	./selfie -l selfie.m -numprocesses 1 -u 1 -l test_program.m -k 4
 
 winAssignment3:
 	make winClean
