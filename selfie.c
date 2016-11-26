@@ -848,7 +848,6 @@ void implementShmWrite();
 void emitShmRead();
 void implementShmRead();
 
-// [EIFLES] SharedMemObjects and file descriptor
 int* allocateShObj();
 int* allocateFD();
 int getNewFDId();
@@ -873,12 +872,12 @@ void setShObj_value(int* object, int* value);
 
 int* getFD_next(int* fd);
 int  getFD_id(int* fd);
-int  getFD_processId(int* fd);
+int  getFD_pid(int* fd);
 int* getFD_object(int* fd);
 
 void setFD_next(int* fd, int* next);
 void setFD_id(int* fd, int id);
-void setFD_processId(int* fd, int processId);
+void setFD_pid(int* fd, int pid);
 void setFD_object(int* fd, int* object);
 
 // ------------------------ GLOBAL CONSTANTS-----------------------
@@ -886,6 +885,8 @@ void setFD_object(int* fd, int* object);
 int debug_read   = 0;
 int debug_write  = 0;
 int debug_open   = 0;
+//[EIFLES] debugging for shared memory processing
+int debug_shm    = 0;   
 
 int debug_malloc = 0;
 
@@ -4838,37 +4839,15 @@ void implementShmOpen() {
   // set return value
   *(registers+REG_V0) = (int) getFD_id(fd);
 
-  // printSimpleStringEifles("implementShmOpen");
-  print((int*) "Open shared object ");
-  // print((int*) " at address:");
-  // printBinary(shObj,32);
-  // println();
-  // print((int*) "next: ");
-  // printBinary(getShObj_next(shObj),32);
-  print((int*) ", name: ");
-  print(getShObj_name(shObj));
-  print((int*) ", size: ");
-  printInteger(getShObj_size(shObj));
-  print((int*) ", fd_count: ");
-  printInteger(getShObj_fd_count(shObj));
-  print((int*) ", value*: ");
-  printBinary(getShObj_value(shObj),32);
-  println();
-
-  // print((int*) "Added fd for shared object at address: ");
-  // printBinary(fd,32);
-  // println();
-  // print((int*) "next: ");
-  // printBinary(getFD_next(fd),32);
-  // print((int*) ", getFD_id: ");
-  // printInteger(getFD_id(fd));
-  // print((int*) ", getFD_processId: ");
-  // printInteger(getFD_processId(fd));
-  // print((int*) ", getFD_object: ");
-  // printBinary(getFD_object(fd),32);
-  // println();
-
-  // println();
+  if (debug_shm) {
+    print((int*) "[shm_open] (shObjName:");
+    print(shObjName);
+    print((int*) ") | fd_id: ");
+    printInteger(getFD_id(fd));
+    print((int*) ", pid: ");
+    printInteger(getFD_pid(fd));
+    println();
+  }
 }
 
 void implementShmClose() {
@@ -4880,11 +4859,19 @@ void implementShmClose() {
 
   // set return value
   *(registers+REG_V0) = successful;
+
+  if (debug_shm) {
+    print((int*) "[shm_close] (fd_id:");
+    printInteger(fd_id);
+    print((int*) ")");
+    println();
+  }
 }
 
 void implementShmSize() {
   int fd_id;
   int size;
+  int old_size;
   int* fd;
   int* shObj;
   int* shObj_value;
@@ -4896,33 +4883,43 @@ void implementShmSize() {
 
   if (fd == (int*) 0) {
     // fd does not exist
-    *(registers+REG_V0) = (int) 0;
+    *(registers+REG_V0) = -1;
     return;
   }
 
   shObj = getFD_object(fd);
-  if (getShObj_size(shObj) == 0) {
-    // no size set yet, now set size
-    setShObj_size(shObj,size);
-    // allocate 
-    shObj_value = zalloc(size);
-    setShObj_value(shObj,shObj_value);
-    //TODO, for now only initialize int value to 0
-    *(getShObj_value(shObj)) = (int) 0;
+  old_size = getShObj_size(shObj);
+
+  if (old_size != 0) {
+    //size already set, return size
+    *(registers+REG_V0) = (int) getShObj_size(shObj);
+    return;
   }
+
+  // no size set yet, now set size
+  old_size = getShObj_size(shObj);
+  setShObj_size(shObj,size);
+  // allocate 
+  shObj_value = zalloc(size);
+  setShObj_value(shObj,shObj_value);
+  //initialize int value to 0
+  *(getShObj_value(shObj)) = (int) 0;
 
   // set return value
   *(registers+REG_V0) = (int) getShObj_size(shObj);
 
-  print((int*) "Called shm_size to set size of fd id: ");
-  printInteger(fd_id);
-  print((int*) " to: ");
-  printInteger(size);
-  print((int*) " bytes. Size now: ");
-  printInteger(getShObj_size(shObj));
-  print((int*) " bytes. value*:");
-  printBinary(getShObj_value(shObj),32);
-  println();
+  if (debug_shm) {
+    print((int*) "[shm_size] (fd_id:");
+    printInteger(fd_id);
+    print((int*) ", size:");
+    printInteger(size);
+    print((int*) "B) | old size:");
+    printInteger(old_size);
+    print((int*) "B, new size:");
+    printInteger(getShObj_size(shObj));
+    print((int*) "B");
+    println();
+  }
 }
 
 void implementShmWrite() {
@@ -4943,30 +4940,22 @@ void implementShmWrite() {
   fd = getFD(fd_id);
   shObj = getFD_object(fd);
 
-  // print((int*) "Write on fd_id: ");
-  // printInteger(fd_id);
-  // print((int*) ", shared object value*: ");
-  // printBinary(getShObj_value(shObj),32);
-  // print((int*) ", shared object value: ");
-  // printInteger(*(getShObj_value(shObj)));
-  // println();
-  // for now, only writes 4 Bytes(SIZEOFINT) to *(value)
-  // TODO
-  // *(getShObj_value(shObj)) = value;
+  if (size > getShObj_size(shObj)) {
+    print((int*) "[ERROR] Writing ");
+    printInteger(size);
+    print((int*) "B to fd with id: ");
+    printInteger(fd_id);
+    print((int*) " exceeds value size: ");
+    printInteger(getShObj_size(shObj));
+    print((int*) "B");
+    println();
 
-  // print((int*) ", new value: ");
-  // printInteger(*(getShObj_value(shObj)));
-  // println();
+    *(registers+REG_V0) = -1;
+    return;
+  }
 
-  // now write bytesWrite from buf and store in shared object with fd
+  // now write size from buf and store in shared object with fd
 
-  print((int*) "Write on fd_id: ");
-  printInteger(fd_id);
-  print((int*) ", buf*: ");
-  printBinary(buf,32);
-  print((int*) ", size: ");
-  printInteger(size);
-  println();
   shObj_value = getShObj_value(shObj);
 
   bytesActuallyWritten = 0;
@@ -4974,11 +4963,21 @@ void implementShmWrite() {
   while (bytesActuallyWritten < size) {
     *(shObj_value + bytesActuallyWritten) = *(buf + bytesActuallyWritten);
     bytesActuallyWritten = bytesActuallyWritten + WORDSIZE;
-    printInteger(bytesActuallyWritten);
   }
     
   // set return value
   *(registers+REG_V0) = (int) bytesActuallyWritten;
+
+  if (debug_shm) {
+    print((int*) "[shm_write] (fd_id:");
+    printInteger(fd_id);
+    print((int*) ", buf:");
+    printString(buf);
+    print((int*) ", size:");
+    printInteger(size);
+    print((int*) "B)");
+    println();
+  }
 }
 
 void implementShmRead() {
@@ -4999,14 +4998,14 @@ void implementShmRead() {
   fd = getFD(fd_id);
   if (fd == (int*) 0) {
     // fd does not exist
-    *(registers+REG_V0) = (int) 0;
+    *(registers+REG_V0) = -1;
     return;
   }
   shObj = getFD_object(fd);
 
   if (shObj == (int*) 0) {
     // no shared object yet / shm_write not called yet!
-    *(registers+REG_V0) = (int) 0;
+    *(registers+REG_V0) = -1;
     return;
   }
   // for now, only reads 4 Bytes(SIZEOFINT) from *(value)
@@ -5014,6 +5013,19 @@ void implementShmRead() {
   // set return value
   // *(registers+REG_V0) = (int) *(getShObj_value(shObj));
 
+  if (size > getShObj_size(shObj)) {
+    print((int*) "[ERROR] Reading ");
+    printInteger(size);
+    print((int*) "B from fd with id: ");
+    printInteger(fd_id);
+    print((int*) " exceeds value size: ");
+    printInteger(getShObj_size(shObj));
+    print((int*) "B");
+    println();
+
+    *(registers+REG_V0) = -1;
+    return;
+  }
   // now read bytesToRead from fd and store in buf
   shObj_value = getShObj_value(shObj);
 
@@ -5022,11 +5034,19 @@ void implementShmRead() {
   while (bytesActuallyRead < size) {
     *(buf + bytesActuallyRead) = *(shObj_value + bytesActuallyRead);
     bytesActuallyRead = bytesActuallyRead + WORDSIZE;
-    printInteger(bytesActuallyRead);
   }
     
   // set return value
   *(registers+REG_V0) = (int) bytesActuallyRead;
+
+  if (debug_shm) {
+    print((int*) "[shm_read] (fd_id:");
+    printInteger(fd_id);
+    print((int*) ", size:");
+    printInteger(size);
+    print((int*) "B)");
+    println();
+  }
 }
 
 void emitRead() {
@@ -6846,8 +6866,8 @@ void selfie_disassemble() {
 // file descriptor struct:
 // +---+-------+----------+
 // | 0 | int*  | next     | pointer to next fd
-// | 1 | int   | id       | id of the file descriptor != processID
-// | 2 | int   | processId| id of the process, which opened this FD (which is checked on calling close())
+// | 1 | int   | id       | id of the file descriptor != pid
+// | 2 | int   | pid      | id of the process, which opened this FD (which is checked on calling close())
 // | 3 | int*  | object   | pointer to the shared object
 // +---+------------+
 int* getShObj_next(int* object)      { return (int*) *(object);        }
@@ -6864,12 +6884,12 @@ void setShObj_value(int* object, int* value)       { *(object + 4) = (int) value
 
 int* getFD_next(int* fd)         { return (int*) *(fd);     }
 int  getFD_id(int* fd)           { return *(fd + 1);        }
-int  getFD_processId(int* fd)    { return *(fd + 2);        }
+int  getFD_pid(int* fd)    { return *(fd + 2);        }
 int* getFD_object(int* fd)       { return (int*) *(fd + 3); }
 
 void setFD_next(int* fd, int* next)         { *(fd) = (int) next;       }
 void setFD_id(int* fd, int id)              { *(fd + 1) = id;           }
-void setFD_processId(int* fd, int processId){ *(fd + 2) = processId;    }
+void setFD_pid(int* fd, int pid){ *(fd + 2) = pid;    }
 void setFD_object(int* fd, int* object)     { *(fd + 3) = (int) object; }
 
 int* allocateShObj() {
@@ -6944,29 +6964,22 @@ int* allocateFD() {
 
 int* addFD(int* shObj) {
   int* current;
-  int processId;
+  int pid;
   int fd_id;
 
   fd_id = getNewFDId();
-  processId = getID(currentContext);
+  pid = getID(currentContext);
 
   current = allocateFD();
   setFD_next(current,fd_list);
   setFD_id(current,fd_id);
-  setFD_processId(current,processId);
+  setFD_pid(current,pid);
   setFD_object(current,shObj);
 
   //increment number of FDs in shared object
   setShObj_fd_count(shObj,getShObj_fd_count(shObj) + 1);
 
   fd_list = current;
-
-  print((int*) "New FD [fd_id: ");
-  printInteger(fd_id);
-  print((int*) ", processId: ");
-  printInteger(processId);
-  print((int*) "]");
-  println();
 
   return fd_list;
 }
@@ -7012,7 +7025,7 @@ int removeFD(int fd_id) {
   int* shObj;
   int fd_count_new;
 
-  printListOfFDs();
+  // printListOfFDs();
 
   // [EIFLES] Empty list, nothing to delete
   if(fd_list == (int*) 0) {
@@ -7026,7 +7039,7 @@ int removeFD(int fd_id) {
     if (getFD_id(current) == fd_id) {
       println();
       // found fd with fd_id
-      if (getFD_processId(current) != getID(currentContext)) {
+      if (getFD_pid(current) != getID(currentContext)) {
         // calling process is not the process which opened the FD
         // not allowed, return.
         print((int*) "Process with id: ");
@@ -7034,7 +7047,7 @@ int removeFD(int fd_id) {
         print((int*) " tried to close fd with id: ");
         printInteger(fd_id);
         print((int*) ", opened by process with id: ");
-        printInteger(getFD_processId(current));
+        printInteger(getFD_pid(current));
         print((int*) " --> Abort close.");
         println();
         return 0;
@@ -7051,16 +7064,21 @@ int removeFD(int fd_id) {
       fd_count_new = getShObj_fd_count(shObj) - 1;
       setShObj_fd_count(shObj,fd_count_new);
       
-      print((int*) "Close fd with id: ");
-      printInteger(fd_id);
-      print((int*) ". ");
-      printInteger(getShObj_fd_count(shObj));
-      print((int*) " remaining FDs on shared object ");
-      print(getShObj_name(shObj));
-      println();
+      // print((int*) "Close fd with id: ");
+      // printInteger(fd_id);
+      // print((int*) ". ");
+      // printInteger(getShObj_fd_count(shObj));
+      // print((int*) " remaining FDs on shared object ");
+      // print(getShObj_name(shObj));
+      // println();
 
       if (fd_count_new == 0) {
         // no FDs on shared object, delete this object.
+        if (debug_shm) {
+          print((int*) "No FDs left -> Free shared object ");
+          printString(getShObj_name(shObj));
+          println();
+        }
         removeShObj(shObj);
       }
 
@@ -7477,13 +7495,14 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         }
       }
       else if (exceptionNumber == EXCEPTION_SCHED_YIELD) {
-      // else if (exceptionNumber == EXCEPTION_NOEXCEPTION) {
-        println();
-        print((int*) "[EXCEPTION_SCHED_YIELD]");
-        println();
-        println();
         toID = runScheduler(fromID);
         cycles = 0;
+        println();
+        print((int*) "[EXCEPTION_SCHED_YIELD, next_pid: ");
+        printInteger(toID);
+        print((int*) "]");
+        println();
+        println();
       }
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
