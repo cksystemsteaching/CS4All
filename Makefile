@@ -1,9 +1,13 @@
 # Compiler flags
 CFLAGS := -w -m32 -D'main(a,b)=main(a,char**argv)'
+DFLAGS := -g -O0
 
 # Compile selfie.c into selfie executable
 selfie: selfie.c
 	$(CC) $(CFLAGS) $< -o $@
+
+selfie_gdb: selfie.c
+	$(CC) $(CFLAGS) $(DFLAGS) $< -o $@
 
 # Consider these targets as targets, not files
 .PHONY : test clean
