@@ -5493,24 +5493,19 @@ void implementShmClose(){
 	int newFrame;
 	int oldFrame;
 
-	print((int*)"Shm Close");
 	shmObjectId= *(registers+REG_A0);
 	shmObject=findShmObjectById(shmObjectId);
 	if (shmObject!= (int*) 0){
-		print((int*)"Shm Found");
-		if(getShmObjectFrames(shmObject)!=(int*) 0){
-			print((int*)"Frames for Shm found");
+		if(getShmObjectFrames(shmObject)!=(int*) 0){	
 			shmObjectOfContext=getShmObjectOfContextById(shmObjectId);	
-			if(shmObjectOfContext!=(int*)0){
-					print((int*)"Shm Found in Context");
-					println();
+			if(shmObjectOfContext!=(int*)0){			
 				//current context has shm object with specified id
 				vaddrOfShmObject = getContextShmObjectVaddr(shmObjectOfContext);
 				firstVAddr = vaddrOfShmObject;
 				
 				while(vaddrOfShmObject < (firstVAddr + roundUp(getShmObjectSize(shmObject),PAGESIZE))){
 					page = getPageOfVirtualAddress(vaddrOfShmObject);
-
+					
 					oldFrame = getFrameForPage(loadSegmentFromVirtual(st,vaddrOfShmObject), page);
 					newFrame = palloc();
 					
