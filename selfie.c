@@ -316,6 +316,7 @@ int SYM_NOTEQ        = 24; // !=
 int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
+int SYM_PLUSPLUS     = 28; // ++
 
 int* SYMBOLS; // strings representing symbols
 
@@ -352,7 +353,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(28 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(29 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -382,6 +383,7 @@ void initScanner () {
   *(SYMBOLS + SYM_MOD)          = (int) "%";
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
+  *(SYMBOLS + SYM_PLUSPLUS)     = (int) "++";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -506,11 +508,12 @@ void save_temporaries();
 void restore_temporaries(int numberOfTemporaries);
 
 void syntaxErrorSymbol(int expected);
-void syntaxErrorUnexpected();
+void syntaxErrorUnexpected(int *errorCode);
 void printType(int type);
 void typeWarning(int expected, int found);
 
 int* getVariable(int* variable);
+void incrementCurrTemp(int* variable);
 int  load_variable(int* variable);
 void load_integer(int value);
 void load_string(int* string);
@@ -2126,7 +2129,12 @@ void getSymbol() {
       } else if (character == CHAR_PLUS) {
         getCharacter();
 
-        symbol = SYM_PLUS;
+        if (character == CHAR_PLUS) {
+          getCharacter();
+
+          symbol = SYM_PLUSPLUS;
+        } else
+          symbol = SYM_PLUS;
 
       } else if (character == CHAR_DASH) {
         getCharacter();
@@ -2424,6 +2432,8 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_ASTERISK)
     return 0;
+  else if (symbol == SYM_PLUSPLUS)
+    return 0;
   else if (symbol == SYM_IDENTIFIER)
     return 0;
   else if (symbol == SYM_INTEGER)
@@ -2440,6 +2450,8 @@ int lookForFactor() {
 
 int lookForStatement() {
   if (symbol == SYM_ASTERISK)
+    return 0;
+  else if (symbol == SYM_PLUSPLUS)
     return 0;
   else if (symbol == SYM_IDENTIFIER)
     return 0;
@@ -2549,13 +2561,14 @@ void syntaxErrorSymbol(int expected) {
   println();
 }
 
-void syntaxErrorUnexpected() {
+void syntaxErrorUnexpected(int *errorCode) {
   printLineNumber((int*) "error", lineNumber);
 
   print((int*) "unexpected symbol ");
   printSymbol(symbol);
-  print((int*) " found");
-
+  print((int*) " found (");
+  print(errorCode);
+  print((int*) ")");
   println();
 }
 
@@ -2601,6 +2614,24 @@ int* getVariable(int* variable) {
   }
 
   return entry;
+}
+
+void incrementCurrTemp(int* variable) {
+  int* entry;
+  int type;
+
+  entry = getVariable(variable);
+  type = getType(entry);
+
+  if(type == INT_T) {
+    emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+    emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+  } else if(type == INTSTAR_T) {
+    emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), WORDSIZE);
+    emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+  } else {
+    typeWarning(VOID_T, type);
+  }
 }
 
 int load_variable(int* variable) {
@@ -2829,7 +2860,7 @@ int gr_factor() {
   type = INT_T;
 
   while (lookForFactor()) {
-    syntaxErrorUnexpected();
+    syntaxErrorUnexpected((int*) "ERR_1");
 
     if (symbol == SYM_EOF)
       exit(-1);
@@ -2877,6 +2908,18 @@ int gr_factor() {
 
       getSymbol();
 
+    // "*" "++" identifier
+    } else if (symbol == SYM_PLUSPLUS) {
+      getSymbol();
+
+      if (symbol != SYM_IDENTIFIER)
+        syntaxErrorUnexpected((int*) "ERR_9");
+
+      type = load_variable(identifier);
+      incrementCurrTemp(identifier);
+
+      getSymbol();
+
     // * "(" expression ")"
     } else if (symbol == SYM_LPARENTHESIS) {
       getSymbol();
@@ -2888,7 +2931,7 @@ int gr_factor() {
       else
         syntaxErrorSymbol(SYM_RPARENTHESIS);
     } else
-      syntaxErrorUnexpected();
+      syntaxErrorUnexpected((int*) "ERR_2");
 
     if (type != INTSTAR_T)
       typeWarning(INTSTAR_T, type);
@@ -2897,6 +2940,36 @@ int gr_factor() {
     emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
     type = INT_T;
+
+  // ++ [*] identifier;
+  } else if (symbol == SYM_PLUSPLUS) {
+    getSymbol();
+
+    if(symbol == SYM_ASTERISK) { // ++ * identifier
+      getSymbol();
+
+      if(symbol != SYM_IDENTIFIER)
+        syntaxErrorSymbol(SYM_IDENTIFIER);
+
+      talloc();
+      load_variable(identifier);
+
+      // dereference
+      emitIFormat(OP_LW, currentTemporary(), previousTemporary(), 0);
+      emitIFormat(OP_ADDIU, previousTemporary(), previousTemporary(), 1);
+      emitIFormat(OP_SW, currentTemporary(), previousTemporary(), 0);
+
+      tfree(1);
+      type = INT_T;
+    } else { // ++ identfier
+      if(symbol != SYM_IDENTIFIER)
+        syntaxErrorSymbol(SYM_IDENTIFIER);
+
+      type = load_variable(identifier);
+      incrementCurrTemp(identifier);
+    }
+
+    getSymbol();
 
   // identifier?
   } else if (symbol == SYM_IDENTIFIER) {
@@ -2959,7 +3032,7 @@ int gr_factor() {
     else
       syntaxErrorSymbol(SYM_RPARENTHESIS);
   } else
-    syntaxErrorUnexpected();
+    syntaxErrorUnexpected((int*) "ERR_3");
 
   // assert: allocatedTemporaries == n + 1
 
@@ -3383,7 +3456,7 @@ void gr_statement() {
   // assert: allocatedTemporaries == 0;
 
   while (lookForStatement()) {
-    syntaxErrorUnexpected();
+    syntaxErrorUnexpected((int*) "ERR_4");
 
     if (symbol == SYM_EOF)
       exit(-1);
@@ -3469,9 +3542,45 @@ void gr_statement() {
         syntaxErrorSymbol(SYM_RPARENTHESIS);
     } else
       syntaxErrorSymbol(SYM_LPARENTHESIS);
-  }
+
+  // ++ [*] identifier;
+  } else if (symbol == SYM_PLUSPLUS) {
+    getSymbol();
+
+    if(symbol == SYM_ASTERISK) { // ++ * identifier
+      getSymbol();
+
+      if(symbol != SYM_IDENTIFIER)
+        syntaxErrorSymbol(SYM_IDENTIFIER);
+
+      talloc();
+      load_variable(identifier);
+
+      // dereference
+      emitIFormat(OP_LW, currentTemporary(), previousTemporary(), 0);
+      emitIFormat(OP_ADDIU, previousTemporary(), previousTemporary(), 1);
+      emitIFormat(OP_SW, currentTemporary(), previousTemporary(), 0);
+
+      tfree(1);
+    } else { // ++identfier
+      if(symbol != SYM_IDENTIFIER)
+        syntaxErrorSymbol(SYM_IDENTIFIER);
+
+      load_variable(identifier);
+      incrementCurrTemp(identifier);
+    }
+
+    tfree(1);
+
+    getSymbol();
+
+    if (symbol != SYM_SEMICOLON)
+      syntaxErrorSymbol(SYM_SEMICOLON);
+
+    getSymbol();
+
   // identifier "=" expression | call
-  else if (symbol == SYM_IDENTIFIER) {
+  } else if (symbol == SYM_IDENTIFIER) {
     variableOrProcedureName = identifier;
 
     getSymbol();
@@ -3515,7 +3624,7 @@ void gr_statement() {
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
     } else
-      syntaxErrorUnexpected();
+      syntaxErrorUnexpected((int*) "ERR_5");
   }
   // while statement?
   else if (symbol == SYM_WHILE) {
@@ -3628,7 +3737,7 @@ int gr_initialization(int type) {
       if (sign)
         initialValue = -initialValue;
     } else
-      syntaxErrorUnexpected();
+      syntaxErrorUnexpected((int*) "ERR_6");
 
     if (symbol == SYM_SEMICOLON)
       getSymbol();
@@ -3793,7 +3902,7 @@ void gr_procedure(int* procedure, int type) {
     help_procedure_epilogue(numberOfParameters);
 
   } else
-    syntaxErrorUnexpected();
+    syntaxErrorUnexpected((int*) "ERR_7");
 
   local_symbol_table = (int*) 0;
 
@@ -3809,7 +3918,7 @@ void gr_cstar() {
 
   while (symbol != SYM_EOF) {
     while (lookForType()) {
-      syntaxErrorUnexpected();
+      syntaxErrorUnexpected((int*) "ERR_8");
 
       if (symbol == SYM_EOF)
         exit(-1);
@@ -7067,6 +7176,9 @@ int main(int argc, int* argv) {
   initSelfie(argc, (int*) argv);
 
   initLibrary();
+
+  print((int*) "This is TheExtendables Selfie");
+  println();
 
   exitCode = selfie();
 
