@@ -59,7 +59,12 @@ Assign3:
 Switch nur erlaubt vom Hypster:
 Wie ist der generelle Ablauf?
 1. userprocess wirft exception
-2. mipster/hardware fängt es auf mit #runUntilException() und setzt trap
+2. mipster/hardware fängt es auf - setzt trap - #runUntilException() terminiert
+3. mipsterSwitch wird ausgeführt in runOrHostUntilExitWithPageFaultHandling()
+4. switch vom mipster muss IMMER auf hypervisor_ID() springen.
+
+
+
 3. daraufhin kommt man wieder in die runOrHostUntilExitWithPageFaultHandling() vom mipster
 3.1.   "if (getParent(fromContext) != selfie_ID())" wird kontrolliert
 3.1.1. da mipster läuft, merkt dieser, dass er nicht das OS ist, sondern nur handware-> geh zum OS. Dieser wird alles regeln

@@ -1401,7 +1401,7 @@ void setArgument(int* argv);
 
 int USAGE = 1;
 // is an internal error. OS is not parent, hence the hardware/mipster would handle the stuff, which is wrong.
-int OS_IS_NOT_PARENT = 2;
+int OS_NOT_EXISTING = 2;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -5537,6 +5537,7 @@ int selfie_create() {
 void emitSwitch() {
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "hypster_switch", 0, PROCEDURE, INT_T, 0, binaryLength);
 
+    // we put 0 there, because we want to switch to process 0 -> this is the OS aka the first process the mipster startet
   emitIFormat(OP_LW, REG_SP, REG_A0, 0); // ID of context to which we switch
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
@@ -5564,7 +5565,9 @@ int doSwitch(int toID) {
 
     if (debug_switch) {
       print(binaryName);
-      print((int*) ": selfie_switch from context ");
+      print((int*) ": selfie_switch with ID: ");
+      printInteger(selfie_ID());
+      print((int*) " from context ");
       printInteger(fromID);
       print((int*) " to context ");
       printInteger(toID);
@@ -5587,8 +5590,8 @@ void implementSwitch() {
   // CAUTION: doSwitch() modifies the global variable registers
   // but some compilers dereference the lvalue *(registers+REG_V1)
   // before evaluating the rvalue doSwitch()
-
   fromID = doSwitch(*(registers+REG_A0));
+
 
   // use REG_V1 instead of REG_V0 to avoid race condition with interrupt
   *(registers+REG_V1) = fromID;
@@ -5600,8 +5603,21 @@ int mipster_switch(int toID) {
   // CAUTION: doSwitch() modifies the global variable registers
   // but some compilers dereference the lvalue *(registers+REG_V1)
   // before evaluating the rvalue doSwitch()
-
   fromID = doSwitch(toID);
+
+  // basically mipster only switches between processes and OS. ALWAYS. Otherwise we made something wrong!
+  // this is valid to say, since the mipster DOESN'T do the scheduling. Since NOW at this line of code we must schedule
+  // a next process (handle exception etc), we ALWAYS switch to the OS==hypervisor. He is the only one who schedules.
+  if (EXIT_ON_NO_OS_PROCESS_EXISTING == 1) {
+    if (fromID != hypster_ID()) {
+      if (toID != hypster_ID()) {
+        print((int *) "Not switching to the OS. We ALWAYS switch to the OS after a process threw an exception");
+        return OS_NOT_EXISTING;
+        //status = EXCEPTION_EXIT;
+        //throwException(EXCEPTION_EXIT, OS_NOT_EXISTING);
+      }
+    }
+  }
 
   // use REG_V1 instead of REG_V0 to avoid race condition with interrupt
   *(registers+REG_V1) = fromID;
@@ -7524,7 +7540,6 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   // works with mipsters and hypsters
   int fromID;
   int* fromContext;
-  int* context;
   int savedStatus;
   int exceptionNumber;
   int exceptionParameter;
@@ -7545,34 +7560,34 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     }
     else {
       // we are the parent in charge of handling exceptions
-        //if the parent isn't the OS, then we have done something wrong... -> error
-        if (EXIT_ON_NO_OS_PROCESS_EXISTING == 1) {
-          if(getID(currentContext) != hypster_ID()) {
-            return OS_IS_NOT_PARENT;
-          }
-        }
-
-
         savedStatus = selfie_status();
         exceptionNumber = decodeExceptionNumber(savedStatus);
         exceptionParameter = decodeExceptionParameter(savedStatus);
 
         if (exceptionNumber == EXCEPTION_PAGEFAULT) {
-            frame = (int) palloc();
+          frame = (int) palloc();
+
+          print((int *) "handled PAGEFAULT: ");
+          printInteger(selfie_ID());
+          println();
 
             // TODO: use this table to unmap and reuse frames
-            mapPage(getPT(fromContext), exceptionParameter, frame);
+          mapPage(getPT(fromContext), exceptionParameter, frame);
 
             // page table on microkernel boot level
-            selfie_map(fromID, exceptionParameter, frame);
+          selfie_map(fromID, exceptionParameter, frame);
         }
         else if (exceptionNumber == EXCEPTION_EXIT) {
 
-            //delete current context
+          print((int *) "handled EXIT: ");
+          printInteger(selfie_ID());
+          println();
+
+          //delete current context
             selfie_delete(fromID);
 
             //if hypster is used, also delete context from its local contexts.
-            if (mipster == 0)
+            if (selfie_ID() >= 0)
                 doDelete(fromID);
 
             //if context list is now empty, then terminate
@@ -7587,9 +7602,15 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         //If there is a timer or yield interrupt, then re-schedule
         else if (exceptionNumber == EXCEPTION_YIELD) {
             toID = scheduleRoundRobin(fromID);
+          print((int *) "handled yield: ");
+          printInteger(selfie_ID());
+          println();
         }
         else if (exceptionNumber == EXCEPTION_TIMER) {
             toID = scheduleRoundRobin(fromID);
+          print((int *) "handled TIMER: ");
+          printInteger(selfie_ID());
+          println();
         }
         else {
             print(binaryName);
@@ -7702,7 +7723,6 @@ int boot(int argc, int* argv) {
 
 
   // mipsters and hypsters handle page faults
-
   exitCode = runOrHostUntilExitWithPageFaultHandling(currentID);
 
   print(selfieName);
