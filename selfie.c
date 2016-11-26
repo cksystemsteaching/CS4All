@@ -7779,6 +7779,7 @@ int main(int argc, int* argv) {
   exitCode = selfie();
  
   if (exitCode == USAGE) {
+
     print(selfieName);
     print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary }");
 		print((int*) " [-conc number[freq number]] -u [-m | -d | -y | -k | -min | -mob ) size ... ] ");
