@@ -932,8 +932,7 @@ void setConcurrentCount();
 void setInstructionTimer();
 void setHypsterID();
 
-void setOSExceptionHandling();
-void setUserProcess();
+
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -1073,7 +1072,7 @@ int EXCEPTION_YIELD          	 = 8;
 
 int* EXCEPTIONS; // strings representing exceptions
 
-int debug_exception = 0;
+int debug_exception = 1;
 
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
@@ -1357,6 +1356,8 @@ void down_mapPageTable(int* context);
 
 int runUntilExitWithoutExceptionHandling(int toID);
 int runOrHostUntilExitWithPageFaultHandling(int toID);
+
+int checkOs(int fromID,int toID);
 
 int bootminmob(int argc, int* argv, int machine);
 int boot(int argc, int* argv);
@@ -7355,21 +7356,33 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   while (1) {
     
     fromID = selfie_switch(toID);
+	
 			
+	
+
+	
     fromContext = findContext(fromID, usedContexts);
 //		println();
 //		print((int*)"USED CONTEXT");
 //		printInteger(fromID);
 //		println();
     // assert: fromContext must be in usedContexts (created here)
-		//print((int*)"PRINT SELFIE ID");
-		//printInteger(selfie_ID());
+		//printd("Selfie ID: ", selfie_ID());
+		//printd("Hypster ID: ",hypster_ID());
+		//printd("Parent ID: ", getParent(fromContext));
+		//printd("current Context ID",fromID);
+		
+
     if (getParent(fromContext) != selfie_ID()){
 
       // switch to parent which is in charge of handling exceptions
 			toID = getParent(fromContext);
-			
-			
+			//print((int*)"Switch from ");
+			//printInteger(fromID);
+			//print((int*)" to ");
+			//printInteger(toID);
+			//println();
+			//println();
 			parentContext=findContext(toID, usedContexts);
 			if(parentContext==(int*)0)
 				return 0;
@@ -7384,6 +7397,9 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
+				if(checkOs(fromID,toID)==-1)
+					return -1;
+			
         frame = (int) palloc();
 
         // TODO: use this table to unmap and reuse frames
@@ -7419,12 +7435,18 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 				//printInteger(toID);
 				//println();
 			}else if(exceptionNumber == EXCEPTION_YIELD){
+				if(checkOs(fromID,toID)==-1)
+					return -1;
 			  toID=schedule(fromContext);
         cycles=0;
 			}else if(exceptionNumber == EXCEPTION_TIMER){
+				if(checkOs(fromID,toID)==-1)
+					return -1;
 			  toID=schedule(fromContext);
 			}
       else {
+				if(checkOs(fromID,toID)==-1)
+					return -1;
         print(binaryName);
         print((int*) ": context ");
         printInteger(getID(fromContext));
@@ -7474,6 +7496,26 @@ int schedule(int* fromContext){
 
 	return nextContextID;
 
+}
+
+int checkOs(int fromID,int toID){
+			printd("From ID: ", fromID);
+							printd("To ID: ", toID);
+							printd("HypsterID", hypster_ID());
+		if (mipster){
+				if (fromID != hypster_ID()) {
+					// fromID is a user process aka. exception comes from user process
+						if (toID != hypster_ID()) {
+							//if(fromID==toID)
+							//	return 0;
+							// we should switch to the os for handling the user process exception, we do not => the os is not there => Exit with error message
+							print("Error 404: OS not found");
+							println();
+						  return -1;
+						}
+		  		}	
+			}	
+	return 0;
 }
 
 int bootminmob(int argc, int* argv, int machine) {
@@ -7715,8 +7757,10 @@ int selfie() {
         setInstructionTimer();
       else if (stringCompare(option, (int*) "-hyd"))
         setHypsterID();
-      else if (stringCompare(option, (int*) "-u"))
-        setUserProcess();
+      else if (stringCompare(option, (int*) "-u")){
+       	userProcess = 1;
+				return selfie_run(MIPSTER, MIPSTER, 0);
+			}
       else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
@@ -7724,7 +7768,7 @@ int selfie() {
       else if (stringCompare(option, (int*) "-y"))
         return selfie_run(HYPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-k")){
-				setOSExceptionHandling();
+				exceptionHandlingOS=1;
         return selfie_run(HYPSTER, MIPSTER, 0);
       }else if (stringCompare(option, (int*) "-min"))
         return selfie_run(MIPSTER, MINSTER, 0);
@@ -7753,13 +7797,8 @@ void setHypsterID(){
   println();
 }
 
-void setOSExceptionHandling(){
-	exceptionHandlingOS = 1;
-}
 
-void setUserProcess(){
-	userProcess = 1;
-}
+
 
 void setInstructionTimer(){
   print((int*) "Timer interrupt frequency:");
