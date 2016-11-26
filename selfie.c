@@ -1253,15 +1253,6 @@ void setContextShm(int* context, int* contextShm)    { *(context + 10) = (int) c
 
 // Morties Context ShmObjectlist
 
-int* getNextContextShmObject(int* shmObject);
-int* getPrevContextShmObject(int* shmObject);
-int  getContextShmObjectID(int* contexts);
-int* getContextShmObjectVaddr(int* contexts);
-
-void setNextContextShmObject(int* shmObject, int* next);
-void setPrevContextShmObject(int* shmObject, int* prev);
-void setContextShmObjectID		(int* shmObject, int id);
-void setContextShmObjectVaddr	(int* shmObject, int* vaddr);
 
 void setNextContextShmObject(int* shmObject, int* next)		{ *shmObject		 =	(int)  next; 	}
 void setPrevContextShmObject(int* shmObject, int* prev)		{	*(shmObject+1) = (int) prev;		}
@@ -1284,6 +1275,7 @@ int  getShmObjectId(int* shmObject)		{ return  			*(shmObject+2); }
 int* getShmObjectName(int* shmObject)	{ return (int*) *(shmObject+3); }
 int  getShmObjectSize(int* shmObject)	{ return 				*(shmObject+4); }
 int* getShmObjectFrames(int* shmObject) {return (int*)*(shmObject+5);	}
+int  getShmObjectCount(int* shmObject) {return 				*(shmObject+6);	}
 
 void setNextShmObject(int* shmObject, int* nextShmObject)	{ *shmObject			=	(int)  nextShmObject; }
 void setPrevShmObject(int* shmObject, int* prevShmObject) { *(shmObject+1)	=	(int)  prevShmObject; }
@@ -1291,6 +1283,8 @@ void setShmObjectId	 (int* shmObject,	int id) 						{	*(shmObject+2)	=	id;						
 void setShmObjectName(int* shmObject, int* name) 					{ *(shmObject+3)	= (int)	name; 					}
 void setShmObjectSize(int* shmObject, int size) 					{ *(shmObject+4) 	=	size; 								}
 void setShmObjectFrames(int* shmObject,int* frames)				{ *(shmObject+5)  = (int) frames;					}
+void setShmObjectCount(int* shmObject, int count) 				{ *(shmObject+6) 	=	count; 								}
+
 
 // MORTIS SHM
 int addShmObject(int* name);
@@ -1300,6 +1294,7 @@ int findOrCreateShmObjectByName(int* name);
 int* findShmObjectById(int id);
 int shmSizeHandling(int* cShmObject, int size);
 int* freshFrame();
+void removeShmObject(int* delShmObject);
 
 // Frame List
 int* getNextFrame(int* frames);
@@ -5240,7 +5235,7 @@ int findOrCreateShmObjectByName(int* name){
 
 int addShmObject(int *name){
 	int *shmObject;
-	shmObject=malloc(2*SIZEOFINT+4*SIZEOFINTSTAR);
+	shmObject=malloc(3*SIZEOFINT + 4*SIZEOFINTSTAR);
 	setNextShmObject(shmObject,(int*)0);
 	setPrevShmObject(shmObject,(int*)0);
 	setShmObjectId(shmObject,shmObjectCount);
@@ -5248,6 +5243,7 @@ int addShmObject(int *name){
 	setShmObjectName(shmObject,name);
 	setShmObjectSize(shmObject,0);
 	setShmObjectFrames(shmObject,(int*)0);
+	setShmObjectCount(shmObject,0);
 
 	if(shmList!= (int*)0){
 		setPrevShmObject(shmList,shmObject);
@@ -5377,6 +5373,9 @@ void implementShmMap(){
 		// and its start address in virtual memory
 		addShmObjectToContext(id,frameBegin);
 
+		// increment counter
+		setShmObjectCount(cShmObject, getShmObjectCount(cShmObject) + 1);
+
 	}
 	*(registers+REG_V0) = frameBegin;
 }
@@ -5478,8 +5477,7 @@ void removeShmObjectOfContextById(int shmObjectId){
 		//not first node
 		setNextContextShmObject(prevShmObject,nextShmObject);
 	}
-		
-
+	
 }
 
 
@@ -5490,6 +5488,11 @@ void implementShmClose(){
 	int returnCode;
 	int* shmObjectOfContext;
 	int vaddrOfShmObject;
+	int page;
+	int firstVAddr;
+	int newFrame;
+	int oldFrame;
+
 	print((int*)"Shm Close");
 	shmObjectId= *(registers+REG_A0);
 	shmObject=findShmObjectById(shmObjectId);
@@ -5502,28 +5505,89 @@ void implementShmClose(){
 					print((int*)"Shm Found in Context");
 					println();
 				//current context has shm object with specified id
-				vaddrOfShmObject=getContextShmObjectVaddr(shmObjectOfContext);
+				vaddrOfShmObject = getContextShmObjectVaddr(shmObjectOfContext);
+				firstVAddr = vaddrOfShmObject;
+				
+				while(vaddrOfShmObject < (firstVAddr + roundUp(getShmObjectSize(shmObject),PAGESIZE))){
+					page = getPageOfVirtualAddress(vaddrOfShmObject);
+
+					oldFrame = getFrameForPage(loadSegmentFromVirtual(st,vaddrOfShmObject), page);
+					newFrame = palloc();
+					
+					copyFrameToFrame(oldFrame,newFrame);
+
+					//*(*(st+3) + page) = 0;
+					mapPage(st,page,(int)newFrame);	
+
+					vaddrOfShmObject = vaddrOfShmObject + PAGESIZE;
+				}
+
 				//remove the shmoObject from the contexts ShmObjectList; 
 				removeShmObjectOfContextById(shmObjectId);
+				setShmObjectCount(shmObject,getShmObjectCount(shmObject)-1);
+			
 				//check if there are other contexts using this object
+				if(getShmObjectCount(shmObject) == 0){
+					// last client lost connection to shm object
+					removeShmObject(shmObject);
+
+					println();
+					print("DELETE FROM GLOBAL");
+					println();
+				}
+				returnCode=0;
 			}
 			else{
 				returnCode=-1;			
 			}
-			
 		}
 		else{
 			returnCode=-1;
 		}
-		
-		
-		
 	}
 	else{
 		returnCode=-1;
-		
+	}
+
+	*(registers+REG_V0) = returnCode;
+}
+
+void copyFrameToFrame(int* from, int* to){
+	int i;
+
+	i=0;
+	while(i<PAGESIZE){
+		*(to+i) = *(from+i);
+		i = i+1;
 	}
 }
+
+void removeShmObject(int* delShmObject){
+	int* prevShmObject;
+	int* nextShmObject;
+	print((int*)"Deleting Shm Object");
+	
+	prevShmObject=getPrevShmObject(delShmObject);
+	nextShmObject=getNextShmObject(delShmObject);
+
+	if(prevShmObject==(int*) 0){
+		//is head
+		if(nextShmObject!=(int*)0)
+			setPrevShmObject(nextShmObject,(int*)0);
+
+		shmList = nextShmObject;
+	}
+	if(nextShmObject!=(int*)0){ 
+		//not last node
+		setPrevShmObject(nextShmObject,prevShmObject);
+	}
+	if(prevShmObject!=(int*)0){
+		//not first node
+		setNextShmObject(prevShmObject,nextShmObject);
+	}
+	
+}
+
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
