@@ -93,7 +93,7 @@ winAssignment3-exit:
 	make
 	selfie.exe -c selfie.c -o selfie.m # create selfie mipster binary
 	selfie.exe -c test_program.c selfie.c -o test_program.m # create test program
-	./selfie -l test_program.m -numprocesses 1 -u 1
+	selfie.exe -l test_program.m -numprocesses 1 -u 1 -m 4
 
 
 

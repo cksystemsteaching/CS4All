@@ -6931,6 +6931,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int parentID;
   int grandParentID;
   int* tempContext;
+  int checkHypster;
 
   while (1) {
     // [EIFLES] Context switch is handled in here!
@@ -6954,8 +6955,13 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     }
 
     println();
-    print((int*) "parent of current user process = ");
-    printInteger(getParent(fromContext));
+    print((int*) "current selfie_ID() = ");
+    printInteger(selfie_ID());
+    println();
+
+    println();
+    print((int*) "current hypster_ID() = ");
+    printInteger(hypster_ID());
     println();
 
     currentID = getID(fromContext);
@@ -6988,7 +6994,15 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
         printSimpleStringEifles("EXCEPTION_PAGEFAULT");
 
-        checkIfHypsterIsHandlingExceptionOrExit();
+        checkHypster = checkIfHypsterIsHandlingExceptionOrExit();
+
+        if (checkHypster == -7) {
+          println();
+          printSimpleStringEifles("We need to EXIT!");
+          println();
+
+          return -1;
+        }
 
         frame = (int) palloc();
 
@@ -7016,13 +7030,29 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       // else if (exceptionNumber == EXCEPTION_NOEXCEPTION) {
         printSimpleStringEifles("EXCEPTION_SCHED_YIELD");
 
-        checkIfHypsterIsHandlingExceptionOrExit();
+        checkHypster = checkIfHypsterIsHandlingExceptionOrExit();
+
+        if (checkHypster == -7) {
+          println();
+          printSimpleStringEifles("We need to EXIT!");
+          println();
+
+          return -1;
+        }
 
         toID = runScheduler(fromID);
         cycles = 0;
       }
       else if (exceptionNumber != EXCEPTION_TIMER) {
-        checkIfHypsterIsHandlingExceptionOrExit();
+        checkHypster = checkIfHypsterIsHandlingExceptionOrExit();
+
+        if (checkHypster == -7) {
+          println();
+          printSimpleStringEifles("We need to EXIT!");
+          println();
+
+          return -1;
+        }
 
         print(binaryName);
         print((int*) ": context ");
@@ -7036,7 +7066,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       else {
         printSimpleStringEifles("SOME OTHER EXCEPTION");
 
-        checkIfHypsterIsHandlingExceptionOrExit();
+        checkHypster = checkIfHypsterIsHandlingExceptionOrExit();
 
         toID = runScheduler(fromID);
       } 
@@ -7067,6 +7097,7 @@ int checkIfHypsterIsHandlingExceptionOrExit(){
     print((int*) "is_user_process NOT SET");
     println();
   }
+  return 0;
 }
 
 int bootminmob(int argc, int* argv, int machine) {
@@ -7333,13 +7364,11 @@ int selfie() {
       else if (stringCompare(option, (int*) "-k")) {
         use_hypster = 1;
         return selfie_run(HYPSTER, MIPSTER, 0);
-        //return selfie_run(MIPSTER, MIPSTER, 0);
       }
       else if (stringCompare(option, (int*) "-u")) {
         // [EIFLES] Indicates user process
         option = getArgument();
         is_user_process = 1;
-        //return selfie_run(HYPSTER, MIPSTER, 0);
       }
       else if (stringCompare(option, (int*) "-o"))
         selfie_output();
