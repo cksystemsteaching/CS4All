@@ -6931,7 +6931,6 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int parentID;
   int grandParentID;
   int* tempContext;
-  int checkHypster;
 
   while (1) {
     // [EIFLES] Context switch is handled in here!
@@ -6994,13 +6993,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
         printSimpleStringEifles("EXCEPTION_PAGEFAULT");
 
-        checkHypster = checkIfHypsterIsHandlingExceptionOrExit();
-
-        if (checkHypster == -7) {
-          println();
-          printSimpleStringEifles("We need to EXIT!");
-          println();
-
+        if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
           return -1;
         }
 
@@ -7014,6 +7007,10 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       } 
       else if (exceptionNumber == EXCEPTION_EXIT) {
         printSimpleStringEifles("EXCEPTION_EXIT");
+
+        if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
+          return -1;
+        }
 
         doDelete(toID);
         cycles = 0;		// [EIFLES] reset cycles, so the next process gets the full TIMESLICE (fair scheduling)
@@ -7030,13 +7027,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       // else if (exceptionNumber == EXCEPTION_NOEXCEPTION) {
         printSimpleStringEifles("EXCEPTION_SCHED_YIELD");
 
-        checkHypster = checkIfHypsterIsHandlingExceptionOrExit();
-
-        if (checkHypster == -7) {
-          println();
-          printSimpleStringEifles("We need to EXIT!");
-          println();
-
+        if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
           return -1;
         }
 
@@ -7044,16 +7035,6 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         cycles = 0;
       }
       else if (exceptionNumber != EXCEPTION_TIMER) {
-        checkHypster = checkIfHypsterIsHandlingExceptionOrExit();
-
-        if (checkHypster == -7) {
-          println();
-          printSimpleStringEifles("We need to EXIT!");
-          println();
-
-          return -1;
-        }
-
         print(binaryName);
         print((int*) ": context ");
         printInteger(getID(fromContext));
@@ -7066,7 +7047,9 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       else {
         printSimpleStringEifles("SOME OTHER EXCEPTION");
 
-        checkHypster = checkIfHypsterIsHandlingExceptionOrExit();
+        if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
+          return -1;
+        }
 
         toID = runScheduler(fromID);
       } 
@@ -7096,6 +7079,7 @@ int checkIfHypsterIsHandlingExceptionOrExit(){
     println();
     print((int*) "is_user_process NOT SET");
     println();
+    return NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING;
   }
   return 0;
 }

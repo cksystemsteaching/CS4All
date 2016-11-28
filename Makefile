@@ -79,7 +79,8 @@ assignment3-exit:
 	make
 	./selfie -c selfie.c -o selfie.m # create selfie mipster binary
 	./selfie -c test_program.c selfie.c -o test_program.m # create test program
-	./selfie -l test_program.m -numprocesses 1 -u 1 -m 4 # do not compile with selfie's compiler -> will trigger exit because the hypster will not exist to handle it
+	#./selfie -l test_program.m -numprocesses 1 -u 1 -m 4 # do not compile with selfie's compiler -> will trigger exit because the hypster will not exist to handle it
+	./selfie -l test_program.m -numprocesses 1 -u 1 -k 4
 
 winAssignment3-no-exit:
 	make winClean
@@ -94,6 +95,5 @@ winAssignment3-exit:
 	selfie.exe -c selfie.c -o selfie.m # create selfie mipster binary
 	selfie.exe -c test_program.c selfie.c -o test_program.m # create test program
 	selfie.exe -l test_program.m -numprocesses 1 -u 1 -m 4
-
 
 
