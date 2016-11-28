@@ -26,27 +26,64 @@ test: selfie
 	diff -q selfie3.s selfie5.s
 	./selfie -c -mob 1
 
+
+##########################
+###### E I F L E S #######
+##########################
+
 clean:
 	rm -rf *.m
 	rm -rf *.s
 	rm -rf selfie
 
 clean-win:
-	rm -rf *.m
-	rm -rf *.s
-	rm -rf selfie.exe
+	del *.m
+	del *.s
+	del selfie.exe
 
+# Assignment 1: Loading, scheduling, switching, execution  #
 A1:
 	make clean
 	make
 	./selfie -c test_program.c selfie.c -o test_program.m 
 	./selfie -timeslice 7777 -numprocesses 5 -l test_program.m -m 32
 
+# Assignment 2: Memory segmentation, yield system call #
 A2:
 	make clean
 	make
 	./selfie -c test_program.c selfie.c -o test_program.m 
 	./selfie -l test_program.m -m 32
+
+# Assignment 3: Shared memory #
+A3-no-exit:
+	make clean
+	make
+	./selfie -c selfie.c -o selfie.m # create selfie mipster binary
+	./selfie -c test_program.c selfie.c -o test_program.m # create test program
+	./selfie -l selfie.m -numprocesses 1 -u 1 -l test_program.m -k 4 # command from assignment 3 (modified to run properly)
+
+A3-no-exit-win:
+	make clean-win
+	make
+	selfie.exe -c selfie.c -o selfie.m # create selfie mipster binary
+	selfie.exe -c test_program.c selfie.c -o test_program.m # create test program
+	selfie.exe -l selfie.m -numprocesses 1 -u 1 -l test_program.m -k 4 # command from assignment 3 (modified to run properly)
+
+A3-exit:
+	make clean
+	make
+	./selfie -c selfie.c -o selfie.m # create selfie mipster binary
+	./selfie -c test_program.c selfie.c -o test_program.m # create test program
+	#./selfie -l test_program.m -numprocesses 1 -u 1 -m 4 # do not compile with selfie's compiler -> will trigger exit because the hypster will not exist to handle it
+	./selfie -l test_program.m -numprocesses 1 -u 1 -k 4
+
+A3-exit-win:
+	make clean-win
+	make
+	selfie.exe -c selfie.c -o selfie.m # create selfie mipster binary
+	selfie.exe -c test_program.c selfie.c -o test_program.m # create test program
+	selfie.exe -l test_program.m -numprocesses 1 -u 1 -m 4
 
 A3-posix:
 	make clean

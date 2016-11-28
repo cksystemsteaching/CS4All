@@ -1116,6 +1116,15 @@ int timer = 0; // counter for timer interrupt
 
 int mipster = 0; // flag for forcing to use mipster rather than hypster
 
+// [EIFLES]
+int use_hypster = 0; // flag for forcing hypster rather than mipster
+
+// [EIFLES]
+int is_user_process = 0;  // flag for setting a process as user process
+
+// [EIFLES]
+int NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING = -7;
+
 int interpret = 0; // flag for executing or disassembling code
 
 int debug = 0; // flag for logging code execution
@@ -1220,7 +1229,7 @@ void mapPage(int* table, int page, int frame);
 // | 8 | brk    | break between code, data, and heap
 // | 9 | parent | ID of context that created this context
 // [EIFLES]
-// | 10| sgmtt 	| pointer to segment table
+// | 10| sgmtt  | pointer to segment table
 // +---+--------+
 
 int* getNextContext(int* context) { return (int*) *context; }
@@ -1755,6 +1764,22 @@ void printSimpleStringEifles(int* message){
 
 void println() {
   putCharacter(CHAR_LF);
+void printEifles(int* message, int* s) {
+  println();
+  print((int*) "[EIFLES,int*] ");
+  print(message);
+  print((int*) ": ");
+  print(s);
+  println();
+}
+
+void printIntegerEifles(int* message, int i) {
+  println();
+  print((int*) "[EIFLES,int] ");
+  print(message);
+  print((int*) ": ");  
+  printInteger(i);
+  println();
 }
 
 void printCharacter(int c) {
@@ -1842,12 +1867,8 @@ int* zalloc(int size) {
 }
 
 void sched_yield () {
-	print((int*) "sched_yield() called.");
-	println();
-
-  // emitSchedYield();
-	//throwException(EXCEPTION_SCHED_YIELD,0);		// [EIFLES] correct parameter?
-	// throwException(EXCEPTION_NOEXCEPTION,0);		// [EIFLES] correct parameter?
+  print((int*) "sched_yield() called.");
+  println();
 }
 
 // *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~
@@ -4118,9 +4139,6 @@ void selfie_compile() {
   emitDelete();
   emitMap();
 
-  // [EIFLES]
-  //emitSchedYield();
-
   while (link) {
     if (numberOfRemainingArguments() == 0)
       link = 0;
@@ -4747,7 +4765,7 @@ void implementExit() {
 }
 
 void emitSchedYield() {
-  // [EIFLES]
+
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "sched_yield", 0, PROCEDURE, VOID_T, 0, binaryLength);
   emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SCHED_YIELD);
   emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
@@ -5541,6 +5559,7 @@ void implementID() {
 
 int hypster_ID() {
   // this procedure is only executed at boot level zero
+  // again: selvies' compiler will point to "hypster_ID" (see above) instead of doint the following (returning MIPSTER_ID)
   return MIPSTER_ID;
 }
 
@@ -5591,13 +5610,18 @@ void implementCreate() {
 }
 
 int hypster_create() {
+
+  printEifles("hypster_create()", "hypster created!!!");
+
   // this procedure is only executed at boot level zero
   return doCreate(selfie_ID());
 }
 
 int selfie_create() {
-  if (mipster)
+  if (mipster){
+    printEifles("selfie_create()", "mipster created!!!");
     return doCreate(selfie_ID());
+  }
   else
     return hypster_create();
 }
@@ -5622,7 +5646,7 @@ int doSwitch(int toID) {
   int* toContext;
 
   fromID = getID(currentContext);
-  // [EIFLES] In here, we have to assign the correct position in the seg.table for the chosen context!
+
   toContext = findContext(toID, usedContexts);
 
   if (toContext != (int*) 0) {
@@ -5723,10 +5747,18 @@ void implementStatus() {
 
 int hypster_status() {
   // this procedure is only executed at boot level zero
+
+  // [EIFLES] same as in mipster case? NO! because depending on the compiler, this will lead to a different implementation
+  // compiling this code with selfie's compiler will generate a symbol table entry "hypster_status" and treat it like a syscall
   return doStatus();
 }
 
 int selfie_status() {
+
+  //printSimpleStringEifles("in selfie_status()!!!!!");
+  //printIntegerEifles("selfie_status() mipster ", mipster);
+  //printIntegerEifles("selfie_status() hypster ", hypster);
+
   if (mipster)
     return doStatus();
   else
@@ -5854,10 +5886,16 @@ void implementMap() {
 
 void hypster_map(int ID, int page, int frame) {
   // this procedure is only executed at boot level zero
+
+  // [EIFLES] same thing as in mipster case? YES: same as in hypster_status() -> selfie's compiler will lead to a syscall
   doMap(ID, page, frame);
 }
 
 void selfie_map(int ID, int page, int frame) {
+  //printSimpleStringEifles("in selfie_map()!!!");
+  //printIntegerEifles("selfie_map() mipster", mipster);
+  //printIntegerEifles("selfie_map() hypster", hypster);
+
   if (mipster)
     doMap(ID, page, frame);
   else
@@ -6694,16 +6732,6 @@ void throwException(int exception, int parameter) {
   else
     status = encodeException(exception, parameter);
 
- //  println();
- //  print((int*) "------[throwException, exception=");
- //  printInteger(exception);
- //  print((int*) ", status=");
- //  printInteger(status);
- //  print((int*) ", parameter=");
- //  printInteger(parameter);
- //  print((int*) "]------");
-	// println();
-
   trap = 1;
 
   if (debug_exception) {
@@ -7227,6 +7255,8 @@ int* allocateContext(int ID, int parentID) {
 int* createContext(int ID, int parentID, int* in) {
   int* context;
 
+  printIntegerEifles("createContext() with ID: ", ID);
+
   context = allocateContext(ID, parentID);
 
   setNextContext(context, in);
@@ -7521,6 +7551,22 @@ int runUntilExitWithoutExceptionHandling(int toID) {
   }
 }
 
+void printAllContexts() {
+  int* current;
+  //int* previous;
+
+  //previous = (int*) 0;
+  current = usedContexts;
+
+  print((int*) "Contexts: ");
+  while(current != (int*) 0) {
+    printInteger(getID(current));
+    print((int*) " -> ");
+    current = getNextContext(current);
+  }
+
+}
+
 int runOrHostUntilExitWithPageFaultHandling(int toID) {
   // works with mipsters and hypsters
   int fromID;
@@ -7530,6 +7576,11 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int exceptionParameter;
   int frame;
 
+  int currentID;
+  int parentID;
+  int grandParentID;
+  int* tempContext;
+
   while (1) {
     // [EIFLES] Context switch is handled in here!
     fromID = selfie_switch(toID);
@@ -7538,9 +7589,44 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
     // assert: fromContext must be in usedContexts (created here)
 
+    // ------------------------------------------------------------
+    if(use_hypster){
+      println();
+      print((int*) "flag use_hypster is activated!!");
+      println();
+    }
+
+    if(is_user_process){
+      println();
+      print((int*) "flag is_user_process is activated!!");
+      println();
+    }
+
+    println();
+    print((int*) "current selfie_ID() = ");
+    printInteger(selfie_ID());
+    println();
+
+    println();
+    print((int*) "current hypster_ID() = ");
+    printInteger(hypster_ID());
+    println();
+
+    currentID = getID(fromContext);
+
+    println();
+    print((int*) "current user process ID = ");
+    printInteger(currentID);
+    println();
+
+    // ------------------------------------------------------------
+
     if (getParent(fromContext) != selfie_ID()) {
       // switch to parent which is in charge of handling exceptions
       // [EIFLES] However, we need to check if there even exists a parent! Infinite loop without this check!!
+
+      printSimpleStringEifles("switch to parent!");
+
       toID = getParent(fromContext);
       if(findContext(toID, usedContexts) == (int*) 0) {
         return 0;
@@ -7553,13 +7639,13 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       exceptionNumber    = decodeExceptionNumber(savedStatus);
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
-      // print((int*) "############# caught exception with exceptionNumber: ");
-      // printInteger(exceptionNumber);
-      // print((int*) " #############");
-      // println();
-
-
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
+        printSimpleStringEifles("EXCEPTION_PAGEFAULT");
+
+        if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
+          return -1;
+        }
+
         frame = (int) palloc();
 
         // TODO: use this table to unmap and reuse frames
@@ -7569,8 +7655,14 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         selfie_map(fromID, exceptionParameter, frame);
       } 
       else if (exceptionNumber == EXCEPTION_EXIT) {
+        printSimpleStringEifles("EXCEPTION_EXIT");
+
+        if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
+          return -1;
+        }
+
         doDelete(toID);
-        cycles = 0;		// [EIFLES] reset cycles, so the next process gets the full TIMESLICE (fair scheduling)
+        cycles = 0;   // [EIFLES] reset cycles, so the next process gets the full TIMESLICE (fair scheduling)
 
         // [EIFLES] all contexts finished, terminate. 
         if (usedContexts == (int*) 0) {
@@ -7581,6 +7673,13 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         }
       }
       else if (exceptionNumber == EXCEPTION_SCHED_YIELD) {
+      // else if (exceptionNumber == EXCEPTION_NOEXCEPTION) {
+        printSimpleStringEifles("EXCEPTION_SCHED_YIELD");
+
+        if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
+          return -1;
+        }
+
         toID = runScheduler(fromID);
         cycles = 0;
         println();
@@ -7601,10 +7700,43 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         return -1;
       } 
       else {
+        printSimpleStringEifles("SOME OTHER EXCEPTION");
+
+        if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
+          return -1;
+        }
+
         toID = runScheduler(fromID);
       } 
     }
   }
+}
+
+int checkIfHypsterIsHandlingExceptionOrExit(){
+  println();
+  print((int*) "checkIfHypsterIsHandlingExceptionOrExit() called");
+  println();
+
+  if(is_user_process){
+    if(selfie_ID() == hypster_ID()){
+      println();
+      print((int*) "  ---> selfie_ID = hypster_ID() ----> DO NOT EXIT!");
+      println();
+    }
+    else{
+      println();
+      print((int*) "  ---> selfie_ID != hypster_ID() ----> EXIT!");
+      println();
+      return NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING;
+    }
+  }
+  else{
+    println();
+    print((int*) "is_user_process NOT SET");
+    println();
+    return NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING;
+  }
+  return 0;
 }
 
 int bootminmob(int argc, int* argv, int machine) {
@@ -7687,8 +7819,6 @@ int boot(int argc, int* argv) {
 
   processIndex = 0;
 
-  // [EIFLES] in here, we probably have to count how many instances are created within the while loop
-  // [EIFLES] needed to know in how many pieces we have to devide the mainmemory (segmenttable)
   while (processIndex < numProcesses) {
     // create initial context on microkernel boot level
     nextID = selfie_create();
@@ -7771,9 +7901,13 @@ int selfie_run(int engine, int machine, int debugger) {
     printProfile((int*) ": loops: ", loops, loopsPerAddress);
     printProfile((int*) ": loads: ", loads, loadsPerAddress);
     printProfile((int*) ": stores: ", stores, storesPerAddress);
-  } else
+  } else{
     // boot hypster
     exitCode = boot(numberOfRemainingArguments(), remainingArguments());
+
+    // [EIFLES]
+    use_hypster = 0;
+  }
 
   interpret = 0;
 
@@ -7789,9 +7923,7 @@ void setTimeslice() {
 
 void setNumProcesses() {
   numProcesses = atoi(getArgument());
-  print((int*) "Set numProcesses: ");
-  printInteger(numProcesses);
-  println();
+  printIntegerEifles("Set numProcesses", numProcesses);
 }
 
 // round robin scheduler
@@ -7878,7 +8010,16 @@ int selfie() {
       else if (stringCompare(option, (int*) "-timeslice"))
         setTimeslice();
       else if (stringCompare(option, (int*) "-numprocesses"))
-        setNumProcesses();
+        setNumProcesses();  
+      else if (stringCompare(option, (int*) "-k")) {
+        use_hypster = 1;
+        return selfie_run(HYPSTER, MIPSTER, 0);
+      }
+      else if (stringCompare(option, (int*) "-u")) {
+        // [EIFLES] Indicates user process
+        option = getArgument();
+        is_user_process = 1;
+      }
       else if (stringCompare(option, (int*) "-o"))
         selfie_output();
       else if (stringCompare(option, (int*) "-s"))
@@ -7917,8 +8058,9 @@ int main(int argc, int* argv) {
 
   if (exitCode == USAGE) {
     print(selfieName);
-    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary } [ ((-m | -d | -y | -min | -mob ) size ...) ]");
-    print((int*) " [ -timeslice numberOfSteps ] [ -numprocesses binaryCount]");
+    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary }");
+    print((int*) " [ ((-m | -d | -y | -k | -min | -mob ) size ...) ]");
+    print((int*) " [ -timeslice numberOfSteps ] [ -numprocesses binaryCount ] [ -u userprocess ]");
     println();
 
     return 0;
