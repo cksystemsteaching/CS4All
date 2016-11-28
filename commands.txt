@@ -1,0 +1,36 @@
+----------------------------------------------------------------
+IMPORTANT: Please commit your changes to assignments-dev branch only. 
+If you're ready to merge:
+"assignments-dev" --> "selfie" = selfie gets all changes from assignments-dev
+
+git checkout assignments-dev
+git merge -s ours selfie
+git checkout selfie
+git merge assignments-dev
+
+git push	
+
+Infos here: http://stackoverflow.com/a/30170159/2472398
+----------------------------------------------------------------
+
+Other commands:
+------
+Create Selfie executable:
+
+make
+------
+Compile selfie, using selfie (self-compilation)
+
+./selfie -c selfie.c -o selfie.m
+------
+Run a program, using mipster (32M memory)
+
+./selfie -l selfie.m -m 32
+./selfie -l test_program.m -m 32
+------
+Compile and link test_program and selfie
+
+./selfie -c test_program.c selfie.c -o test_program.m
+------
+Compile and link test_program and selfie and run on mipster
+./selfie -c test_program.c selfie.c -m 32

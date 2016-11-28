@@ -129,6 +129,8 @@ int roundUp(int n, int m);
 
 int* zalloc(int size);
 
+// [EIFLES]
+void sched_yield();
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int CHAR_EOF          = -1; // end of file
@@ -793,7 +795,9 @@ void selfie_load();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int maxBinaryLength = 131072; // 128KB
+// int maxBinaryLength = 131072; // 128KB
+int maxBinaryLength = 262144; // 256KB [EIFLES]
+
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -830,11 +834,61 @@ void implementOpen();
 void emitMalloc();
 void implementMalloc();
 
-// ------------------------ GLOBAL CONSTANTS -----------------------
+// [EIFLES]
+void emitSchedYield();
+void implementSchedYield();
+void emitShmOpen();
+void implementShmOpen();
+void emitShmClose();
+void implementShmClose();
+void emitShmSize();
+void implementShmSize();
+void emitShmMap();
+void implementShmMap();
+void emitShmWrite();
+void implementShmWrite();
+void emitShmRead();
+void implementShmRead();
+
+int* allocateShObj();
+int* allocateFD();
+int getNewFDId();
+
+int* addShObj(int* shObjName);
+int removeShObj(int* shObj);
+int* addFD(int* shObj);
+int* getFD(int fd_id);
+int removeFD(int fd_id);
+
+int* getShObj_next(int* object);
+int* getShObj_name(int* object);
+int  getShObj_size(int* object);
+int  getShObj_fd_count(int* object);
+int* getShObj_value(int* object);
+
+void setShObj_next(int* object, int* next);
+void setShObj_name(int* object, int* name);
+void setShObj_size(int* object, int size);
+void setShObj_fd_count(int* object, int fd_count);
+void setShObj_value(int* object, int* value);
+
+int* getFD_next(int* fd);
+int  getFD_id(int* fd);
+int  getFD_pid(int* fd);
+int* getFD_object(int* fd);
+
+void setFD_next(int* fd, int* next);
+void setFD_id(int* fd, int id);
+void setFD_pid(int* fd, int pid);
+void setFD_object(int* fd, int* object);
+
+// ------------------------ GLOBAL CONSTANTS-----------------------
 
 int debug_read   = 0;
 int debug_write  = 0;
 int debug_open   = 0;
+//[EIFLES] debugging for shared memory processing
+int debug_shm    = 0;   
 
 int debug_malloc = 0;
 
@@ -842,6 +896,15 @@ int SYSCALL_EXIT   = 4001;
 int SYSCALL_READ   = 4003;
 int SYSCALL_WRITE  = 4004;
 int SYSCALL_OPEN   = 4005;
+// [EIFLES] yield, so a different process (context) can go on
+int SYSCALL_SCHED_YIELD = 4006;
+// [EIFLES] shared memory operations
+int SYSCALL_SHM_OPEN = 4007;
+int SYSCALL_SHM_CLOSE = 4008;
+int SYSCALL_SHM_SIZE= 4009;
+int SYSCALL_SHM_MAP= 4010;
+int SYSCALL_SHM_WRITE = 4011;
+int SYSCALL_SHM_READ = 4012;
 
 int SYSCALL_MALLOC = 4045;
 
@@ -1018,6 +1081,7 @@ int EXCEPTION_HEAPOVERFLOW       = 4;
 int EXCEPTION_EXIT               = 5;
 int EXCEPTION_TIMER              = 6;
 int EXCEPTION_PAGEFAULT          = 7;
+int EXCEPTION_SCHED_YIELD        = 8;
 
 int* EXCEPTIONS; // strings representing exceptions
 
@@ -1052,6 +1116,15 @@ int timer = 0; // counter for timer interrupt
 
 int mipster = 0; // flag for forcing to use mipster rather than hypster
 
+// [EIFLES]
+int use_hypster = 0; // flag for forcing hypster rather than mipster
+
+// [EIFLES]
+int is_user_process = 0;  // flag for setting a process as user process
+
+// [EIFLES]
+int NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING = -7;
+
 int interpret = 0; // flag for executing or disassembling code
 
 int debug = 0; // flag for logging code execution
@@ -1068,10 +1141,15 @@ int* loadsPerAddress = (int*) 0; // number of executed loads per load operation
 int  stores           = 0;        // total number of executed memory stores
 int* storesPerAddress = (int*) 0; // number of executed stores per store operation
 
+// [EIFLES] Assignment3
+int* shared_object_list = 0;
+int* fd_list = 0;
+int fd_count = 0;
+
 // ------------------------- INITIALIZATION ------------------------
 
 void initInterpreter() {
-  EXCEPTIONS = malloc(8 * SIZEOFINTSTAR);
+  EXCEPTIONS = malloc(9 * SIZEOFINTSTAR);
 
   *(EXCEPTIONS + EXCEPTION_NOEXCEPTION)        = (int) "no exception";
   *(EXCEPTIONS + EXCEPTION_UNKNOWNINSTRUCTION) = (int) "unknown instruction";
@@ -1081,6 +1159,7 @@ void initInterpreter() {
   *(EXCEPTIONS + EXCEPTION_EXIT)               = (int) "exit";
   *(EXCEPTIONS + EXCEPTION_TIMER)              = (int) "timer interrupt";
   *(EXCEPTIONS + EXCEPTION_PAGEFAULT)          = (int) "page fault";
+  *(EXCEPTIONS + EXCEPTION_SCHED_YIELD)        = (int) "sched_yield";
 }
 
 void resetInterpreter() {
@@ -1149,6 +1228,8 @@ void mapPage(int* table, int page, int frame);
 // | 7 | pt     | pointer to page table
 // | 8 | brk    | break between code, data, and heap
 // | 9 | parent | ID of context that created this context
+// [EIFLES]
+// | 10| sgmtt  | pointer to segment table
 // +---+--------+
 
 int* getNextContext(int* context) { return (int*) *context; }
@@ -1161,6 +1242,7 @@ int  getRegLo(int* context)       { return        *(context + 6); }
 int* getPT(int* context)          { return (int*) *(context + 7); }
 int  getBreak(int* context)       { return        *(context + 8); }
 int  getParent(int* context)      { return        *(context + 9); }
+int* getSGMTT(int* context)       { return (int*) *(context + 10); }
 
 void setNextContext(int* context, int* next) { *context       = (int) next; }
 void setPrevContext(int* context, int* prev) { *(context + 1) = (int) prev; }
@@ -1172,6 +1254,7 @@ void setRegLo(int* context, int reg_lo)      { *(context + 6) = reg_lo; }
 void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
 void setBreak(int* context, int brk)         { *(context + 8) = brk; }
 void setParent(int* context, int id)         { *(context + 9) = id; }
+void setSGMTT(int* context, int* sgmtt)      { *(context + 10) = (int) sgmtt; }
 
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
@@ -1263,6 +1346,9 @@ void setArgument(int* argv);
 int USAGE = 1;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
+
+// ***EIFLES***
+int numProcesses = 1;   // number of concurrent processes to be executed
 
 int selfie_argc = 0;
 int* selfie_argv = (int*) 0;
@@ -1669,8 +1755,33 @@ void print(int* s) {
   }
 }
 
+void printSimpleStringEifles(int* message){
+  println();
+  print((int*) "[EIFLES] ");
+  print(message);
+  println();
+}
+
 void println() {
   putCharacter(CHAR_LF);
+}
+
+void printEifles(int* message, int* s) {
+  println();
+  print((int*) "[EIFLES,int*] ");
+  print(message);
+  print((int*) ": ");
+  print(s);
+  println();
+}
+
+void printIntegerEifles(int* message, int i) {
+  println();
+  print((int*) "[EIFLES,int] ");
+  print(message);
+  print((int*) ": ");  
+  printInteger(i);
+  println();
 }
 
 void printCharacter(int c) {
@@ -1755,6 +1866,11 @@ int* zalloc(int size) {
   }
 
   return memory;
+}
+
+void sched_yield () {
+  print((int*) "sched_yield() called.");
+  println();
 }
 
 // *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~
@@ -4010,6 +4126,13 @@ void selfie_compile() {
   emitWrite();
   emitOpen();
   emitMalloc();
+  emitSchedYield();
+  emitShmOpen();
+  emitShmClose();
+  emitShmSize();
+  emitShmMap();
+  emitShmWrite();
+  emitShmRead();
 
   emitID();
   emitCreate();
@@ -4643,6 +4766,393 @@ void implementExit() {
   println();
 }
 
+void emitSchedYield() {
+
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "sched_yield", 0, PROCEDURE, VOID_T, 0, binaryLength);
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SCHED_YIELD);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+  // jump back to caller, return value is in REG_V0
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void emitShmOpen() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_open", 0, PROCEDURE, INT_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // *shared object name
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_OPEN);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void emitShmClose() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_close", 0, PROCEDURE, INT_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // fd_id
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_CLOSE);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void emitShmSize() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_size", 0, PROCEDURE, INT_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A1, 0); // size
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // fd_id
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_SIZE);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void emitShmMap() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_map", 0, PROCEDURE, INT_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A1, 0); // fd_id
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // addr
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_MAP);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void emitShmWrite() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_write", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A2, 0); // bytes to write
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);  
+  emitIFormat(OP_LW, REG_SP, REG_A1, 0); // *buf
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // fd_id
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_WRITE);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void emitShmRead() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_read", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A2, 0); // bytes to read
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);  
+  emitIFormat(OP_LW, REG_SP, REG_A1, 0); // *buf
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // fd_id
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_READ);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementSchedYield() {
+  throwException(EXCEPTION_SCHED_YIELD, 0);
+}
+
+void implementShmOpen() {
+  int* shObjName;
+  int* shObj;
+  int* fd;
+
+  shObjName = tlb(pt,*(registers+REG_A0));
+
+  shObj = addShObj(shObjName);
+  fd = addFD(shObj);
+
+  // set return value
+  *(registers+REG_V0) = (int) getFD_id(fd);
+
+  if (debug_shm) {
+    print((int*) "[shm_open] (shObjName:");
+    print(shObjName);
+    print((int*) ") | fd_id: ");
+    printInteger(getFD_id(fd));
+    print((int*) ", pid: ");
+    printInteger(getFD_pid(fd));
+    println();
+  }
+}
+
+void implementShmClose() {
+  int fd_id;
+  int successful;
+
+  fd_id = *(registers+REG_A0);
+  successful = removeFD(fd_id);
+
+  // set return value
+  *(registers+REG_V0) = successful;
+
+  if (debug_shm) {
+    print((int*) "[shm_close] (fd_id:");
+    printInteger(fd_id);
+    print((int*) ")");
+    println();
+  }
+}
+
+void implementShmSize() {
+  int fd_id;
+  int size;
+  int old_size;
+  int* fd;
+  int* shObj;
+  int* shObj_value;
+
+  size = *(registers+REG_A1);
+  fd_id = *(registers+REG_A0);
+
+  fd = getFD(fd_id);
+
+  if (fd == (int*) 0) {
+    // fd does not exist
+    *(registers+REG_V0) = -1;
+    return;
+  }
+
+  shObj = getFD_object(fd);
+  old_size = getShObj_size(shObj);
+
+  if (old_size != 0) {
+    //size already set, return size
+    *(registers+REG_V0) = old_size;
+    return;
+  }
+
+  // no size set yet, now set size
+  setShObj_size(shObj,size);
+  // allocate 
+  shObj_value = zalloc(size);
+  setShObj_value(shObj,shObj_value);
+  //initialize int value to 0
+  *(getShObj_value(shObj)) = (int) 0;
+
+  // set return value
+  *(registers+REG_V0) = (int) getShObj_size(shObj);
+
+  if (debug_shm) {
+    print((int*) "[shm_size] (fd_id:");
+    printInteger(fd_id);
+    print((int*) ", size:");
+    printInteger(size);
+    print((int*) "B) | old size:");
+    printInteger(old_size);
+    print((int*) "B, new size:");
+    printInteger(getShObj_size(shObj));
+    print((int*) "B");
+    println();
+  }
+}
+
+void implementShmMap() {
+  int fd_id;
+  int addr_param;
+
+  int* addr;
+  int old_size;
+  int* fd;
+  int* shObj;
+  int* shObj_value;
+
+  fd_id = *(registers+REG_A1);
+  addr_param = *(registers+REG_A0);
+
+  fd = getFD(fd_id);
+
+  if (fd == (int*) 0) {
+    // fd does not exist
+    *(registers+REG_V0) = -1;
+    return;
+  }
+
+  shObj = getFD_object(fd);
+
+  if (addr_param == 0) {
+    if (debug_shm) {
+      print((int*) "[shm_map] vaddr is 0, allocate size: ");
+      printInteger(getShObj_size(shObj));
+      print((int*) "B.");
+      println();
+    }
+    // if addr is 0, allocate memory of shared object's size
+    shObj_value = zalloc(getShObj_size(shObj));
+    setShObj_value(shObj,shObj_value);
+    //initialize int value to 0
+    *(getShObj_value(shObj)) = (int) 0;
+  } else {
+    addr = tlb(pt,addr_param);
+    // map address
+    setShObj_value(shObj, addr);
+  }
+
+  // return mapped addr of value
+  *(registers+REG_V0) = (int) getShObj_value(shObj);
+
+  if (debug_shm) {
+    print((int*) "[shm_map] (fd_id:");
+    printInteger(fd_id);
+    print((int*) ")");
+    println();
+  }
+}
+
+void implementShmWrite() {
+  int fd_id;
+  int* buf;
+  int size;
+
+  int* fd;
+  int* shObj;
+  int* shObj_value;
+  int bytesActuallyWritten;
+  int bytesToWrite;
+
+  size = *(registers+REG_A2);
+  buf = tlb(pt,*(registers+REG_A1));
+  fd_id = *(registers+REG_A0);
+
+  fd = getFD(fd_id);
+  shObj = getFD_object(fd);
+
+  if (getShObj_size(shObj) == 0) {
+    print((int*) "[ERROR] Writing ");
+    printInteger(size);
+    print((int*) "B to fd with id: ");
+    printInteger(fd_id);
+    print((int*) " - No size set yet - call shm_size first");
+    println();
+
+    *(registers+REG_V0) = -1;
+    return;
+  }
+
+  if (size > getShObj_size(shObj)) {
+    print((int*) "[ERROR] Writing ");
+    printInteger(size);
+    print((int*) "B to fd with id: ");
+    printInteger(fd_id);
+    print((int*) " exceeds value size: ");
+    printInteger(getShObj_size(shObj));
+    print((int*) "B");
+    println();
+
+    *(registers+REG_V0) = -1;
+    return;
+  }
+
+  // now write size from buf and store in shared object with fd
+
+  shObj_value = getShObj_value(shObj);
+
+  bytesActuallyWritten = 0;
+
+  while (bytesActuallyWritten < size) {
+    *(shObj_value + bytesActuallyWritten) = *(buf + bytesActuallyWritten);
+    bytesActuallyWritten = bytesActuallyWritten + WORDSIZE;
+  }
+    
+  // set return value
+  *(registers+REG_V0) = (int) bytesActuallyWritten;
+
+  if (debug_shm) {
+    print((int*) "[shm_write] (fd_id:");
+    printInteger(fd_id);
+    print((int*) ", buf:");
+    printString(buf);
+    print((int*) ", size:");
+    printInteger(size);
+    print((int*) "B)");
+    println();
+  }
+}
+
+void implementShmRead() {
+  int fd_id;
+  int* buf;
+  int size;
+
+  int* fd;
+  int* shObj;
+  int* shObj_value;
+  int bytesActuallyRead;
+  int bytesToRead;
+
+  size = *(registers+REG_A2);
+  buf = tlb(pt,*(registers+REG_A1));
+  fd_id = *(registers+REG_A0);
+
+  fd = getFD(fd_id);
+  if (fd == (int*) 0) {
+    // fd does not exist
+    *(registers+REG_V0) = -1;
+    return;
+  }
+  shObj = getFD_object(fd);
+
+  if (getShObj_size(shObj) == 0) {
+    print((int*) "[ERROR] Read ");
+    printInteger(size);
+    print((int*) "B from fd with id: ");
+    printInteger(fd_id);
+    print((int*) " - No size set yet - call shm_size first");
+    println();
+
+    *(registers+REG_V0) = -1;
+    return;
+  }
+
+  if (size > getShObj_size(shObj)) {
+    print((int*) "[ERROR] Reading ");
+    printInteger(size);
+    print((int*) "B from fd with id: ");
+    printInteger(fd_id);
+    print((int*) " exceeds value size: ");
+    printInteger(getShObj_size(shObj));
+    print((int*) "B");
+    println();
+
+    *(registers+REG_V0) = -1;
+    return;
+  }
+  // now read bytesToRead from fd and store in buf
+  shObj_value = getShObj_value(shObj);
+
+  bytesActuallyRead = 0;
+
+  while (bytesActuallyRead < size) {
+    *(buf + bytesActuallyRead) = *(shObj_value + bytesActuallyRead);
+    bytesActuallyRead = bytesActuallyRead + WORDSIZE;
+  }
+    
+  // set return value
+  *(registers+REG_V0) = (int) bytesActuallyRead;
+
+  if (debug_shm) {
+    print((int*) "[shm_read] (fd_id:");
+    printInteger(fd_id);
+    print((int*) ", size:");
+    printInteger(size);
+    print((int*) "B)");
+    println();
+  }
+}
+
 void emitRead() {
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "read", 0, PROCEDURE, INT_T, 0, binaryLength);
 
@@ -5051,6 +5561,7 @@ void implementID() {
 
 int hypster_ID() {
   // this procedure is only executed at boot level zero
+  // again: selvies' compiler will point to "hypster_ID" (see above) instead of doint the following (returning MIPSTER_ID)
   return MIPSTER_ID;
 }
 
@@ -5101,13 +5612,18 @@ void implementCreate() {
 }
 
 int hypster_create() {
+
+  printEifles("hypster_create()", "hypster created!!!");
+
   // this procedure is only executed at boot level zero
   return doCreate(selfie_ID());
 }
 
 int selfie_create() {
-  if (mipster)
+  if (mipster){
+    printEifles("selfie_create()", "mipster created!!!");
     return doCreate(selfie_ID());
+  }
   else
     return hypster_create();
 }
@@ -5233,10 +5749,18 @@ void implementStatus() {
 
 int hypster_status() {
   // this procedure is only executed at boot level zero
+
+  // [EIFLES] same as in mipster case? NO! because depending on the compiler, this will lead to a different implementation
+  // compiling this code with selfie's compiler will generate a symbol table entry "hypster_status" and treat it like a syscall
   return doStatus();
 }
 
 int selfie_status() {
+
+  //printSimpleStringEifles("in selfie_status()!!!!!");
+  //printIntegerEifles("selfie_status() mipster ", mipster);
+  //printIntegerEifles("selfie_status() hypster ", hypster);
+
   if (mipster)
     return doStatus();
   else
@@ -5364,10 +5888,16 @@ void implementMap() {
 
 void hypster_map(int ID, int page, int frame) {
   // this procedure is only executed at boot level zero
+
+  // [EIFLES] same thing as in mipster case? YES: same as in hypster_status() -> selfie's compiler will lead to a syscall
   doMap(ID, page, frame);
 }
 
 void selfie_map(int ID, int page, int frame) {
+  //printSimpleStringEifles("in selfie_map()!!!");
+  //printIntegerEifles("selfie_map() mipster", mipster);
+  //printIntegerEifles("selfie_map() hypster", hypster);
+
   if (mipster)
     doMap(ID, page, frame);
   else
@@ -5517,6 +6047,21 @@ void fct_syscall() {
       implementDelete();
     else if (*(registers+REG_V0) == SYSCALL_MAP)
       implementMap();
+    else if (*(registers+REG_V0) == SYSCALL_SCHED_YIELD)
+      implementSchedYield();
+    else if (*(registers+REG_V0) == SYSCALL_SHM_OPEN) 
+      implementShmOpen();
+    else if (*(registers+REG_V0) == SYSCALL_SHM_CLOSE) 
+      implementShmClose();
+    else if (*(registers+REG_V0) == SYSCALL_SHM_SIZE) 
+      implementShmSize();    
+    else if (*(registers+REG_V0) == SYSCALL_SHM_MAP) 
+      implementShmMap();   
+    else if (*(registers+REG_V0) == SYSCALL_SHM_WRITE) 
+      implementShmWrite();
+    else if (*(registers+REG_V0) == SYSCALL_SHM_READ) 
+      implementShmRead();
+
     else {
       pc = pc - WORDSIZE;
 
@@ -6421,6 +6966,248 @@ void selfie_disassemble() {
   println();
 }
 
+// ---------------------------------------------------------------------------
+// ----------------------- SHARED MEMORY by [EIFLES]--------------------------
+// ---------------------------------------------------------------------------
+
+// shared object struct:
+// +---+-------+----------+
+// | 0 | int*  | next     | pointer to next shared object
+// | 1 | int*  | name     | name of shared object
+// | 2 | int   | size     | size of shared object's value
+// | 3 | int   | fd_count | number of associated file descriptors (if 0, free space)
+// | 4 | int*  | value    | pointer to the value in memory (which has size defined in this struct)
+// +---+-------+----------+
+
+// file descriptor struct:
+// +---+-------+----------+
+// | 0 | int*  | next     | pointer to next fd
+// | 1 | int   | id       | id of the file descriptor != pid
+// | 2 | int   | pid      | id of the process, which opened this FD (which is checked on calling close())
+// | 3 | int*  | object   | pointer to the shared object
+// +---+------------+
+int* getShObj_next(int* object)      { return (int*) *(object);        }
+int* getShObj_name(int* object)      { return (int*) *(object + 1);    }
+int  getShObj_size(int* object)      { return *(object + 2);           }
+int  getShObj_fd_count(int* object)  { return *(object + 3);           }
+int* getShObj_value(int* object)     { return (int*) *(object + 4);    }
+
+void setShObj_next(int* object, int* next)         { *(object) = (int) next;         }
+void setShObj_name(int* object, int* name)         { *(object + 1) = (int) name;     }
+void setShObj_size(int* object, int size)          { *(object + 2) = size;           }
+void setShObj_fd_count(int* object, int fd_count)  { *(object + 3) = fd_count;       }
+void setShObj_value(int* object, int* value)       { *(object + 4) = (int) value;    }
+
+int* getFD_next(int* fd)         { return (int*) *(fd);     }
+int  getFD_id(int* fd)           { return *(fd + 1);        }
+int  getFD_pid(int* fd)    { return *(fd + 2);        }
+int* getFD_object(int* fd)       { return (int*) *(fd + 3); }
+
+void setFD_next(int* fd, int* next)         { *(fd) = (int) next;       }
+void setFD_id(int* fd, int id)              { *(fd + 1) = id;           }
+void setFD_pid(int* fd, int pid){ *(fd + 2) = pid;    }
+void setFD_object(int* fd, int* object)     { *(fd + 3) = (int) object; }
+
+int* allocateShObj() {
+  int* shObj;
+  shObj = zalloc(3 * SIZEOFINTSTAR + 2 * SIZEOFINT);
+  return shObj;
+}
+
+int* addShObj(int* shObjName) {
+  int* current;
+
+  current = shared_object_list;
+
+  while (current != (int*) 0) {
+    if(stringCompare(getShObj_name(current),shObjName) != 0){
+      // found shared object, return
+      return current;
+    }
+    current = getShObj_next(current);
+  }
+
+  // [EIFLES] object not found, create new one and append shared object list 
+  // (can be (int*) 0 if empty - thats ok)
+  current = allocateShObj();
+  setShObj_next(current,shared_object_list);
+  setShObj_name(current,shObjName);
+  // initialize size and value with 0, must be set on calling shm_size
+  setShObj_size(current,0);
+  setShObj_value(current,0);
+
+  shared_object_list = current;
+
+  return shared_object_list;
+}
+
+int removeShObj(int* shObj) {
+  int* current;
+  int* previous;
+
+  previous = (int*) 0;
+  current = shared_object_list;
+  while (current != (int*) 0) {
+    if (current == shObj) {
+      // found shared object, delete
+      if (previous == (int*) 0) {
+        // the found shared object is right at the head of the list
+        shared_object_list = getShObj_next(current);
+      }
+      else {
+        setShObj_next(previous,getShObj_next(current));
+      }
+      return 1;
+    }
+    previous = current;
+    current = getShObj_next(current);
+  }
+  return 0;
+}
+
+int getNewFDId() {
+  int new;
+  new = fd_count;
+  fd_count = fd_count + 1;
+  return new;
+}
+
+int* allocateFD() {
+  int* fd;
+  fd = zalloc(2*SIZEOFINTSTAR + 2*SIZEOFINT);
+  return fd;
+}
+
+int* addFD(int* shObj) {
+  int* current;
+  int pid;
+  int fd_id;
+
+  fd_id = getNewFDId();
+  pid = getID(currentContext);
+
+  current = allocateFD();
+  setFD_next(current,fd_list);
+  setFD_id(current,fd_id);
+  setFD_pid(current,pid);
+  setFD_object(current,shObj);
+
+  //increment number of FDs in shared object
+  setShObj_fd_count(shObj,getShObj_fd_count(shObj) + 1);
+
+  fd_list = current;
+
+  return fd_list;
+}
+
+int* getFD(int fd_id) {
+  int* current;
+
+  // [EIFLES] Empty list
+  if(fd_list == (int*) 0) {
+    return (int*) 0;
+  }
+
+  current = fd_list;
+
+  while (current != (int*) 0) {
+    if (getFD_id(current) == fd_id) {
+      // found fd with fd_id, return
+      return current;
+    }
+    current = getFD_next(current);
+  }
+
+  // no fd with fd_id found
+  return (int*) 0;
+}
+
+void printListOfFDs() {
+  int* current;
+
+  print((int*) "fd_list: ");
+  current = fd_list;
+  while (current != (int*) 0) {
+    printInteger(getFD_id(current));
+    print((int*) " -> ");
+    current = getFD_next(current);
+  }
+  println();
+}
+
+int removeFD(int fd_id) {
+  int* current;
+  int* previous;
+  int* shObj;
+  int fd_count_new;
+
+  // printListOfFDs();
+
+  // [EIFLES] Empty list, nothing to delete
+  if(fd_list == (int*) 0) {
+    return 0;
+  }
+
+  previous =  (int*) 0;
+  current = fd_list;
+
+  while (current != (int*) 0) {
+    if (getFD_id(current) == fd_id) {
+      println();
+      // found fd with fd_id
+      if (getFD_pid(current) != getID(currentContext)) {
+        // calling process is not the process which opened the FD
+        // not allowed, return.
+        print((int*) "Process with id: ");
+        printInteger(getID(currentContext));
+        print((int*) " tried to close fd with id: ");
+        printInteger(fd_id);
+        print((int*) ", opened by process with id: ");
+        printInteger(getFD_pid(current));
+        print((int*) " --> Abort close.");
+        println();
+        return 0;
+      }
+      if (previous == (int*) 0) {
+        // the found fd is right at the head of the list
+        fd_list = getFD_next(current);
+      }
+      else {
+        setFD_next(previous,getFD_next(current));
+      }
+      //decrement number of FDs in shared object
+      shObj = getFD_object(current);
+      fd_count_new = getShObj_fd_count(shObj) - 1;
+      setShObj_fd_count(shObj,fd_count_new);
+      
+      // print((int*) "Close fd with id: ");
+      // printInteger(fd_id);
+      // print((int*) ". ");
+      // printInteger(getShObj_fd_count(shObj));
+      // print((int*) " remaining FDs on shared object ");
+      // print(getShObj_name(shObj));
+      // println();
+
+      if (fd_count_new == 0) {
+        // no FDs on shared object, delete this object.
+        if (debug_shm) {
+          print((int*) "No FDs left -> Free shared object ");
+          printString(getShObj_name(shObj));
+          println();
+        }
+        removeShObj(shObj);
+      }
+
+      return 1;
+    }
+    previous = current;
+    current = getFD_next(current);
+  }
+
+  // no fd with fd_id found
+  return 0;  
+}
+
 // -----------------------------------------------------------------
 // ---------------------------- CONTEXTS ---------------------------
 // -----------------------------------------------------------------
@@ -6469,6 +7256,8 @@ int* allocateContext(int ID, int parentID) {
 
 int* createContext(int ID, int parentID, int* in) {
   int* context;
+
+  printIntegerEifles("createContext() with ID: ", ID);
 
   context = allocateContext(ID, parentID);
 
@@ -6764,6 +7553,22 @@ int runUntilExitWithoutExceptionHandling(int toID) {
   }
 }
 
+void printAllContexts() {
+  int* current;
+  //int* previous;
+
+  //previous = (int*) 0;
+  current = usedContexts;
+
+  print((int*) "Contexts: ");
+  while(current != (int*) 0) {
+    printInteger(getID(current));
+    print((int*) " -> ");
+    current = getNextContext(current);
+  }
+
+}
+
 int runOrHostUntilExitWithPageFaultHandling(int toID) {
   // works with mipsters and hypsters
   int fromID;
@@ -6773,16 +7578,62 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int exceptionParameter;
   int frame;
 
+  int currentID;
+  int parentID;
+  int grandParentID;
+  int* tempContext;
+
   while (1) {
+    // [EIFLES] Context switch is handled in here!
     fromID = selfie_switch(toID);
 
     fromContext = findContext(fromID, usedContexts);
 
     // assert: fromContext must be in usedContexts (created here)
 
-    if (getParent(fromContext) != selfie_ID())
+    // ------------------------------------------------------------
+    if(use_hypster){
+      println();
+      print((int*) "flag use_hypster is activated!!");
+      println();
+    }
+
+    if(is_user_process){
+      println();
+      print((int*) "flag is_user_process is activated!!");
+      println();
+    }
+
+    // println();
+    // print((int*) "current selfie_ID() = ");
+    // printInteger(selfie_ID());
+    // println();
+
+    // println();
+    // print((int*) "current hypster_ID() = ");
+    // printInteger(hypster_ID());
+    // println();
+
+    // currentID = getID(fromContext);
+
+    // println();
+    // print((int*) "current user process ID = ");
+    // printInteger(currentID);
+    // println();
+
+    // ------------------------------------------------------------
+
+    if (getParent(fromContext) != selfie_ID()) {
       // switch to parent which is in charge of handling exceptions
+      // [EIFLES] However, we need to check if there even exists a parent! Infinite loop without this check!!
+
+      printSimpleStringEifles("switch to parent!");
+
       toID = getParent(fromContext);
+      if(findContext(toID, usedContexts) == (int*) 0) {
+        return 0;
+      }
+    }
     else {
       // we are the parent in charge of handling exceptions
       savedStatus = selfie_status();
@@ -6791,6 +7642,13 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       exceptionParameter = decodeExceptionParameter(savedStatus);
 
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
+        printSimpleStringEifles("EXCEPTION_PAGEFAULT");
+
+        // has problem without new parameters, says: "is_user_process NOT SET"
+        // if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
+        //   return -1;
+        // }
+
         frame = (int) palloc();
 
         // TODO: use this table to unmap and reuse frames
@@ -6798,9 +7656,44 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT)
-        // TODO: only return if all contexts have exited
-        return exceptionParameter;
+      } 
+      else if (exceptionNumber == EXCEPTION_EXIT) {
+        printSimpleStringEifles("EXCEPTION_EXIT");
+
+        // has problem without new parameters, says: "is_user_process NOT SET"
+        // if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
+        //   return -1;
+        // }
+
+        doDelete(toID);
+        cycles = 0;   // [EIFLES] reset cycles, so the next process gets the full TIMESLICE (fair scheduling)
+
+        // [EIFLES] all contexts finished, terminate. 
+        if (usedContexts == (int*) 0) {
+          return exceptionParameter;
+        } else {
+          // [EIFLES] contexts left
+          toID = getID(usedContexts);
+        }
+      }
+      else if (exceptionNumber == EXCEPTION_SCHED_YIELD) {
+      // else if (exceptionNumber == EXCEPTION_NOEXCEPTION) {
+        printSimpleStringEifles("EXCEPTION_SCHED_YIELD");
+
+        // has problem without new parameters, says: "is_user_process NOT SET"
+        // if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
+        //   return -1;
+        // }
+
+        toID = runScheduler(fromID);
+        cycles = 0;
+        println();
+        print((int*) "[EXCEPTION_SCHED_YIELD, next_pid: ");
+        printInteger(toID);
+        print((int*) "]");
+        println();
+        println();
+      }
       else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
@@ -6810,12 +7703,46 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         println();
 
         return -1;
-      }
+      } 
+      else {
+        printSimpleStringEifles("SOME OTHER EXCEPTION");
 
-      // TODO: scheduler should go here
-      toID = fromID;
+        // has problem without new parameters, says: "is_user_process NOT SET"
+        // if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
+        //   return -1;
+        // }
+
+        toID = runScheduler(fromID);
+      } 
     }
   }
+}
+
+int checkIfHypsterIsHandlingExceptionOrExit(){
+  println();
+  print((int*) "checkIfHypsterIsHandlingExceptionOrExit() called");
+  println();
+
+  if(is_user_process){
+    if(selfie_ID() == hypster_ID()){
+      println();
+      print((int*) "  ---> selfie_ID = hypster_ID() ----> DO NOT EXIT!");
+      println();
+    }
+    else{
+      println();
+      print((int*) "  ---> selfie_ID != hypster_ID() ----> EXIT!");
+      println();
+      return NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING;
+    }
+  }
+  else{
+    println();
+    print((int*) "is_user_process NOT SET");
+    println();
+    return NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING;
+  }
+  return 0;
 }
 
 int bootminmob(int argc, int* argv, int machine) {
@@ -6874,8 +7801,9 @@ int bootminmob(int argc, int* argv, int machine) {
 
 int boot(int argc, int* argv) {
   // works with mipsters and hypsters
-  int initID;
   int exitCode;
+  int processIndex;
+  int nextID;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6895,22 +7823,28 @@ int boot(int argc, int* argv) {
 
   resetMicrokernel();
 
-  // create initial context on microkernel boot level
-  initID = selfie_create();
+  processIndex = 0;
 
-  if (usedContexts == (int*) 0)
-    // create duplicate of the initial context on our boot level
-    usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+  while (processIndex < numProcesses) {
+    // create initial context on microkernel boot level
+    nextID = selfie_create();
 
-  up_loadBinary(getPT(usedContexts));
+    if (usedContexts == (int*) 0)
+      // create duplicate of the initial context on our boot level
+      usedContexts = createContext(nextID, selfie_ID(), (int*) 0);
 
-  up_loadArguments(getPT(usedContexts), argc, argv);
+    up_loadBinary(getPT(usedContexts));
 
-  // propagate page table of initial context to microkernel boot level
-  down_mapPageTable(usedContexts);
+    up_loadArguments(getPT(usedContexts), argc, argv);
+
+    // propagate page table of initial context to microkernel boot level
+    down_mapPageTable(usedContexts);
+
+    processIndex = processIndex + 1;
+  }
 
   // mipsters and hypsters handle page faults
-  exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
+  exitCode = runOrHostUntilExitWithPageFaultHandling(nextID);
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6973,13 +7907,55 @@ int selfie_run(int engine, int machine, int debugger) {
     printProfile((int*) ": loops: ", loops, loopsPerAddress);
     printProfile((int*) ": loads: ", loads, loadsPerAddress);
     printProfile((int*) ": stores: ", stores, storesPerAddress);
-  } else
+  } else{
     // boot hypster
     exitCode = boot(numberOfRemainingArguments(), remainingArguments());
+
+    // [EIFLES]
+    use_hypster = 0;
+  }
 
   interpret = 0;
 
   return exitCode;
+}
+
+void setTimeslice() {
+  TIMESLICE = atoi(getArgument());
+  print((int*) "Set TIMESLICE: ");
+  printInteger(TIMESLICE);
+  println();
+}
+
+void setNumProcesses() {
+  numProcesses = atoi(getArgument());
+  printIntegerEifles("Set numProcesses", numProcesses);
+}
+
+// round robin scheduler
+int runScheduler(int thisID) {
+  int *thisContext;
+  int *nextContext;
+  int* current;
+
+  // print((int*) "DEBUG: runScheduler() called, return ");
+
+  thisContext = findContext(thisID, usedContexts);
+  nextContext = getNextContext(thisContext);
+
+  if (nextContext != (int *) 0) {
+    return getID(nextContext);
+  } else {
+    if (thisID == getID(thisContext)) {
+      // at the end of context list, go to beginning
+      current = thisContext;
+      while (getPrevContext(current) != (int*) 0) {
+        current = getPrevContext(current);
+      }
+      return getID(current);
+    }
+    return getID(thisContext);
+  }
 }
 
 // -----------------------------------------------------------------
@@ -7037,6 +8013,19 @@ int selfie() {
       else if (numberOfRemainingArguments() == 0)
         // remaining options have at least one argument
         return USAGE;
+      else if (stringCompare(option, (int*) "-timeslice"))
+        setTimeslice();
+      else if (stringCompare(option, (int*) "-numprocesses"))
+        setNumProcesses();  
+      else if (stringCompare(option, (int*) "-k")) {
+        use_hypster = 1;
+        return selfie_run(HYPSTER, MIPSTER, 0);
+      }
+      else if (stringCompare(option, (int*) "-u")) {
+        // [EIFLES] Indicates user process
+        option = getArgument();
+        is_user_process = 1;
+      }
       else if (stringCompare(option, (int*) "-o"))
         selfie_output();
       else if (stringCompare(option, (int*) "-s"))
@@ -7068,11 +8057,16 @@ int main(int argc, int* argv) {
 
   initLibrary();
 
+  print((int*) "This is eifles Selfie");
+  println();
+
   exitCode = selfie();
 
   if (exitCode == USAGE) {
     print(selfieName);
-    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary } [ (-m | -d | -y | -min | -mob ) size ... ] ");
+    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary }");
+    print((int*) " [ ((-m | -d | -y | -k | -min | -mob ) size ...) ]");
+    print((int*) " [ -timeslice numberOfSteps ] [ -numprocesses binaryCount ] [ -u userprocess ]");
     println();
 
     return 0;

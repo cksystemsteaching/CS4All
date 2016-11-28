@@ -26,8 +26,73 @@ test: selfie
 	diff -q selfie3.s selfie5.s
 	./selfie -c -mob 1
 
-# Clean up
+
+##########################
+###### E I F L E S #######
+##########################
+
 clean:
 	rm -rf *.m
 	rm -rf *.s
 	rm -rf selfie
+
+clean-win:
+	del *.m
+	del *.s
+	del selfie.exe
+
+# Assignment 1: Loading, scheduling, switching, execution  #
+A1:
+	make clean
+	make
+	./selfie -c test_program.c selfie.c -o test_program.m 
+	./selfie -timeslice 7777 -numprocesses 5 -l test_program.m -m 32
+
+# Assignment 2: Memory segmentation, yield system call #
+A2:
+	make clean
+	make
+	./selfie -c test_program.c selfie.c -o test_program.m 
+	./selfie -l test_program.m -m 32
+
+# Assignment 3: Shared memory #
+A3-no-exit:
+	make clean
+	make
+	./selfie -c selfie.c -o selfie.m
+	./selfie -c demo_A3-os.c selfie.c -o demo_A3-os.m
+	./selfie -l selfie.m -numprocesses 1 -u 1 -l demo_A3-os.m -k 4
+
+A3-no-exit-win:
+	make clean-win
+	make
+	selfie.exe -c selfie.c -o selfie.m
+	selfie.exe -c demo_A3-os.c selfie.c -o demo_A3-os.m
+	selfie.exe -l selfie.m -numprocesses 1 -u 1 -l demo_A3-os.m -k 4
+
+A3-exit:
+	make clean
+	make
+	./selfie -c selfie.c -o selfie.m
+	./selfie -c demo_A3-os.c selfie.c -o demo_A3-os.m
+	#./selfie -l test_program.m -numprocesses 1 -u 1 -m 4 # do not compile with selfie's compiler -> will trigger exit because the hypster will not exist to handle it
+	./selfie -l demo_A3-os.m -numprocesses 1 -u 1 -k 4
+
+A3-exit-win:
+	make clean-win
+	make
+	selfie.exe -c selfie.c -o selfie.m
+	selfie.exe -c demo_A3-os.c selfie.c -o demo_A3-os.m
+	selfie.exe -l demo_A3-os.m -numprocesses 1 -u 1 -m 4
+
+A3-posix:
+	make clean
+	make
+	./selfie -c demo_A3-posix.c selfie.c -o demo_A3-posix.m 
+	./selfie -timeslice 77777 -numprocesses 5 -l demo_A3-posix.m -m 32
+
+A3-posix-win:
+	make clean-win
+	make
+	selfie.exe -c demo_A3-posix.c selfie.c -o demo_A3-posix.m 
+	selfie.exe -timeslice 77777 -numprocesses 5 -l demo_A3-posix.m -m 32
