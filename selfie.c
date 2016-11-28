@@ -7567,9 +7567,9 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         if (exceptionNumber == EXCEPTION_PAGEFAULT) {
           frame = (int) palloc();
 
-          print((int *) "handled PAGEFAULT: ");
-          printInteger(selfie_ID());
-          println();
+          //print((int *) "handled PAGEFAULT: ");
+          //printInteger(selfie_ID());
+          //println();
 
             // TODO: use this table to unmap and reuse frames
           mapPage(getPT(fromContext), exceptionParameter, frame);
@@ -7579,9 +7579,9 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         }
         else if (exceptionNumber == EXCEPTION_EXIT) {
 
-          print((int *) "handled EXIT: ");
-          printInteger(selfie_ID());
-          println();
+          //print((int *) "handled EXIT: ");
+          //printInteger(selfie_ID());
+          //println();
 
           //delete current context
             selfie_delete(fromID);
@@ -7602,15 +7602,15 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         //If there is a timer or yield interrupt, then re-schedule
         else if (exceptionNumber == EXCEPTION_YIELD) {
             toID = scheduleRoundRobin(fromID);
-          print((int *) "handled yield: ");
-          printInteger(selfie_ID());
-          println();
+          //print((int *) "handled yield: ");
+          //printInteger(selfie_ID());
+          //println();
         }
         else if (exceptionNumber == EXCEPTION_TIMER) {
             toID = scheduleRoundRobin(fromID);
-          print((int *) "handled TIMER: ");
-          printInteger(selfie_ID());
-          println();
+          //print((int *) "handled TIMER: ");
+          //printInteger(selfie_ID());
+          //println();
         }
         else {
             print(binaryName);
