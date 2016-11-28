@@ -843,34 +843,30 @@ void emitShmMap();
 void implementShmMap();
 
 void emitShmClose();
-void implementShmClose();
+void implementShmMap();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int debug_read   = 0;
-int debug_write  = 0;
-int debug_open   = 0;
+int debug_read       = 0;
+int debug_write      = 0;
+int debug_open       = 0;
+int debug_malloc     = 0;
+int debug_yield      = 0;
+int debug_shm_open   = 0;
+int debug_shm_size   = 0;
+int debug_shm_map    = 0;
+int debug_shm_close  = 0;
 
-int debug_malloc = 0;
-
-int debug_shed_yield = 0;
-int debug_shm_open = 0;
-int debug_shm_size = 0;
-int debug_shm_map = 0;
-int debug_shm_close = 0;
-
-int SYSCALL_EXIT   = 4001;
-int SYSCALL_READ   = 4003;
-int SYSCALL_WRITE  = 4004;
-int SYSCALL_OPEN   = 4005;
-
-int SYSCALL_MALLOC = 4045;
-
+int SYSCALL_EXIT     = 4001;
+int SYSCALL_READ     = 4003;
+int SYSCALL_WRITE    = 4004;
+int SYSCALL_OPEN     = 4005;
+int SYSCALL_MALLOC   = 4045;
 int SYSCALL_SCHED_YIELD = 4158; // linux opcode for sched yield
-int SYSCALL_SHM_OPEN = 4200; 
-int SYSCALL_SHM_SIZE = 4201;
-int SYSCALL_SHM_MAP = 4202;
-int SYSCALL_SHM_CLOSE = 4203;
+int SYSCALL_SHM_OPEN    = 4200;
+int SYSCALL_SHM_SIZE    = 4201;
+int SYSCALL_SHM_MAP     = 4202;
+int SYSCALL_SHM_CLOSE   = 4203;
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
@@ -945,7 +941,7 @@ int getFrameForPage(int* table, int page);
 int isPageMapped(int* table, int page);
 
 int isValidVirtualAddress(int vaddr);
-int getPageOfVirtualAddress(int* table, int vaddr);
+int getPageOfVirtualAddress(int vaddr);
 int isVirtualAddressMapped(int* table, int vaddr);
 
 int* tlb(int* table, int vaddr);
@@ -1188,7 +1184,7 @@ int STATUS_EXITING = 4;
 // | 4 | regs   | pointer to general purpose registers
 // | 5 | reg_hi | hi register
 // | 6 | reg_lo | lo register
-// | 7 | seg_t  | pointer to segment table
+// | 7 | pt     | pointer to page table
 // | 8 | brk    | break between code, data, and heap
 // | 9 | parent | ID of context that created this context
 // | 10| status | Status of the context
@@ -1201,100 +1197,10 @@ int  getPC(int* context)          { return        *(context + 3); }
 int* getRegs(int* context)        { return (int*) *(context + 4); }
 int  getRegHi(int* context)       { return        *(context + 5); }
 int  getRegLo(int* context)       { return        *(context + 6); }
-int* getSegTable(int* context)    { return (int*) *(context + 7); }
+int* getPT(int* context)          { return (int*) *(context + 7); }
 int  getBreak(int* context)       { return        *(context + 8); }
 int  getParent(int* context)      { return        *(context + 9); }
 int  getStatus(int* context)      { return        *(context + 10); }
-
-int getSegmentID(int* table, int vaddr) {
-
-//	print((int*) "======"); printInteger(vaddr); print((int*) "======");
-//	printSegmentTable(table);
-
-	if(vaddr >= 0) {
-		if(vaddr <= *(table + 3)) {
-//			printInteger(0); println();
-			return 0;
-		}
-	}
-
-	if(vaddr >= *(table + 3) ) {
-		if(vaddr <= *(table + 5)) {
-//			printInteger(1); println();f
-			return 1;
-		}
-	}
-
-	if(vaddr >= *(table + 5)) {
-		if(vaddr <= VIRTUALMEMORYSIZE) {
-//			printInteger(2); println();
-			return 2;
-		}
-	}
-
-	print((int*) " Error get Segment ID "); printInteger(vaddr); println();
-	throwException(EXCEPTION_ADDRESSERROR, 22);
-	return -1;
-}
-
-int* getSegmentTableEntry(int* table, int segment) {
-	if(segment == 0) return table;
-	if(segment == 1) return table+2;
-	if(segment == 2) return table+4;
-
-	throwException(EXCEPTION_ADDRESSERROR, 33);
-	return (int*) 0;
-}
-
-int* getSegmentPT(int* context, int vaddr) {
-
-//	print((int*) "Seg for "); printInteger(vaddr);
-
-	int* segTable;
-	int segmentID;
-
-	segTable = getSegTable(context);
-	segmentID = getSegmentID(segTable, vaddr);
-
-	if(segmentID >= 0) {
-		if(segmentID <= 2) {
-			return getSegmentTableEntry(segTable, segmentID);
-		}
-	}
-
-	print((int*) " Error get Segment PT "); printInteger(vaddr); println();
-	throwException(EXCEPTION_ADDRESSERROR, 22);
-	return (int*) 0;
-}
-
-void printSegmentTable(int* table)  {
-
-	int i;
-	int* entry;
-
-	print((int*) "==== Seg Table ==="); println();
-	i = 0;
-	while(i < 3) {
-		entry = getSegmentTableEntry(table, i);
-		print((int*) "Segment "); printInteger(i); print((int*) " starting at "); printInteger(*(entry+1)); print((int*) " with pt "); printInteger(*(entry)); println();
-		i = i + 1;
-	}
-
-	print((int*) "Last address of vmem: "); printInteger(VIRTUALMEMORYSIZE-WORDSIZE);
-	println();
-}
-
-void printPageTable(int* pt) {
-
-	int i;
-	i = 0;
-
-	while(*(pt+i) > 0) {
-		printInteger(i); print((int*) " => "); printInteger(*(pt+i)); println();
-		i = i + 1;
-	}
-
-}
 
 void setNextContext(int* context, int* next) { *context       = (int) next; }
 void setPrevContext(int* context, int* prev) { *(context + 1) = (int) prev; }
@@ -1303,10 +1209,129 @@ void setPC(int* context, int pc)             { *(context + 3) = pc; }
 void setRegs(int* context, int* regs)        { *(context + 4) = (int) regs; }
 void setRegHi(int* context, int reg_hi)      { *(context + 5) = reg_hi; }
 void setRegLo(int* context, int reg_lo)      { *(context + 6) = reg_lo; }
-void setSegTable(int* context, int* pt)      { *(context + 7) = (int) pt; }
+void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
 void setBreak(int* context, int brk)         { *(context + 8) = brk; }
 void setParent(int* context, int id)         { *(context + 9) = id; }
 void setStatus(int* context, int id)         { *(context + 10) = id; }
+
+// -----------------------------------------------------------------
+// ---------------------- SHARED MEMORY OBJECTS --------------------
+// -----------------------------------------------------------------
+
+int* shmObjects   = (int*) 0; // doubly-linked (pointers to prev and next) list for all open shmObjects
+
+// functions for shared memory objects
+// TODO: implement functions for searching, inserting, deleting, ...
+int* createShmObject(int shmId);
+int* allocateShm(int shmId);
+
+int* findShmObject(int shmId);
+void deleteShmObject(int shmId);
+
+// shmObject struct:
+// +---+----------+
+// | 0 | id       | unique identifier
+// | 1 | ptr      | pointer to physical memory 
+// | 2 | size     | size of the shmObject
+// | 3 | accesses | number of processes which have access to the shmObject
+// | 4 | next     | pointer to next shmObject
+// +---+----------+
+
+// getters for shared memory objects
+int* getNextShmObject(int* shmObject) { return (int*) *(shmObject + 4);       }
+int  getShmObjectID(int* shmObject)   { return        *(shmObject); }
+int* getPtrShmObject(int* shmObject) { return (int*) *(shmObject + 1); }
+int  getSizeShmObject(int* shmObject) { return        *(shmObject + 2); }
+int  getAccShmObject(int* shmObject)  { return        *(shmObject + 3); }
+
+// setters for shared memory objects
+void setNextShmObject(int* shmObject, int* next) { *(shmObject + 4)      = (int) next; }
+void setShmObjectID(int* shmObject, int id)      { *(shmObject + 0) = id;         }
+void setShmPtr(int* shmObject, int* Ptr)          { *(shmObject + 1) = (int) Ptr; }
+void setShmSize(int* shmObject, int size)           { *(shmObject + 2) = size;       }
+void setAccesses(int* shmObject, int accesses)   { *(shmObject + 3) = accesses;   }
+
+// open/create new shared memory object
+int* createShmObject(int shmId) {
+  int* entry;
+  entry = allocateShm(shmId);
+
+  if(shmObjects == (int*) 0) {
+    shmObjects = entry;  
+  }
+  else {
+    setNextShmObject(entry, shmObjects);
+    shmObjects = entry;  
+  }
+
+  return entry;
+}
+
+// allocate memory for shm object
+int* allocateShm(int shmId) {
+  return zalloc(5*SIZEOFINTSTAR);
+}
+
+// searches for an shm object and returns a pointer to that object
+int* findShmObject(int shmId) {
+
+  int* current;
+
+  current = shmObjects;
+  while(current != (int*) 0) {
+    if(getShmObjectID(current) == shmId) {
+      return current;    
+    }
+    
+    current = getNextShmObject(current);
+  }
+
+  return (int*) 0;
+}
+
+
+// delete existing shm object if it's not used anymore (needed when shm_close is called)
+void deleteShmObject(int shmId) {
+
+  int* prev;  
+  int* toDelete;
+  
+  if(shmObjects != (int*) 0) {
+    prev = shmObjects;
+    
+    if(getShmObjectID(prev) == shmId) {
+      shmObjects = (int*) 0;
+      return;    
+    }
+
+    while(getNextShmObject(prev) != (int*) 0) {
+      if(getShmObjectID(getNextShmObject(prev)) == shmId) {
+        toDelete = getNextShmObject(prev);
+        
+        setNextShmObject(prev, getNextShmObject(toDelete));
+        toDelete = (int*) 0;
+        return;
+      }          
+      else {
+        prev = getNextShmObject(prev);      
+      }
+    }
+  }
+  return;
+}
+
+void traverseShmTable(int* t) {
+
+  if(t == (int*) 0) {
+    return;
+  }
+
+  print((int*) "ID: "); printInteger(getShmObjectID(t)); print((int*) "|");
+  print((int*) "Size: "); printInteger(getSizeShmObject(t)); print((int*) "|");
+  print((int*) "Accesses: "); printInteger(getAccShmObject(t)); print((int*) "|");
+  println();
+  traverseShmTable(getNextShmObject(t));
+}
 
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
@@ -1727,7 +1752,7 @@ int* itoa(int n, int* s, int b, int a, int p) {
     }
   }
 
-  storeCharacter(s, i, 0); // null-terminated string
+  storeCharacter(s, i, 0); // (int*) 0-terminated string
 
   // our numeral system is positional hindu-arabic, that is,
   // the weight of digits increases right to left, which means
@@ -2128,7 +2153,7 @@ void getSymbol() {
       // '/' may have already been recognized
       // while looking for whitespace and "//"
       if (isCharacterLetter()) {
-        // accommodate identifier and null for termination
+        // accommodate identifier and (int*) 0 for termination
         identifier = malloc(maxIdentifierLength + 1);
 
         i = 0;
@@ -2147,12 +2172,12 @@ void getSymbol() {
           getCharacter();
         }
 
-        storeCharacter(identifier, i, 0); // null-terminated string
+        storeCharacter(identifier, i, 0); // (int*) 0-terminated string
 
         symbol = identifierOrKeyword();
 
       } else if (isCharacterDigit()) {
-        // accommodate integer and null for termination
+        // accommodate integer and (int*) 0 for termination
         integer = malloc(maxIntegerLength + 1);
 
         i = 0;
@@ -2171,7 +2196,7 @@ void getSymbol() {
           getCharacter();
         }
 
-        storeCharacter(integer, i, 0); // null-terminated string
+        storeCharacter(integer, i, 0); // (int*) 0-terminated string
 
         literal = atoi(integer);
 
@@ -2221,7 +2246,7 @@ void getSymbol() {
       } else if (character == CHAR_DOUBLEQUOTE) {
         getCharacter();
 
-        // accommodate string and null for termination
+        // accommodate string and (int*) 0 for termination
         // allocate zeroed memory since strings are emitted
         // in whole words but may end non-word-aligned
         string = zalloc(maxStringLength + 1);
@@ -2250,7 +2275,7 @@ void getSymbol() {
           exit(-1);
         }
 
-        storeCharacter(string, i, 0); // null-terminated string
+        storeCharacter(string, i, 0); // (int*) 0-terminated string
 
         symbol = SYM_STRING;
 
@@ -2369,6 +2394,7 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
   newEntry = malloc(2 * SIZEOFINTSTAR + 6 * SIZEOFINT);
 
   setString(newEntry, string);
+
   setLineNumber(newEntry, line);
   setClass(newEntry, class);
   setType(newEntry, type);
@@ -2392,6 +2418,12 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
     setNextEntry(newEntry, local_symbol_table);
     local_symbol_table = newEntry;
   } else {
+
+    println(); println();
+    print((int*) "I try to write "); println();
+    print(string);println();
+    print((int*) "================================================================"); println();
+
     // library procedures
     setScope(newEntry, REG_GP);
     setNextEntry(newEntry, library_symbol_table);
@@ -3789,7 +3821,7 @@ void gr_procedure(int* procedure, int type) {
   int localVariables;
   int* entry;
 
-  print(procedure); println();
+//  print(procedure); println();
 
   // assuming procedure is undefined
   isUndefined = 1;
@@ -4839,8 +4871,8 @@ void implementRead() {
 
   while (size > 0) {
     if (isValidVirtualAddress(vaddr)) {
-      if (isVirtualAddressMapped(getSegmentPT(currentContext, vaddr),vaddr)) {
-        buffer = tlb(getSegmentPT(currentContext, vaddr), vaddr);
+      if (isVirtualAddressMapped(pt, vaddr)) {
+        buffer = tlb(pt, vaddr);
 
         if (size < bytesToRead)
           bytesToRead = size;
@@ -4955,8 +4987,8 @@ void implementWrite() {
 
   while (size > 0) {
     if (isValidVirtualAddress(vaddr)) {
-      if (isVirtualAddressMapped(getSegmentPT(currentContext, vaddr),vaddr)) {
-        buffer = tlb(getSegmentPT(currentContext, vaddr),vaddr);
+      if (isVirtualAddressMapped(pt, vaddr)) {
+        buffer = tlb(pt, vaddr);
 
         if (size < bytesToWrite)
           bytesToWrite = size;
@@ -5095,7 +5127,7 @@ void implementOpen() {
   flags = *(registers+REG_A1);
   vaddr = *(registers+REG_A0);
 
-  if (down_loadString(getSegmentPT(currentContext, vaddr),vaddr, filename_buffer)) {
+  if (down_loadString(pt, vaddr, filename_buffer)) {
     fd = open(filename_buffer, flags, mode);
 
     *(registers+REG_V0) = fd;
@@ -5177,7 +5209,7 @@ void implementMalloc() {
 
 void emitSchedYield() {
   // create entry in symboltable for sched_yield
-  createSymbolTableEntry(LIBRARY_TABLE, (int*) "sched_yield", 0, PROCEDURE, INT_T, 0, binaryLength); // use INT_T, as sched_yield should return an integer value
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "sched_yield", 0, PROCEDURE, INT_T, 0, binaryLength); 
 
   // load correct syscall number
   emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SCHED_YIELD);
@@ -5190,14 +5222,16 @@ void emitSchedYield() {
 
 void implementSchedYield() { 
 
-	print((int*) "Now yielding context: "); printInteger(getID(currentContext)); println();
-
-	throwException(EXCEPTION_TIMER,0);
+  print((int*) "Now yielding context: "); printInteger(getID(currentContext)); println();
+  throwException(EXCEPTION_TIMER,0);
 }
 
 void emitShmOpen() {
   // create entry in symboltable for shm_open
-  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_open", 0, PROCEDURE, INT_T, 0, binaryLength); // use INT_T, as shm_open should return an integer value
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_open", 0, PROCEDURE, INT_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // int name
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
   // load correct syscall number
   emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_OPEN);
@@ -5208,15 +5242,35 @@ void emitShmOpen() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
-void implementShmOpen() { 
-  //TODO:
+void implementShmOpen() {
+
+  int name;
+  int* shmEntry;
+
   //Creates or opens a new shared memory object and returns a descriptor (OS identifier) for it.
   //In case of error, it returns -1.
+
+  name = *(registers+REG_A0);
+
+  shmEntry = findShmObject(name);
+
+  if(shmEntry == (int*) 0) {
+    shmEntry = createShmObject(name);
+  }
+  
+  setAccesses(shmEntry, getAccShmObject(shmEntry) + 1);
+
 }
 
 void emitShmSize() {
   // create entry in symboltable for shm_size
-  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_size", 0, PROCEDURE, INT_T, 0, binaryLength); // use INT_T, as shm_size should return an integer value
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_size", 0, PROCEDURE, INT_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A1, 0); // int shSize
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // int id
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
   // load correct syscall number
   emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_SIZE);
@@ -5228,15 +5282,52 @@ void emitShmSize() {
 }
 
 void implementShmSize() { 
-  //TODO:
-  //Sets or returns the size (in bytes) of the shm object with identifier id.
-  //If the object had size zero, it sets the size to shSize and returns shSize.
-  //If the object had some previously set size actSize, then it ignores shSize and simply returns actSize.
+  int shSize;
+  int id;
+  int* entry;
+  int entrySize;
+
+  // Sets or returns the size (in bytes) of the shm object with identifier id.
+  // If the object had size zero, it sets the size to shSize and returns shSize.
+  // If the object had some previously set size actSize, then it ignores shSize and simply returns actSize.
+ 
+
+  shSize = *(registers+REG_A1);
+  id     = *(registers+REG_A0);
+
+  entry = findShmObject(id);
+
+  if(entry == (int*) 0) {
+    print((int*) "Unable to open shared memory id "); printInteger(id); println();
+  }
+
+  entrySize = getSizeShmObject(entry);
+  
+  if(entrySize > 0) {
+    //return entrySize;
+  }
+  
+  setShmSize(entry, shSize);
+//  setShmPtr(entry, zalloc(shSize));
+  
+
+  print((int*) "shSize ##########: ");
+  printInteger(shSize);
+  println();
+  print((int*) "id     ##########: ");
+  printInteger(id);
+  println();
 }
 
 void emitShmMap() {
   // create entry in symboltable for shm_map
-  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_map", 0, PROCEDURE, INT_T, 0, binaryLength); // use INT_T, as shm_map should return an integer value
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_map", 0, PROCEDURE, INT_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A1, 0); // int id
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // int* addr
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
   // load correct syscall number
   emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_MAP);
@@ -5248,15 +5339,34 @@ void emitShmMap() {
 }
 
 void implementShmMap() { 
-  //TODO:
-  //Maps the virtual address addr to the start of the shared memory identified by id.
-  //If addr is zero, then memory is allocated first, of the size equal to the shared memory size.
-  //Returns virtual address actually used for mapping, o for error.
+
+//  int id;
+//  int addr;
+//
+//  print((int*) "SHM MAP "); println();
+//  // Maps the virtual address addr to the start of the shared memory identified by id.
+//  // If addr is zero, then memory is allocated first, of the size equal to the shared memory size.
+//  // Returns virtual address actually used for mapping, 0 for error.
+//
+//
+//  id   = *(registers+REG_A1);
+//  addr = *(registers+REG_A0);
+//  print((int*) "id     ##########: ");
+//  printInteger(id);
+//  println();
+//  print((int*) "addr   ##########: ");
+//  print(addr);
+//  println();
+
 }
 
 void emitShmClose() {
-  // create entry in symboltable for shm_close
-  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_close", 0, PROCEDURE, INT_T, 0, binaryLength); // use INT_T, as shm_close should return an integer value
+//  // create entry in symboltable for shm_close
+
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_close", 0, PROCEDURE, INT_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // int id
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
   // load correct syscall number
   emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_CLOSE);
@@ -5268,10 +5378,38 @@ void emitShmClose() {
 }
 
 void implementShmClose() { 
-  //TODO:
-  //Decouples the calling process from the shared memory object with descriptor id.
-  //Previously mapped memory is now private to the process.
-  //After all processes have closed their access to the shared memory object, the OS should free the resources associated with the object.
+
+  int id;
+  int* entry;
+  int counter;
+
+  print((int*) "SHM CLOSE "); println();
+  // Decouples the calling process from the shared memory object with descriptor id.
+  // Previously mapped memory is now private to the process.
+  // After all processes have closed their access to a shared memory object, the OS should free the resources associated with the object.
+
+  id = *(registers+REG_A0);
+
+  entry = findShmObject(id);
+
+  if(entry == (int*) 0) {
+    print((int*) "Unable to find shmObject id: "); printInteger(id); println();
+  }
+
+  counter = getAccShmObject(entry)-1;
+  setAccesses(entry, counter);
+
+  if(counter == 0) {
+    deleteShmObject(id);
+  }
+  
+ 
+  print((int*) "id     ##########: ");
+  printInteger(id);
+  println();
+
+  
+
 }
 
 // -----------------------------------------------------------------
@@ -5427,8 +5565,6 @@ int mipster_switch(int toID) {
   // use REG_V1 instead of REG_V0 to avoid race condition with interrupt
   *(registers+REG_V1) = fromID;
 
-  printSegmentTable(getSegTable(currentContext));
-
   runUntilException();
 
   return fromID;
@@ -5576,11 +5712,9 @@ void doMap(int ID, int page, int frame) {
     if (getParent(mapContext) != MIPSTER_ID) {
       parentContext = findContext(getParent(mapContext), usedContexts);
 
-      if (parentContext != (int*) 0) {
+      if (parentContext != (int*) 0)
         // assert: 0 <= frame < VIRTUALMEMORYSIZE
-        //frame = getFrameForPage(getPT(parentContext), frame / PAGESIZE);
-      	frame = getFrameForPage(getSegmentPT(currentContext, frame), frame / PAGESIZE);
-      }
+        frame = getFrameForPage(getPT(parentContext), frame / PAGESIZE);
       else if (debug_map) {
         print(binaryName);
         print((int*) ": selfie_map parent context ");
@@ -5593,7 +5727,7 @@ void doMap(int ID, int page, int frame) {
     }
 
     // on boot level zero frame may be any signed integer
-    mapPage(getSegmentPT(mapContext, page), page, frame);
+    mapPage(getPT(mapContext), page, frame);
 
     if (debug_map) {
       print(binaryName);
@@ -5649,11 +5783,7 @@ void storePhysicalMemory(int* paddr, int data) {
 }
 
 int getFrameForPage(int* table, int page) {
-
-	int* pt;
-	pt = (int*) *(table);
-
-  return *(pt + page);
+  return *(table + page);
 }
 
 int isPageMapped(int* table, int page) {
@@ -5673,27 +5803,14 @@ int isValidVirtualAddress(int vaddr) {
   return 0;
 }
 
-int getPageOfVirtualAddress(int* table, int vaddr) {
-
-	int offset;
-	offset = *(table + 1);
-
-//	print((int*) "vaddr ");
-//	printInteger(vaddr); println();
-//
-//	print((int*) "table entry ");
-//	printInteger(*(table+1)); println();
-//
-//	print((int*) "page nr ");
-//	printInteger((vaddr - offset)); println();
-
-	return (vaddr - offset) / PAGESIZE;
+int getPageOfVirtualAddress(int vaddr) {
+  return vaddr / PAGESIZE;
 }
 
 int isVirtualAddressMapped(int* table, int vaddr) {
   // assert: isValidVirtualAddress(vaddr) == 1
 
-  return isPageMapped(table, getPageOfVirtualAddress(table, vaddr));
+  return isPageMapped(table, getPageOfVirtualAddress(vaddr));
 }
 
 int* tlb(int* table, int vaddr) {
@@ -5701,21 +5818,15 @@ int* tlb(int* table, int vaddr) {
   int frame;
   int paddr;
 
-//  printPageTable(table);
-
   // assert: isValidVirtualAddress(vaddr) == 1
   // assert: isVirtualAddressMapped(table, vaddr) == 1
 
-  page = getPageOfVirtualAddress(table, vaddr);
+  page = getPageOfVirtualAddress(vaddr);
 
   frame = getFrameForPage(table, page);
 
   // map virtual address to physical address
-  paddr = (vaddr % twoToThePowerOf(12)) + frame;
-
-//  print((int*) "segment ");
-//  printInteger(getSegmentID(getSegTable(currentContext), vaddr));
-//	print((int*)" Got page "); printInteger(page); print((int*) " into frame "); printInteger(frame); print((int*) " with offset "); printInteger(vaddr % twoToThePowerOf(12)); print((int*) " paddr "); printInteger(paddr); println();
+  paddr = (vaddr - page * PAGESIZE) + frame;
 
   if (debug_tlb) {
     print(binaryName);
@@ -5755,9 +5866,8 @@ void storeVirtualMemory(int* table, int vaddr, int data) {
 void mapAndStoreVirtualMemory(int* table, int vaddr, int data) {
   // assert: isValidVirtualAddress(vaddr) == 1
 
-  if (isVirtualAddressMapped(table, vaddr) == 0) {
-  	mapPage(table, getPageOfVirtualAddress(table, vaddr), (int) palloc());
-  }
+  if (isVirtualAddressMapped(table, vaddr) == 0)
+    mapPage(table, getPageOfVirtualAddress(vaddr), (int) palloc());
 
   storeVirtualMemory(table, vaddr, data);
 }
@@ -6305,8 +6415,8 @@ void op_lw() {
     vaddr = *(registers+rs) + signExtend(immediate);
 
     if (isValidVirtualAddress(vaddr)) {
-      if (isVirtualAddressMapped(getSegmentPT(currentContext, vaddr), vaddr)) {
-        *(registers+rt) = loadVirtualMemory(getSegmentPT(currentContext, vaddr), vaddr);
+      if (isVirtualAddressMapped(pt, vaddr)) {
+        *(registers+rt) = loadVirtualMemory(pt, vaddr);
 
         // keep track of number of loads
         loads = loads + 1;
@@ -6403,8 +6513,8 @@ void op_sw() {
     vaddr = *(registers+rs) + signExtend(immediate);
 
     if (isValidVirtualAddress(vaddr)) {
-      if (isVirtualAddressMapped(getSegmentPT(currentContext, vaddr),vaddr)) {
-        storeVirtualMemory(getSegmentPT(currentContext, vaddr),vaddr, *(registers+rt));
+      if (isVirtualAddressMapped(pt, vaddr)) {
+        storeVirtualMemory(pt, vaddr, *(registers+rt));
 
         // keep track of number of stores
         stores = stores + 1;
@@ -6496,8 +6606,7 @@ void fetch() {
   // assert: isValidVirtualAddress(pc) == 1
   // assert: isVirtualAddressMapped(pt, pc) == 1
 
-	printInteger(pc);
-  ir = loadVirtualMemory(getSegmentPT(currentContext, pc), pc);
+  ir = loadVirtualMemory(pt, pc);
 }
 
 void execute() {
@@ -6730,10 +6839,9 @@ int createID(int seed) {
 
 int* allocateContext(int ID, int parentID) {
   int* context;
-  int* segTable;
 
   if (freeContexts == (int*) 0)
-    context = malloc(4 * SIZEOFINTSTAR + 7 * SIZEOFINT);
+    context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
   else {
     context = freeContexts;
 
@@ -6756,25 +6864,7 @@ int* allocateContext(int ID, int parentID) {
 
   // allocate zeroed memory for page table
   // TODO: save and reuse memory for page table
-  //setSegTable(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
-  segTable =  zalloc(3*SIZEOFINTSTAR+3*SIZEOFINT);
-
-  //Allocate PageTable for CodeSegment
-  print((int*) "Allocate for Code: "); printInteger(maxBinaryLength / PAGESIZE); print((int*) "pages."); println();
-  *(segTable + 0) = (int) zalloc(maxBinaryLength / PAGESIZE * WORDSIZE);
-  *(segTable + 1) = 0;
-  //Allocate PageTable for Heap
-  print((int*) "Allocate for Heap: "); printInteger(8352); print((int*) "pages."); println();
-  *(segTable + 2) = (int) zalloc(8352* WORDSIZE);
-  *(segTable + 3) = maxBinaryLength - WORDSIZE;
-  //Allocate PageTable for Stack
-  print((int*) "Allocate for Stack: "); printInteger(8000); print((int*) "pages."); println();
-  *(segTable + 4) = (int) zalloc(8000 * WORDSIZE);
-  *(segTable + 5) = maxBinaryLength + 8352 * PAGESIZE;
-
-  setSegTable(context,segTable);
-
-  printSegmentTable(getSegTable(context));
+  setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
 
   // heap starts where it is safe to start
   setBreak(context, maxBinaryLength);
@@ -6828,7 +6918,7 @@ void switchContext(int* from, int* to) {
   registers = getRegs(to);
   reg_hi    = getRegHi(to);
   reg_lo    = getRegLo(to);
-  pt        = getSegTable(to);
+  pt        = getPT(to);
   brk       = getBreak(to);
 }
 
@@ -6872,18 +6962,8 @@ int* deleteContext(int* context, int* from) {
 }
 
 void mapPage(int* table, int page, int frame) {
-
-	int* pt;
-
-	pt = (int*) *(table);
-
   // assert: 0 <= page < VIRTUALMEMORYSIZE / PAGESIZE
-  *(pt + page) = frame;
-
-//	print((int*) "mapped page nr"); printInteger(page); print((int*) " into frame "); printInteger(frame); println();
-
-//	print((int*) "Mapped new page!"); println();
-
+  *(table + page) = frame;
 }
 
 // -----------------------------------------------------------------
@@ -6951,26 +7031,15 @@ void pfree(int* frame) {
 
 void up_loadBinary(int* table) {
   int vaddr;
-	int i;
+
   // binaries start at lowest virtual address
   vaddr = 0;
 
-  print((int*) "Now uploading binary"); println();
-
   while (vaddr < binaryLength) {
-
     mapAndStoreVirtualMemory(table, vaddr, loadBinary(vaddr));
 
     vaddr = vaddr + WORDSIZE;
   }
-
-  print((int*) "Done with binary binary"); println();
-
-//  i = 0;
-//  while(*(table+i) > 0) {
-//  	printInteger(i); print((int*) " = "); printInteger(*(table+i)); println();
-//  	i = i + 1;
-//  }
 }
 
 int up_loadString(int* table, int* s, int SP) {
@@ -7068,16 +7137,16 @@ void down_mapPageTable(int* context) {
 
   page = 0;
 
-  while (isPageMapped(getSegmentPT(context, page), page)) {
-    selfie_map(getID(context), page, getFrameForPage(getSegmentPT(context, page), page));
+  while (isPageMapped(getPT(context), page)) {
+    selfie_map(getID(context), page, getFrameForPage(getPT(context), page));
 
     page = page + 1;
   }
 
   page = (VIRTUALMEMORYSIZE - WORDSIZE) / PAGESIZE;
 
-  while (isPageMapped(getSegmentPT(context, page), page)) {
-    selfie_map(getID(context), page, getFrameForPage(getSegmentPT(context, page), page));
+  while (isPageMapped(getPT(context), page)) {
+    selfie_map(getID(context), page, getFrameForPage(getPT(context), page));
 
     page = page - 1;
   }
@@ -7144,7 +7213,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     fromParentID = getParent(fromContext);
 
     if(getStatus(fromContext) == STATUS_EXITING) {
-    	usedContexts = deleteContext(fromContext, usedContexts);
+      usedContexts = deleteContext(fromContext, usedContexts);
     }
 
     // assert: fromContext must be in usedContexts (created here)
@@ -7163,7 +7232,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         frame = (int) palloc();
 
         // TODO: use this table to unmap and reuse frames
-        mapPage(getSegmentPT(fromContext, exceptionParameter), exceptionParameter, frame);
+        mapPage(getPT(fromContext), exceptionParameter, frame);
 
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
@@ -7187,7 +7256,6 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         printInteger(getID(fromContext));
         print((int*) " throws uncaught ");
         printStatus(savedStatus);
-        printInteger(exceptionNumber);
         println();
 
         return -1;
@@ -7211,7 +7279,7 @@ int schedule() {
     toId = getID(getNextContext(currentContext));
   }
 
-  //print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
+  print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
 
   //traverseContexts(usedContexts);
 
@@ -7222,7 +7290,6 @@ int bootminmob(int argc, int* argv, int machine) {
   // works only with mipsters
   int initID;
   int exitCode;
-	int i;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -7243,20 +7310,16 @@ int bootminmob(int argc, int* argv, int machine) {
   // create initial context on our boot level
   initID = doCreate(MIPSTER_ID);
 
-  //up_loadBinary(getPT(usedContexts));
-  up_loadBinary(getSegmentPT(usedContexts, 0));
+  up_loadBinary(getPT(usedContexts));
 
-  up_loadArguments(getSegmentPT(usedContexts, VIRTUALMEMORYSIZE), argc, argv);
+  up_loadArguments(getPT(usedContexts), argc, argv);
 
-  if (machine == MINSTER) {
+  if (machine == MINSTER)
     // virtual is like physical memory in initial context up to memory size
     // by mapping unmapped pages (for the heap) to all available page frames
     // CAUTION: consumes memory even when not used
+    mapUnmappedPages(getPT(usedContexts));
 
-  	mapUnmappedPages(*(getSegTable(usedContexts)+0));
-  	mapUnmappedPages(*(getSegTable(usedContexts)+1));
-  	mapUnmappedPages(*(getSegTable(usedContexts)+2));
-  }
   exitCode = runUntilExitWithoutExceptionHandling(initID);
 
   print(selfieName);
@@ -7315,24 +7378,20 @@ int boot(int argc, int* argv) {
     usedContexts = createContext(initID, selfie_ID(), (int*) 0);
   }
 
-  up_loadBinary(getSegmentPT(usedContexts, 0));
-
-  print((int*) "Start arguments"); println();
-  up_loadArguments(getSegmentPT(usedContexts, VIRTUALMEMORYSIZE-WORDSIZE), argc, argv);
-	print((int*) "End arguments"); println();
+  up_loadBinary(getPT(usedContexts));
+  up_loadArguments(getPT(usedContexts), argc, argv);
 
   // propagate page table of initial context to microkernel boot level
-//  down_mapPageTable(usedContexts);
+  down_mapPageTable(usedContexts);
 
   while ((repeats - 1) > 0) {
     bumpID = createID(bumpID);
     tempCtx = createContext(bumpID, selfie_ID(), usedContexts);
 
-    *(getSegTable(tempCtx) + 0) = *(getSegTable(usedContexts) + 0);
-
     usedContexts = tempCtx;
 
-    up_loadArguments(getSegmentPT(tempCtx, VIRTUALMEMORYSIZE-WORDSIZE), argc, argv);
+    up_loadBinary(getPT(tempCtx));
+    up_loadArguments(getPT(tempCtx), argc, argv);
 
     repeats = repeats - 1;
   }
@@ -7517,3 +7576,4 @@ int main(int argc, int* argv) {
     return exitCode;
   }
 }
+
