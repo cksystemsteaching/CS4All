@@ -1764,6 +1764,8 @@ void printSimpleStringEifles(int* message){
 
 void println() {
   putCharacter(CHAR_LF);
+}
+
 void printEifles(int* message, int* s) {
   println();
   print((int*) "[EIFLES,int*] ");
@@ -7602,22 +7604,22 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       println();
     }
 
-    println();
-    print((int*) "current selfie_ID() = ");
-    printInteger(selfie_ID());
-    println();
+    // println();
+    // print((int*) "current selfie_ID() = ");
+    // printInteger(selfie_ID());
+    // println();
 
-    println();
-    print((int*) "current hypster_ID() = ");
-    printInteger(hypster_ID());
-    println();
+    // println();
+    // print((int*) "current hypster_ID() = ");
+    // printInteger(hypster_ID());
+    // println();
 
-    currentID = getID(fromContext);
+    // currentID = getID(fromContext);
 
-    println();
-    print((int*) "current user process ID = ");
-    printInteger(currentID);
-    println();
+    // println();
+    // print((int*) "current user process ID = ");
+    // printInteger(currentID);
+    // println();
 
     // ------------------------------------------------------------
 
@@ -7642,9 +7644,10 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       if (exceptionNumber == EXCEPTION_PAGEFAULT) {
         printSimpleStringEifles("EXCEPTION_PAGEFAULT");
 
-        if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
-          return -1;
-        }
+        // has problem without new parameters, says: "is_user_process NOT SET"
+        // if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
+        //   return -1;
+        // }
 
         frame = (int) palloc();
 
@@ -7657,9 +7660,10 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       else if (exceptionNumber == EXCEPTION_EXIT) {
         printSimpleStringEifles("EXCEPTION_EXIT");
 
-        if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
-          return -1;
-        }
+        // has problem without new parameters, says: "is_user_process NOT SET"
+        // if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
+        //   return -1;
+        // }
 
         doDelete(toID);
         cycles = 0;   // [EIFLES] reset cycles, so the next process gets the full TIMESLICE (fair scheduling)
@@ -7676,9 +7680,10 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       // else if (exceptionNumber == EXCEPTION_NOEXCEPTION) {
         printSimpleStringEifles("EXCEPTION_SCHED_YIELD");
 
-        if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
-          return -1;
-        }
+        // has problem without new parameters, says: "is_user_process NOT SET"
+        // if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
+        //   return -1;
+        // }
 
         toID = runScheduler(fromID);
         cycles = 0;
@@ -7702,9 +7707,10 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
       else {
         printSimpleStringEifles("SOME OTHER EXCEPTION");
 
-        if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
-          return -1;
-        }
+        // has problem without new parameters, says: "is_user_process NOT SET"
+        // if(checkIfHypsterIsHandlingExceptionOrExit() == NO_HYPSTER_AVAILABLE_FOR_EXCEPTION_HANDLING){
+        //   return -1;
+        // }
 
         toID = runScheduler(fromID);
       } 
