@@ -26,40 +26,36 @@ test: selfie
 	diff -q selfie3.s selfie5.s
 	./selfie -c -mob 1
 
-# Clean up
 clean:
 	rm -rf *.m
 	rm -rf *.s
 	rm -rf selfie
 
-win_clean:
+clean-win:
 	rm -rf *.m
 	rm -rf *.s
 	rm -rf selfie.exe
 
-# Assignment 1 
-assignment1:
+A1:
 	make clean
 	make
 	./selfie -c test_program.c selfie.c -o test_program.m 
 	./selfie -timeslice 7777 -numprocesses 5 -l test_program.m -m 32
 
-# Assignment 2
-assignment2:
+A2:
 	make clean
 	make
 	./selfie -c test_program.c selfie.c -o test_program.m 
 	./selfie -l test_program.m -m 32
 
-assignment3-posix:
+A3-posix:
 	make clean
 	make
-	./selfie -c test_program.c selfie.c -o test_program.m 
-	./selfie -timeslice 77777 -numprocesses 5 -l test_program.m -m 32
-#	./selfie -timeslice 77777 -numprocesses 5 -l test_program.m -m 32
+	./selfie -c demo_A3-posix.c selfie.c -o demo_A3-posix.m 
+	./selfie -timeslice 77777 -numprocesses 5 -l demo_A3-posix.m -m 32
 
-win_assignment3-posix:
-	make win_clean
+A3-posix-win:
+	make clean-win
 	make
-	selfie.exe -c test_program.c selfie.c -o test_program.m 
-	selfie.exe -timeslice 77777 -numprocesses 5 -l test_program.m -m 32
+	selfie.exe -c demo_A3-posix.c selfie.c -o demo_A3-posix.m 
+	selfie.exe -timeslice 77777 -numprocesses 5 -l demo_A3-posix.m -m 32
