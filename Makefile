@@ -59,31 +59,31 @@ A2:
 A3-no-exit:
 	make clean
 	make
-	./selfie -c selfie.c -o selfie.m # create selfie mipster binary
-	./selfie -c test_program.c selfie.c -o test_program.m # create test program
-	./selfie -l selfie.m -numprocesses 1 -u 1 -l test_program.m -k 4 # command from assignment 3 (modified to run properly)
+	./selfie -c selfie.c -o selfie.m
+	./selfie -c demo_A3-os.c selfie.c -o demo_A3-os.m
+	./selfie -l selfie.m -numprocesses 1 -u 1 -l demo_A3-os.m -k 4
 
 A3-no-exit-win:
 	make clean-win
 	make
-	selfie.exe -c selfie.c -o selfie.m # create selfie mipster binary
-	selfie.exe -c test_program.c selfie.c -o test_program.m # create test program
-	selfie.exe -l selfie.m -numprocesses 1 -u 1 -l test_program.m -k 4 # command from assignment 3 (modified to run properly)
+	selfie.exe -c selfie.c -o selfie.m
+	selfie.exe -c demo_A3-os.c selfie.c -o demo_A3-os.m
+	selfie.exe -l selfie.m -numprocesses 1 -u 1 -l demo_A3-os.m -k 4
 
 A3-exit:
 	make clean
 	make
-	./selfie -c selfie.c -o selfie.m # create selfie mipster binary
-	./selfie -c test_program.c selfie.c -o test_program.m # create test program
+	./selfie -c selfie.c -o selfie.m
+	./selfie -c demo_A3-os.c selfie.c -o demo_A3-os.m
 	#./selfie -l test_program.m -numprocesses 1 -u 1 -m 4 # do not compile with selfie's compiler -> will trigger exit because the hypster will not exist to handle it
-	./selfie -l test_program.m -numprocesses 1 -u 1 -k 4
+	./selfie -l demo_A3-os.m -numprocesses 1 -u 1 -k 4
 
 A3-exit-win:
 	make clean-win
 	make
-	selfie.exe -c selfie.c -o selfie.m # create selfie mipster binary
-	selfie.exe -c test_program.c selfie.c -o test_program.m # create test program
-	selfie.exe -l test_program.m -numprocesses 1 -u 1 -m 4
+	selfie.exe -c selfie.c -o selfie.m
+	selfie.exe -c demo_A3-os.c selfie.c -o demo_A3-os.m
+	selfie.exe -l demo_A3-os.m -numprocesses 1 -u 1 -m 4
 
 A3-posix:
 	make clean
