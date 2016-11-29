@@ -1072,7 +1072,7 @@ int EXCEPTION_YIELD          	 = 8;
 
 int* EXCEPTIONS; // strings representing exceptions
 
-int debug_exception = 1;
+int debug_exception = 0;
 
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
@@ -7499,21 +7499,21 @@ int schedule(int* fromContext){
 }
 
 int checkOs(int fromID,int toID){
-			printd("From ID: ", fromID);
-							printd("To ID: ", toID);
-							printd("HypsterID", hypster_ID());
+		
 		if (mipster){
-				if (fromID != hypster_ID()) {
-					// fromID is a user process aka. exception comes from user process
-						if (toID != hypster_ID()) {
-							//if(fromID==toID)
-							//	return 0;
-							// we should switch to the os for handling the user process exception, we do not => the os is not there => Exit with error message
-							print("Error 404: OS not found");
-							println();
-						  return -1;
-						}
-		  		}	
+				if(userProcess){
+					if (fromID != hypster_ID()) {
+						// fromID is a user process aka. exception comes from user process
+							if (toID != hypster_ID()) {
+								//if(fromID==toID)
+								//	return 0;
+								// we should switch to the os for handling the user process exception, we do not => the os is not there => Exit with error message
+								print("Error 404: OS not found");
+								println();
+								return -1;
+							}
+					}	
+				}
 			}	
 	return 0;
 }
@@ -7759,7 +7759,7 @@ int selfie() {
         setHypsterID();
       else if (stringCompare(option, (int*) "-u")){
        	userProcess = 1;
-				return selfie_run(MIPSTER, MIPSTER, 0);
+				//return selfie_run(MIPSTER, MIPSTER, 0);
 			}
       else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
