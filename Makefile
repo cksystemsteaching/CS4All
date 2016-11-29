@@ -16,7 +16,7 @@ test: selfie
 	diff -q selfie1.m selfie2.m
 	diff -q selfie1.s selfie2.s
 	./selfie -c selfie.c -o selfie.m -m 2 -l selfie.m -m 2
-	./selfie -c selfie.c -o selfie3.m -s selfie3.s -m 10 -l sefie3.m -y 10 -l selfie3.m -y 10 -l selfie3.m -y 10 -c selfie.c -o selfie4.m -s selfie4.s
+	./selfie -c selfie.c -o selfie3.m -s selfie3.s -y 10 -l selfie3.m -y 10 -l selfie3.m -y 10 -c selfie.c -o selfie4.m -s selfie4.s
 	diff -q selfie3.m selfie4.m
 	diff -q selfie3.s selfie4.s
 	diff -q selfie1.m selfie3.m
@@ -34,8 +34,8 @@ testA: selfie
 	diff -q selfie1.s selfie2.s
 
 testB: selfie
-	./selfie -c selfie.c -o selfie.m -m 1 -l selfie.m -m 1
-	./selfie -c selfie.c -o selfie3.m -s selfie3.s -y 2 -l selfie3.m -y 2 -l selfie3.m -y 2 -c selfie.c -o selfie4.m -s selfie4.s
+	./selfie -c selfie.c -o selfie.m -m 2 -l selfie.m -m 2
+	./selfie -c selfie.c -o selfie3.m -s selfie3.s -y 30 -l selfie3.m -y 15 -l selfie3.m -y 6 -c selfie.c -o selfie4.m -s selfie4.s
 	diff -q selfie3.m selfie4.m
 	diff -q selfie3.s selfie4.s
 	diff -q selfie1.m selfie3.m

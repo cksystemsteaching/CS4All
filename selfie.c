@@ -7304,7 +7304,7 @@ int* deleteContext(int* context, int* from) {
     from = getNextContext(context);
 
   //todo delete shared objects by this thread
-  freeSharedMemoryForContext(getID(context));
+  //freeSharedMemoryForContext(getID(context));
 
   freeContext(context);
 
