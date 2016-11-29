@@ -119,6 +119,7 @@ void println();
 void printCharacter(int c);
 void printString(int* s);
 void printInteger(int n);
+void printDebug();
 void printFixedPointPercentage(int a, int b);
 void printFixedPointRatio(int a, int b);
 void printHexadecimal(int n, int a);
@@ -407,10 +408,10 @@ void resetScanner() {
 
 void resetSymbolTables();
 
-void createSymbolTableEntry(int which, int* string, int line, int class, int type, int value, int address);
+void createSymbolTableEntry(int which, int* string, int line, int clazz, int type, int value, int address);
 
-int* searchSymbolTable(int* entry, int* string, int class);
-int* getScopedSymbolTableEntry(int* string, int class);
+int* searchSymbolTable(int* entry, int* string, int clazz);
+int* getScopedSymbolTableEntry(int* string, int clazz);
 
 int isUndefinedProcedure(int* entry);
 int reportUndefinedProcedures();
@@ -420,7 +421,7 @@ int reportUndefinedProcedures();
 // |  0 | next    | pointer to next entry
 // |  1 | string  | identifier string, string literal
 // |  2 | line#   | source line number
-// |  3 | class   | VARIABLE, PROCEDURE, STRING
+// |  3 | clazz   | VARIABLE, PROCEDURE, STRING
 // |  4 | type    | INT_T, INTSTAR_T, VOID_T
 // |  5 | value   | VARIABLE: initial value
 // |  6 | address | VARIABLE: offset, PROCEDURE: address, STRING: offset
@@ -439,7 +440,7 @@ int  getScope(int* entry)      { return        *(entry + 7); }
 void setNextEntry(int* entry, int* next)    { *entry       = (int) next; }
 void setString(int* entry, int* identifier) { *(entry + 1) = (int) identifier; }
 void setLineNumber(int* entry, int line)    { *(entry + 2) = line; }
-void setClass(int* entry, int class)        { *(entry + 3) = class; }
+void setClass(int* entry, int clazz)        { *(entry + 3) = clazz; }
 void setType(int* entry, int type)          { *(entry + 4) = type; }
 void setValue(int* entry, int value)        { *(entry + 5) = value; }
 void setAddress(int* entry, int address)    { *(entry + 6) = address; }
@@ -793,7 +794,7 @@ void selfie_load();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int maxBinaryLength = 131072; // 128KB
+int maxBinaryLength = 262144;//131072; // 128KB
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -830,6 +831,9 @@ void implementOpen();
 void emitMalloc();
 void implementMalloc();
 
+void emitYield();
+void implementYield();
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_read   = 0;
@@ -851,38 +855,44 @@ int SYSCALL_MALLOC = 4045;
 
 void emitID();
 void implementID();
-
 int selfie_ID();
 
 void emitCreate();
-int  doCreate(int parentID);
+int  doCreateContext(int parentID);
 void implementCreate();
-
 int selfie_create();
 
 void emitSwitch();
 int  doSwitch(int toID);
 void implementSwitch();
 int  mipster_switch(int toID);
-
 int selfie_switch(int toID);
 
 void emitStatus();
 void implementStatus();
-
 int selfie_status();
 
 void emitDelete();
 void doDelete(int ID);
 void implementDelete();
-
 void selfie_delete(int ID);
 
 void emitMap();
 void doMap(int ID, int page, int frame);
 void implementMap();
-
 void selfie_map(int ID, int page, int frame);
+
+void emitShmOpen();
+void implementShmOpen();
+
+void emitShmSize();
+void implementShmSize();
+
+void emitShmMap();
+void implementShmMap();
+
+void emitShmClose();
+void implementShmClose();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -898,6 +908,13 @@ int SYSCALL_SWITCH = 4903;
 int SYSCALL_STATUS = 4904;
 int SYSCALL_DELETE = 4905;
 int SYSCALL_MAP    = 4906;
+int SYSCALL_YIELD  = 4907;
+int SYSCALL_SHMO   = 4908;
+int SYSCALL_SHMS   = 4909;
+int SYSCALL_SHMM   = 4910;
+int SYSCALL_SHMC   = 4911;
+
+
 
 // *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~ *~*~
 // -----------------------------------------------------------------
@@ -928,6 +945,8 @@ void storeVirtualMemory(int* table, int vaddr, int data);
 
 void mapAndStoreVirtualMemory(int* table, int vaddr, int data);
 
+void copyFrameToFrame(int* target, int* source);
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_tlb = 0;
@@ -955,6 +974,106 @@ void initMemory(int megabytes) {
 
   pageFrameMemory = megabytes * MEGABYTE;
 }
+
+// -------------------------------------------------------------------------------------------
+// -------------------------------SHARED MEMORY OBJECTS --------------------------------------
+// -------------------------------------------------------------------------------------------
+
+int* shmo_list = (int*) 0;
+int  shmo_id_counter = 0;
+
+// shared memory object struct:
+// +---------------+
+// | 0 | next      |
+// | 1 | prev      |
+// | 2 | id        |
+// | 3 | name      |
+// | 4 | size      |
+// | 5 | frames    |
+// | 6 | clients   |
+// +---------------+
+
+int* get_next_shmo(int *shmo);
+int* get_prev_shmo(int *shmo);
+int* get_prev_shmo(int *shmo);
+int* get_shmo_name(int *shmo);
+int  get_shmo_id(int *shmo);
+int  get_shmo_size(int *shmo);
+int* get_shmo_frames(int *shmo);
+int* get_shmo_clients(int *shmo);
+
+void set_next_shmo(int *shmo, int *next);
+void set_prev_shmo(int *shmo, int *prev);
+void set_shmo_size(int *shmo, int size);
+void set_shmo_id(int *shmo, int id);
+void set_shmo_name(int *shmo, int *name);
+void set_shmo_frames(int *shmo, int *frames);
+void set_shmo_clients(int *shmo, int *clients);
+
+int  delete_shmo(int *shmo);
+int* create_shmo(int *name);
+int  create_shmo_id();
+int* find_shmo_by_name(int *name);
+int* find_shmo_by_id(int id);
+
+void freeSharedMemoryForContext(int id);
+
+void print_shmo(int *shmo);
+
+
+// -------------------------------------------------------------------------------------------
+// -------------------------------SHARED MEMORY FRAMES ---------------------------------------
+// -------------------------------------------------------------------------------------------
+
+// shared memory frame struct:
+// +-----------+
+// | 0 | frame |
+// | 1 | next  |
+// +-----------+
+
+void allocate_shmo_frames(int *shmo);
+int* allocate_shmo_frame(int *frames);
+
+int  getFrame(int *frameEntry);
+int* getNextFrame(int *frameEntry);
+void setNextFrame(int *frameEntry, int *next);
+void setFrame(int *frameEntry, int *frame);
+
+
+
+// -------------------------------------------------------------------------------------------
+// ------------------------------- CLIENT LIST -----------------------------------------------
+// -------------------------------------------------------------------------------------------
+
+// client struct:
+// +-----------+
+// | 0 | next  |
+// | 1 | prev  |
+// | 2 | pid   |
+// | 3 | pages |
+// +-----------+
+
+int* getNextClient(int *client);
+int* getPrevClient(int *client);
+int  getClientPID(int *client);
+int* getClientPages(int *client);
+
+void setNextClient(int *client, int *next);
+void setPrevClient(int *client, int *prev);
+void setClientPID(int *client, int pid);
+void setClientPages(int *client, int *pages);
+
+void deleteClientFromShmo(int* shmo, int* client);
+
+void registerClient(int *shmo, int pid);
+int* findClientByPID(int *shmo, int pid);
+
+void addClientPage(int *client, int page);
+
+void printClientList(int *shmo);
+
+void printClientPages(int *client);
+
 
 // -----------------------------------------------------------------
 // ------------------------- INSTRUCTIONS --------------------------
@@ -1018,6 +1137,7 @@ int EXCEPTION_HEAPOVERFLOW       = 4;
 int EXCEPTION_EXIT               = 5;
 int EXCEPTION_TIMER              = 6;
 int EXCEPTION_PAGEFAULT          = 7;
+int EXCEPTION_YIELD              = 8;
 
 int* EXCEPTIONS; // strings representing exceptions
 
@@ -1027,6 +1147,16 @@ int debug_exception = 0;
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
 int TIMESLICE = 10000000;
+
+int INSTANCE_COUNT = 1;
+
+// tells the mipster to pass (ake let him handle) all interrupts and exceptions to the underlying OS(aka hypster)
+// 0 = false; 1 = true;
+int OS_MUST_HANDLE_EXCEPTIONS_AND_INTERRUPT = 0;
+
+// tells a user process to exit immediately on exceptions occurrence if no OS is running on the hardware (aka mipster)
+// 0 = false; 1 = true;
+int EXIT_ON_NO_OS_PROCESS_EXISTING = 0;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1071,7 +1201,7 @@ int* storesPerAddress = (int*) 0; // number of executed stores per store operati
 // ------------------------- INITIALIZATION ------------------------
 
 void initInterpreter() {
-  EXCEPTIONS = malloc(8 * SIZEOFINTSTAR);
+  EXCEPTIONS = malloc(9 * SIZEOFINTSTAR);
 
   *(EXCEPTIONS + EXCEPTION_NOEXCEPTION)        = (int) "no exception";
   *(EXCEPTIONS + EXCEPTION_UNKNOWNINSTRUCTION) = (int) "unknown instruction";
@@ -1081,6 +1211,7 @@ void initInterpreter() {
   *(EXCEPTIONS + EXCEPTION_EXIT)               = (int) "exit";
   *(EXCEPTIONS + EXCEPTION_TIMER)              = (int) "timer interrupt";
   *(EXCEPTIONS + EXCEPTION_PAGEFAULT)          = (int) "page fault";
+  *(EXCEPTIONS + EXCEPTION_YIELD)              = (int) "yield";
 }
 
 void resetInterpreter() {
@@ -1230,6 +1361,14 @@ int boot(int argc, int* argv);
 
 int selfie_run(int engine, int machine, int debugger);
 
+void setTimeslice();
+
+void setInstanceCount();
+
+void setFlag_OSHandlesInterruptAndException();
+
+void setFlag_ExitAtExceptionInterruptIfNoOSRunning();
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int MINSTER = 1;
@@ -1261,6 +1400,8 @@ void setArgument(int* argv);
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int USAGE = 1;
+// is an internal error. OS is not parent, hence the hardware/mipster would handle the stuff, which is wrong.
+int OS_NOT_EXISTING = 2;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1700,6 +1841,12 @@ void printString(int* s) {
 
 void printInteger(int n) {
   print(itoa(n, integer_buffer, 10, 0, 0));
+}
+
+void printDebug() {
+    println();
+    print((int *) "--Debug--");
+    println();
 }
 
 void printFixedPointPercentage(int a, int b) {
@@ -2227,14 +2374,14 @@ void getSymbol() {
 // ------------------------- SYMBOL TABLE --------------------------
 // -----------------------------------------------------------------
 
-void createSymbolTableEntry(int whichTable, int* string, int line, int class, int type, int value, int address) {
+void createSymbolTableEntry(int whichTable, int* string, int line, int clazz, int type, int value, int address) {
   int* newEntry;
 
   newEntry = malloc(2 * SIZEOFINTSTAR + 6 * SIZEOFINT);
 
   setString(newEntry, string);
   setLineNumber(newEntry, line);
-  setClass(newEntry, class);
+  setClass(newEntry, clazz);
   setType(newEntry, type);
   setValue(newEntry, value);
   setAddress(newEntry, address);
@@ -2245,11 +2392,11 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
     setNextEntry(newEntry, global_symbol_table);
     global_symbol_table = newEntry;
 
-    if (class == VARIABLE)
+    if (clazz == VARIABLE)
       numberOfGlobalVariables = numberOfGlobalVariables + 1;
-    else if (class == PROCEDURE)
+    else if (clazz == PROCEDURE)
       numberOfProcedures = numberOfProcedures + 1;
-    else if (class == STRING)
+    else if (clazz == STRING)
       numberOfStrings = numberOfStrings + 1;
   } else if (whichTable == LOCAL_TABLE) {
     setScope(newEntry, REG_FP);
@@ -2263,10 +2410,10 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
   }
 }
 
-int* searchSymbolTable(int* entry, int* string, int class) {
+int* searchSymbolTable(int* entry, int* string, int clazz) {
   while (entry != (int*) 0) {
     if (stringCompare(string, getString(entry)))
-      if (class == getClass(entry))
+      if (clazz == getClass(entry))
         return entry;
 
     // keep looking
@@ -2276,20 +2423,20 @@ int* searchSymbolTable(int* entry, int* string, int class) {
   return (int*) 0;
 }
 
-int* getScopedSymbolTableEntry(int* string, int class) {
+int* getScopedSymbolTableEntry(int* string, int clazz) {
   int* entry;
 
-  if (class == VARIABLE)
+  if (clazz == VARIABLE)
     // local variables override global variables
     entry = searchSymbolTable(local_symbol_table, string, VARIABLE);
-  else if (class == PROCEDURE)
+  else if (clazz == PROCEDURE)
     // library procedures override declared or defined procedures
     entry = searchSymbolTable(library_symbol_table, string, PROCEDURE);
   else
     entry = (int*) 0;
 
   if (entry == (int*) 0)
-    return searchSymbolTable(global_symbol_table, string, class);
+    return searchSymbolTable(global_symbol_table, string, clazz);
   else
     return entry;
 }
@@ -4012,11 +4159,16 @@ void selfie_compile() {
   emitMalloc();
 
   emitID();
+  emitYield();
   emitCreate();
   emitSwitch();
   emitStatus();
   emitDelete();
   emitMap();
+  emitShmClose();
+  emitShmMap();
+  emitShmOpen();
+  emitShmSize();
 
   while (link) {
     if (numberOfRemainingArguments() == 0)
@@ -4604,6 +4756,260 @@ void selfie_load() {
 // -----------------------------------------------------------------
 // ----------------------- MIPSTER SYSCALLS ------------------------
 // -----------------------------------------------------------------
+void emitShmMap() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_map", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A1, 0); // id
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // addr
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMM);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller, return value is in REG_V0
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmMap() {
+    int *shmo;
+    int id;
+    //int addr;
+    int *frameEntry;
+    int startAddr;
+    int *client;
+
+    // retrieve addr and id from registers
+    // TODO: assume for now that addr is always NULL, i.e. OS can choose the start address
+    //addr = *(registers + REG_A0);
+    id = *(registers + REG_A1);
+
+
+    // find the shared memory object by the given ID
+    shmo = find_shmo_by_id(id);
+
+    // check first if the shared memory exists
+    if (shmo != (int*) 0) {
+
+        // if there are no frames in physical memory associated to the shared memory object yet,
+        // the current process is the first one to call shm_map() for that object. In this case,
+        // allocate the frames once
+        if (get_shmo_frames(shmo) == (int *) 0) {
+            allocate_shmo_frames(shmo);
+        }
+
+        // find brk where the shared memory may start. We must not start somewhere in an already mapped page.
+        // instead, we start at the beginning of the next unmapped page --> round up brk
+        brk = roundUp(brk, PAGESIZE);
+
+        // start address of shared memory for the current process, based on its brk
+        startAddr = brk;
+
+        // find the client object representing the calling process by its pid
+        client = findClientByPID(shmo, getID(currentContext));
+
+        frameEntry = get_shmo_frames(shmo);
+        while (frameEntry != (int *) 0) {
+            // for each frame, create a mapping between frame and a page in the page table of the current process
+            mapPage(getPT(currentContext), getPageOfVirtualAddress(brk), getFrame(frameEntry));
+            // also store the mapped page in the page list of the client
+            addClientPage(client, getPageOfVirtualAddress(brk));
+
+            // move to the next page
+            brk = brk + PAGESIZE;
+
+            frameEntry = getNextFrame(frameEntry);
+        }
+    }
+    else {
+        // if shared memory object does not exist, return -1 to indicate error
+        startAddr = -1;
+    }
+
+    // return start address of shared memory to the calling process
+    *(registers+REG_V0) = startAddr;
+
+}
+
+void emitShmClose() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_close", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // id
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMC);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller, return value is in REG_V0
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmClose() {
+  int *shmo;
+  int smoID;
+
+  int *frameEntry;
+
+  int *client;
+  int *clientPageEntry;
+  int *pageTable;
+  int *privateFrame;
+
+  int returnValue;
+
+  smoID = *(registers + REG_A0);
+
+  // find the shared memory object by the given ID
+  shmo = find_shmo_by_id(smoID);
+
+  // check first if the shared memory exists
+  if (shmo != (int*) 0) {
+
+    // first check if there are frames existing!
+    // else we can't delete the frames
+    frameEntry = get_shmo_frames(shmo);
+    if (frameEntry == (int *) 0) {
+      returnValue = -1;
+    }
+    // there are frames existing
+    else {
+      // for every frame do:
+      // delete reference to frame
+      // get private page
+      // copy data to private page
+
+      //find right client and remove from the clientList
+      client = get_shmo_clients(shmo);
+        //if last and lonely client --> we don't need to copy frame to make the frame private.
+      if(getNextClient(client) != (int*) 0) {
+          while (client != (int *) 0) {
+              if (getID(currentContext) == getClientPID(client)) {
+                  //we only need the pages of the client -> store them if found
+                  // we should break the while now.. but we ignore the perfomance loses and iterate over all clients
+                  clientPageEntry = getClientPages(client);
+
+                  //delete yourself from list
+                  deleteClientFromShmo(shmo, client);
+              }
+              client = getNextClient(client);
+          }
+
+          pageTable = getPT(currentContext);
+          //iterate over all frames
+          while (frameEntry != (int *) 0) {
+
+              //unmap page in pageTable of the client's context
+              *(pageTable + (*clientPageEntry)) = 0;
+              //create private page
+              privateFrame = palloc();
+              mapPage(pageTable, (*clientPageEntry), (int) privateFrame);
+              //copy shared memory to private page
+              copyFrameToFrame(privateFrame, (int *) getFrame(frameEntry));
+
+              frameEntry = getNextFrame(frameEntry);
+          }
+      } else {
+          deleteClientFromShmo(shmo, client);
+      }
+
+      //delete shmo if no clients are existing
+      if (get_shmo_clients(shmo) == (int*) 0){
+        delete_shmo(shmo);
+      }
+    }
+    returnValue = 0;
+  }
+
+  // return start address of shared memory to the calling process
+  *(registers+REG_V0) = returnValue;
+}
+
+void emitShmSize() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_size", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A1, 0); // shSize
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // id
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMS);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller, return value is in REG_V0
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmSize() {
+  int *shmo;
+  int actSize;
+  int id;
+  int shSize;
+
+  // retrieve id and shSize from registers
+  id = *(registers + REG_A0);
+  shSize = *(registers + REG_A1);
+
+  // search the shared memory object by the id
+  shmo = find_shmo_by_id(id);
+
+  // if the shared memory object does not exist, return -1 as size
+  if (shmo == (int*) 0) {
+    actSize = -1;
+  }
+  else {
+    // shared memory object exists
+    if (get_shmo_size(shmo) == 0) {
+      // if current size is 0, replace it by shSize. Do nothing otherwise.
+      set_shmo_size(shmo, shSize);
+
+    }
+    // retrieve the current size
+    actSize = get_shmo_size(shmo);
+  }
+
+  // return the current size to the calling process
+  *(registers+REG_V0) = actSize;
+}
+
+
+void emitShmOpen() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_open", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // name
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHMO);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller, return value is in REG_V0
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementShmOpen() {
+  int *shmo;
+  int *name;
+
+  // extract name string (located in global segment of calling process)
+  name = tlb(getPT(currentContext), *(registers + REG_A0));
+
+  // look up the shared memory object by its name
+  shmo = find_shmo_by_name(name);
+
+  // if it does not exist yet, create it with the given name
+  if (shmo == (int*) 0) {
+    shmo = create_shmo(name);
+  }
+
+  // register the client process to the shared memory object
+  registerClient(shmo, getID(currentContext));
+
+  // return the ID of the shared memory object to the calling process
+  *(registers+REG_V0) = get_shmo_id(shmo);
+}
+
+
 
 void emitExit() {
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "exit", 0, PROCEDURE, VOID_T, 0, binaryLength);
@@ -5032,6 +5438,22 @@ void implementMalloc() {
   }
 }
 
+void emitYield() {
+    createSymbolTableEntry(LIBRARY_TABLE, (int*)"yield", 0, PROCEDURE, INT_T, 0, binaryLength);
+
+    emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_YIELD);
+    emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+    emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementYield() {
+    printInteger(getID(currentContext));
+    print((int*)" yields");
+    println();
+    throwException(EXCEPTION_YIELD, 0);
+}
+
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
 // -----------------------------------------------------------------
@@ -5070,7 +5492,7 @@ void emitCreate() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
-int doCreate(int parentID) {
+int doCreateContext(int parentID) {
   if (bumpID < INT_MAX) {
     bumpID = createID(bumpID);
 
@@ -5097,17 +5519,17 @@ int doCreate(int parentID) {
 }
 
 void implementCreate() {
-  *(registers+REG_V0) = doCreate(getID(currentContext));
+  *(registers+REG_V0) = doCreateContext(getID(currentContext));
 }
 
 int hypster_create() {
   // this procedure is only executed at boot level zero
-  return doCreate(selfie_ID());
+  return doCreateContext(selfie_ID());
 }
 
 int selfie_create() {
   if (mipster)
-    return doCreate(selfie_ID());
+    return doCreateContext(selfie_ID());
   else
     return hypster_create();
 }
@@ -5115,6 +5537,7 @@ int selfie_create() {
 void emitSwitch() {
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "hypster_switch", 0, PROCEDURE, INT_T, 0, binaryLength);
 
+    // we put 0 there, because we want to switch to process 0 -> this is the OS aka the first process the mipster startet
   emitIFormat(OP_LW, REG_SP, REG_A0, 0); // ID of context to which we switch
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
@@ -5142,7 +5565,9 @@ int doSwitch(int toID) {
 
     if (debug_switch) {
       print(binaryName);
-      print((int*) ": selfie_switch from context ");
+      print((int*) ": selfie_switch with ID: ");
+      printInteger(selfie_ID());
+      print((int*) " from context ");
       printInteger(fromID);
       print((int*) " to context ");
       printInteger(toID);
@@ -5165,8 +5590,8 @@ void implementSwitch() {
   // CAUTION: doSwitch() modifies the global variable registers
   // but some compilers dereference the lvalue *(registers+REG_V1)
   // before evaluating the rvalue doSwitch()
-
   fromID = doSwitch(*(registers+REG_A0));
+
 
   // use REG_V1 instead of REG_V0 to avoid race condition with interrupt
   *(registers+REG_V1) = fromID;
@@ -5178,8 +5603,21 @@ int mipster_switch(int toID) {
   // CAUTION: doSwitch() modifies the global variable registers
   // but some compilers dereference the lvalue *(registers+REG_V1)
   // before evaluating the rvalue doSwitch()
-
   fromID = doSwitch(toID);
+
+  // basically mipster only switches between processes and OS. ALWAYS. Otherwise we made something wrong!
+  // this is valid to say, since the mipster DOESN'T do the scheduling. Since NOW at this line of code we must schedule
+  // a next process (handle exception etc), we ALWAYS switch to the OS==hypervisor. He is the only one who schedules.
+  if (EXIT_ON_NO_OS_PROCESS_EXISTING == 1) {
+    if (fromID != hypster_ID()) {
+      if (toID != hypster_ID()) {
+        print((int *) "Not switching to the OS. We ALWAYS switch to the OS after a process threw an exception");
+        return OS_NOT_EXISTING;
+        //status = EXCEPTION_EXIT;
+        //throwException(EXCEPTION_EXIT, OS_NOT_EXISTING);
+      }
+    }
+  }
 
   // use REG_V1 instead of REG_V0 to avoid race condition with interrupt
   *(registers+REG_V1) = fromID;
@@ -5199,6 +5637,32 @@ int selfie_switch(int toID) {
     return mipster_switch(toID);
   else
     return hypster_switch(toID);
+}
+
+int scheduleRoundRobin(int fromID) {
+  int *nextContext;
+  int *currContext;
+  //get current context
+  currContext = findContext(fromID, usedContexts);
+  // find next context
+  nextContext = getNextContext(currContext);
+
+  if (nextContext == (int *) 0) {
+    nextContext = usedContexts;
+  }
+
+  //hypervisor in hypervisor?? then schedule to the upper hypervisor
+  if(getParent(nextContext) == fromID){
+    print((int*) "happened just, fromID: ");
+    printInteger(fromID);
+    print((int *) ", toID: ");
+    printInteger(getID(currContext));
+    println();
+    nextContext = currContext;
+  }
+
+
+  return getID(nextContext);
 }
 
 void emitStatus() {
@@ -5482,6 +5946,308 @@ void mapAndStoreVirtualMemory(int* table, int vaddr, int data) {
   storeVirtualMemory(table, vaddr, data);
 }
 
+void copyFrameToFrame(int* target, int* source){
+  int i;
+
+  i = 0;
+  while (i < PAGESIZE){
+    *target = *source;
+    i = i + 1;
+  }
+}
+
+// -------------------------------------------------------------------------------------------
+// -------------------------------SHARED MEMORY OBJECTS --------------------------------------
+// -------------------------------------------------------------------------------------------
+
+// struct operations
+int* get_next_shmo(int *shmo)                  { return (int*) *shmo; }
+int* get_prev_shmo(int *shmo)                  { return (int*) *(shmo + 1); }
+int  get_shmo_id(int *shmo)                    { return        *(shmo + 2); }
+int* get_shmo_name(int *shmo)                  { return (int*) *(shmo + 3); }
+int  get_shmo_size(int *shmo)                  { return        *(shmo + 4); }
+int* get_shmo_frames(int *shmo)                { return (int*) *(shmo + 5); }
+int* get_shmo_clients(int *shmo)               { return (int*) *(shmo + 6); }
+
+void set_next_shmo(int *shmo, int *next)       { *shmo = (int) next; }
+void set_prev_shmo(int *shmo, int *prev)       { *(shmo + 1) = (int) prev; }
+void set_shmo_id(int *shmo, int id)            { *(shmo + 2) = id; }
+void set_shmo_name(int *shmo, int *name)       { *(shmo + 3) = (int) name; }
+void set_shmo_size(int *shmo, int size)        { *(shmo + 4) = size; }
+void set_shmo_frames(int *shmo, int *frames)   { *(shmo + 5) = (int) frames; }
+void set_shmo_clients(int *shmo, int *clients) { *(shmo + 6) = (int) clients; }
+
+int delete_shmo(int *shmo) {
+  //delete yourself from list
+  if (get_prev_shmo(shmo) != (int*) 0) {
+    set_next_shmo(get_prev_shmo(shmo), get_next_shmo(shmo));
+  }
+  // is head of list -> set head Pointer to the next one
+  else {
+    shmo_list = get_next_shmo(shmo);
+  }
+  if (get_next_shmo(shmo) != (int*) 0) {
+    set_prev_shmo(get_next_shmo(shmo), get_prev_shmo(shmo));
+  }
+}
+
+// Search for a shared memory object by its name
+int *find_shmo_by_name(int *name) {
+    int *shmo;
+
+    shmo = shmo_list;
+    while (shmo != (int*) 0) {
+        if (stringCompare(get_shmo_name(shmo), name)) {
+            return shmo;
+        }
+        shmo = get_next_shmo(shmo);
+    }
+    return shmo;
+}
+
+// Search for shared memory by its id
+int *find_shmo_by_id(int id) {
+    int *shmo;
+
+    shmo = shmo_list;
+    while (shmo != (int*) 0) {
+        if (get_shmo_id(shmo) == id) {
+            return shmo;
+        }
+        shmo = get_next_shmo(shmo);
+    }
+    return shmo;
+}
+
+void freeSharedMemoryForContext(int id){
+    int *shmo;
+    int *client;
+
+    shmo = shmo_list;
+    while (shmo != (int*) 0) {
+        client = get_shmo_clients(shmo);
+        //find all clients in all shmo which have the id
+        while(client != (int*) 0){
+            if(getClientPID(client) == id){
+                deleteClientFromShmo(shmo, client);
+            }
+            client = getNextClient(client);
+        }
+        //no clients left using the shmo? -> delete shmo
+        if (get_shmo_clients(shmo) == (int*) 0) {
+            delete_shmo(shmo);
+        }
+        shmo = get_next_shmo(shmo);
+    }
+}
+
+// Create a new shared memory object, initialize it and put
+// it into the list of shared memory objects
+int *create_shmo(int *name) {
+    int *shmo;
+
+    shmo = malloc(2 * SIZEOFINT + 5 * SIZEOFINTSTAR);
+
+    // initialize shared memory object
+    set_next_shmo(shmo, (int *) 0);
+    set_prev_shmo(shmo, (int *) 0);
+    set_shmo_id(shmo, create_shmo_id());
+    set_shmo_size(shmo, 0);
+    set_shmo_name(shmo, name);
+    set_shmo_frames(shmo, (int*) 0);
+    set_shmo_clients(shmo, (int*) 0);
+
+    // new shared memory object becomes head of existing list
+    if (shmo_list != (int*) 0) {
+        set_next_shmo(shmo, shmo_list);
+        set_prev_shmo(shmo_list, shmo);
+    }
+    shmo_list = shmo;
+
+    return shmo;
+}
+
+// Create a unique shared memory id
+int create_shmo_id() {
+    int shmo_id;
+
+    shmo_id = shmo_id_counter;
+    shmo_id_counter = shmo_id_counter + 1;
+    return shmo_id;
+}
+
+// prints the given shared memory object
+void print_shmo(int *shmo) {
+
+    println();
+    print((int*)"ID: ");
+    printInteger(get_shmo_id(shmo));
+    println();
+
+    print((int*)"Name: ");
+    print(get_shmo_name(shmo));
+    println();
+
+    print((int*)"Size: ");
+    printInteger(get_shmo_size(shmo));
+    println();
+    print((int*)"Registered Processes: ");
+    printClientList(shmo);
+    println();
+
+}
+
+// -------------------------------------------------------------------------------------------
+// -------------------------------SHARED MEMORY FRAMES ---------------------------------------
+// -------------------------------------------------------------------------------------------
+
+int getFrame(int *frameEntry)      { return *frameEntry; }
+int* getNextFrame(int *frameEntry) { return (int*) *(frameEntry + 1); }
+
+void setFrame(int *frameEntry, int *frame)    {*frameEntry = (int) frame; }
+void setNextFrame(int *frameEntry, int *next) {*(frameEntry + 1) = (int) next; }
+
+
+// used for creating a list of frames for a shared memory object.
+// the number of frames in this list depends on the user-specified size of the shared memory
+void allocate_shmo_frames(int *shmo) {
+    int frame_count;
+    int i;
+    int *frames;
+
+    // the frame list is empty first
+    frames = (int*) 0;
+
+    // only multiples of page/frame size are allocated -> round up size to be multiple of PAGESIZE
+    // then determine how many frames have to be allocated -> divide by PAGESIZE
+    frame_count = roundUp(get_shmo_size(shmo), PAGESIZE) / PAGESIZE;
+
+    i = 0;
+    while (i < frame_count) {
+        // allocate new frame and store it in the growing frame list
+        frames = allocate_shmo_frame(frames);
+        i = i + 1;
+    }
+
+    // associate the frame list to the shared memory object
+    set_shmo_frames(shmo, frames);
+}
+
+
+// used for creating a single frame entry
+int *allocate_shmo_frame(int *frames) {
+    int *entry;
+
+    entry = malloc(2 * SIZEOFINTSTAR);
+
+    // allocate a new frame in physical memory
+    setFrame(entry, palloc());
+    // new frame becomes head of the already existing list
+    setNextFrame(entry, frames);
+
+    return entry;
+}
+
+// -------------------------------------------------------------------------------------------
+// ------------------------------- CLIENT LIST -----------------------------------------------
+// -------------------------------------------------------------------------------------------
+
+// client struct:
+// +-----------+
+// | 0 | next  |
+// | 1 | prev  |
+// | 2 | pid   |
+// | 3 | pages |
+// +-----------+
+
+int* getNextClient(int *client)  { return (int*) *client; }
+int* getPrevClient(int *client)  { return (int*) *(client + 1); }
+int  getClientPID(int *client)   { return *(client + 2); }
+int* getClientPages(int *client) { return (int*) *(client + 3); }
+
+void setNextClient(int *client, int *next)   { *client = (int) next; }
+void setPrevClient(int *client, int *prev)   { *(client + 1) = (int) prev; }
+void setClientPID(int *client, int pid)      { *(client + 2) = pid; }
+void setClientPages(int *client, int *pages) { *(client + 3) = (int) pages; }
+
+void deleteClientFromShmo(int* shmo, int* client){
+    if (getPrevClient(client) != (int*) 0) {
+        setNextClient(getPrevClient(client), getNextClient(client));
+    }
+        // is head of list -> set head Pointer to the next one
+    else {
+        set_shmo_clients(shmo, getNextClient(client));
+    }
+    if (getNextClient(client) != (int*) 0) {
+        setPrevClient(getNextClient(client), getPrevClient(client));
+    }
+}
+
+void registerClient(int *shmo, int pid) {
+    int *client;
+
+    //allocate and initialize client struct
+    client = malloc(SIZEOFINT + 3 * SIZEOFINTSTAR);
+    setClientPID(client, pid);
+    setClientPages(client, (int*) 0);
+    setNextClient(client, (int*) 0);
+
+    // make new client the head of the client list
+    setNextClient(client, get_shmo_clients(shmo));
+    set_shmo_clients(shmo, client);
+
+}
+
+int* findClientByPID(int *shmo, int pid) {
+    int *client;
+
+    client = get_shmo_clients(shmo);
+    while (client != (int*) 0) {
+        if (getClientPID(client) == pid) {
+            return client;
+        }
+        client = getNextClient(client);
+    }
+    return client;
+}
+
+void printClientPages(int *client) {
+    int *page;
+    page = getClientPages(client);
+
+    while (page != (int*) 0) {
+        printInteger(*page);
+        print((int*) " ");
+        page = (int*) *(page+1);
+    }
+    println();
+}
+
+void printClientList(int *shmo) {
+    int *client;
+
+    client = get_shmo_clients(shmo);
+
+    while (client != (int*) 0) {
+        printInteger(getClientPID(client));
+        print((int*) " ");
+        client = getNextClient(client);
+    }
+    println();
+}
+
+void addClientPage(int *client, int page) {
+    int *pageEntry;
+
+    pageEntry = malloc(SIZEOFINT + SIZEOFINTSTAR);
+
+    *pageEntry = page;
+    *(pageEntry + 1) = (int) getClientPages(client);
+
+    setClientPages(client, pageEntry);
+
+}
+
 // -----------------------------------------------------------------
 // ------------------------- INSTRUCTIONS --------------------------
 // -----------------------------------------------------------------
@@ -5507,6 +6273,8 @@ void fct_syscall() {
       implementMalloc();
     else if (*(registers+REG_V0) == SYSCALL_ID)
       implementID();
+    else if (*(registers+REG_V0) == SYSCALL_YIELD)
+        implementYield();
     else if (*(registers+REG_V0) == SYSCALL_CREATE)
       implementCreate();
     else if (*(registers+REG_V0) == SYSCALL_SWITCH)
@@ -5517,6 +6285,14 @@ void fct_syscall() {
       implementDelete();
     else if (*(registers+REG_V0) == SYSCALL_MAP)
       implementMap();
+    else if (*(registers+REG_V0) == SYSCALL_SHMO)
+      implementShmOpen();
+    else if (*(registers+REG_V0) == SYSCALL_SHMC)
+      implementShmClose();
+    else if (*(registers+REG_V0) == SYSCALL_SHMM)
+      implementShmMap();
+    else if (*(registers+REG_V0) == SYSCALL_SHMS)
+      implementShmSize();
     else {
       pc = pc - WORDSIZE;
 
@@ -6269,15 +7045,15 @@ void execute() {
 
 void interrupt() {
   cycles = cycles + 1;
-
   if (timer > 0)
     if (cycles == timer) {
       cycles = 0;
 
-      if (status == 0)
-        // only throw exception if no other is pending
-        // TODO: handle multiple pending exceptions
-        throwException(EXCEPTION_TIMER, 0);
+      if (status == 0) {
+          // only throw exception if no other is pending
+          // TODO: handle multiple pending exceptions
+          throwException(EXCEPTION_TIMER, 0);
+      }
     }
 }
 
@@ -6527,6 +7303,9 @@ int* deleteContext(int* context, int* from) {
   } else
     from = getNextContext(context);
 
+  //todo delete shared objects by this thread
+  //freeSharedMemoryForContext(getID(context));
+
   freeContext(context);
 
   return from;
@@ -6724,45 +7503,46 @@ void down_mapPageTable(int* context) {
 }
 
 int runUntilExitWithoutExceptionHandling(int toID) {
-  // works only with mipsters
-  int fromID;
-  int* fromContext;
-  int savedStatus;
-  int exceptionNumber;
+    // works only with mipsters
+    int fromID;
+    int* fromContext;
+    int savedStatus;
+    int exceptionNumber;
 
-  while (1) {
-    fromID = mipster_switch(toID);
+    while (1) {
+        fromID = mipster_switch(toID);
 
-    fromContext = findContext(fromID, usedContexts);
+        fromContext = findContext(fromID, usedContexts);
 
-    // assert: fromContext must be in usedContexts (created here)
+        // assert: fromContext must be in usedContexts (created here)
 
-    if (getParent(fromContext) != MIPSTER_ID)
-      // switch to parent which is in charge of handling exceptions
-      toID = getParent(fromContext);
-    else {
-      // we are the parent in charge of handling exit exceptions
-      savedStatus = doStatus();
+        if (getParent(fromContext) != MIPSTER_ID)
+            // switch to parent which is in charge of handling exceptions
+            toID = getParent(fromContext);
+        else {
+            // we are the parent in charge of handling exit exceptions
+            savedStatus = doStatus();
 
-      exceptionNumber = decodeExceptionNumber(savedStatus);
+            exceptionNumber = decodeExceptionNumber(savedStatus);
 
-      if (exceptionNumber == EXCEPTION_EXIT)
-        // TODO: only return if all contexts have exited
-        return decodeExceptionParameter(savedStatus);
-      else if (exceptionNumber != EXCEPTION_TIMER) {
-        print(binaryName);
-        print((int*) ": context ");
-        printInteger(getID(fromContext));
-        print((int*) " throws uncaught ");
-        printStatus(savedStatus);
-        println();
+            if (exceptionNumber == EXCEPTION_EXIT)
+                // TODO: only return if all contexts have exited
+                return decodeExceptionParameter(savedStatus);
+            else if (exceptionNumber != EXCEPTION_TIMER) {
+                print(binaryName);
+                print((int*) ": context ");
+                printInteger(getID(fromContext));
+                print((int*) " throws uncaught ");
+                printStatus(savedStatus);
+                println();
 
-        return -1;
-      } else
-        toID = fromID;
+                return -1;
+            } else
+                toID = fromID;
+        }
     }
-  }
 }
+
 
 int runOrHostUntilExitWithPageFaultHandling(int toID) {
   // works with mipsters and hypsters
@@ -6774,49 +7554,85 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int frame;
 
   while (1) {
-    fromID = selfie_switch(toID);
 
+    fromID = selfie_switch(toID);
     fromContext = findContext(fromID, usedContexts);
 
     // assert: fromContext must be in usedContexts (created here)
+    if (getParent(fromContext) != selfie_ID()) {
+        // switch to parent which is in charge of handling exceptions. If parent cannot be found -> not good
+        toID = getParent(fromContext);
 
-    if (getParent(fromContext) != selfie_ID())
-      // switch to parent which is in charge of handling exceptions
-      toID = getParent(fromContext);
+        if (findContext(toID, usedContexts) == (int *) 0)
+            return 1;
+    }
     else {
       // we are the parent in charge of handling exceptions
-      savedStatus = selfie_status();
+        savedStatus = selfie_status();
+        exceptionNumber = decodeExceptionNumber(savedStatus);
+        exceptionParameter = decodeExceptionParameter(savedStatus);
 
-      exceptionNumber    = decodeExceptionNumber(savedStatus);
-      exceptionParameter = decodeExceptionParameter(savedStatus);
+        if (exceptionNumber == EXCEPTION_PAGEFAULT) {
+          frame = (int) palloc();
 
-      if (exceptionNumber == EXCEPTION_PAGEFAULT) {
-        frame = (int) palloc();
+          //print((int *) "handled PAGEFAULT: ");
+          //printInteger(selfie_ID());
+          //println();
 
-        // TODO: use this table to unmap and reuse frames
-        mapPage(getPT(fromContext), exceptionParameter, frame);
+            // TODO: use this table to unmap and reuse frames
+          mapPage(getPT(fromContext), exceptionParameter, frame);
 
-        // page table on microkernel boot level
-        selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT)
-        // TODO: only return if all contexts have exited
-        return exceptionParameter;
-      else if (exceptionNumber != EXCEPTION_TIMER) {
-        print(binaryName);
-        print((int*) ": context ");
-        printInteger(getID(fromContext));
-        print((int*) " throws uncaught ");
-        printStatus(savedStatus);
-        println();
+            // page table on microkernel boot level
+          selfie_map(fromID, exceptionParameter, frame);
+        }
+        else if (exceptionNumber == EXCEPTION_EXIT) {
 
-        return -1;
-      }
+          //print((int *) "handled EXIT: ");
+          //printInteger(selfie_ID());
+          //println();
 
-      // TODO: scheduler should go here
-      toID = fromID;
+          //delete current context
+            selfie_delete(fromID);
+
+            //if hypster is used, also delete context from its local contexts.
+            if (mipster == 0)
+                doDelete(fromID);
+
+            //if context list is now empty, then terminate
+            if (usedContexts == (int *) 0) {
+                return exceptionParameter;
+            }
+            //otherwise: schedule other process. TODO: make this more fair
+            else
+                toID = getID(usedContexts);
+
+        }
+        //If there is a timer or yield interrupt, then re-schedule
+        else if (exceptionNumber == EXCEPTION_YIELD) {
+            toID = scheduleRoundRobin(fromID);
+          //print((int *) "handled yield: ");
+          //printInteger(selfie_ID());
+          //println();
+        }
+        else if (exceptionNumber == EXCEPTION_TIMER) {
+            toID = scheduleRoundRobin(fromID);
+          //print((int *) "handled TIMER: ");
+          //printInteger(selfie_ID());
+          //println();
+        }
+        else {
+            print(binaryName);
+            print((int *) ": context ");
+            printInteger(getID(fromContext));
+            print((int *) " throws uncaught ");
+            printStatus(savedStatus);
+            println();
+            return -1;
+        }
     }
   }
 }
+
 
 int bootminmob(int argc, int* argv, int machine) {
   // works only with mipsters
@@ -6840,7 +7656,7 @@ int bootminmob(int argc, int* argv, int machine) {
   resetMicrokernel();
 
   // create initial context on our boot level
-  initID = doCreate(MIPSTER_ID);
+  initID = doCreateContext(MIPSTER_ID);
 
   up_loadBinary(getPT(usedContexts));
 
@@ -6874,8 +7690,9 @@ int bootminmob(int argc, int* argv, int machine) {
 
 int boot(int argc, int* argv) {
   // works with mipsters and hypsters
-  int initID;
   int exitCode;
+  int counter;
+  int currentID;
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6895,22 +7712,26 @@ int boot(int argc, int* argv) {
 
   resetMicrokernel();
 
-  // create initial context on microkernel boot level
-  initID = selfie_create();
+    counter = 0;
+    while (counter < INSTANCE_COUNT) {
+        currentID = selfie_create();
 
-  if (usedContexts == (int*) 0)
-    // create duplicate of the initial context on our boot level
-    usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+        if (mipster == 0) {
+            // create duplicate of the initial context on our boot level
+            usedContexts = createContext(currentID, selfie_ID(), usedContexts);
+        }
 
-  up_loadBinary(getPT(usedContexts));
+        up_loadBinary(getPT(usedContexts));
+        up_loadArguments(getPT(usedContexts), argc, argv);
+        // propagate page table of initial context to microkernel boot level
+        down_mapPageTable(usedContexts);
+        counter = counter + 1;
+    }
 
-  up_loadArguments(getPT(usedContexts), argc, argv);
 
-  // propagate page table of initial context to microkernel boot level
-  down_mapPageTable(usedContexts);
 
   // mipsters and hypsters handle page faults
-  exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
+  exitCode = runOrHostUntilExitWithPageFaultHandling(currentID);
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6928,6 +7749,32 @@ int boot(int argc, int* argv) {
   println();
 
   return exitCode;
+}
+
+void setTimeslice() {
+    int timeslice;
+    timeslice = atoi(getArgument());
+    if (timeslice < 1)
+        TIMESLICE = 1;
+    else
+        TIMESLICE = timeslice;
+}
+
+void setInstanceCount() {
+    int instanceCount;
+    instanceCount = atoi(getArgument());
+    if (instanceCount < 1)
+        INSTANCE_COUNT = 1;
+    else
+        INSTANCE_COUNT = instanceCount;
+}
+
+void setFlag_OSHandlesInterruptAndException(){
+  OS_MUST_HANDLE_EXCEPTIONS_AND_INTERRUPT = 1;
+}
+
+void setFlag_ExitAtExceptionInterruptIfNoOSRunning(){
+  EXIT_ON_NO_OS_PROCESS_EXISTING = 1;
 }
 
 int selfie_run(int engine, int machine, int debugger) {
@@ -7043,7 +7890,17 @@ int selfie() {
         selfie_disassemble();
       else if (stringCompare(option, (int*) "-l"))
         selfie_load();
-      else if (stringCompare(option, (int*) "-m"))
+      else if (stringCompare(option, (int*) "-t"))
+        setTimeslice();
+      else if (stringCompare(option, (int*) "-n"))
+        setInstanceCount();
+      else if (stringCompare(option, (int*) "-k")) {
+        setFlag_OSHandlesInterruptAndException();
+        return selfie_run(MIPSTER, MIPSTER, 0);
+      } else if (stringCompare(option, (int*) "-u")) {
+        setFlag_ExitAtExceptionInterruptIfNoOSRunning();
+        return selfie_run(HYPSTER, MIPSTER, 0);
+      } else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
         return selfie_run(MIPSTER, MIPSTER, 1);
@@ -7067,6 +7924,9 @@ int main(int argc, int* argv) {
   initSelfie(argc, (int*) argv);
 
   initLibrary();
+
+  print((int*) " This is WMER Selfie ");
+  println();
 
   exitCode = selfie();
 

@@ -1,0 +1,6 @@
+*.exe
+*.m
+*.s
+CMakeLists.txt
+.idea/
+*.stackdump
