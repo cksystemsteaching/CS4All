@@ -5640,7 +5640,6 @@ int selfie_switch(int toID) {
 }
 
 int scheduleRoundRobin(int fromID) {
-  int nextID;
   int *nextContext;
   int *currContext;
   //get current context
@@ -5648,13 +5647,22 @@ int scheduleRoundRobin(int fromID) {
   // find next context
   nextContext = getNextContext(currContext);
 
-  if (nextContext != (int *) 0) {
-    nextID = getID(nextContext);
-  } else {
-    nextID = getID(usedContexts);
+  if (nextContext == (int *) 0) {
+    nextContext = usedContexts;
   }
 
-  return nextID;
+  //hypervisor in hypervisor?? then schedule to the upper hypervisor
+  if(getParent(nextContext) == fromID){
+    print((int*) "happened just, fromID: ");
+    printInteger(fromID);
+    print((int *) ", toID: ");
+    printInteger(getID(currContext));
+    println();
+    nextContext = currContext;
+  }
+
+
+  return getID(nextContext);
 }
 
 void emitStatus() {
@@ -7587,7 +7595,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
             selfie_delete(fromID);
 
             //if hypster is used, also delete context from its local contexts.
-            if (selfie_ID() >= 0)
+            if (mipster == 0)
                 doDelete(fromID);
 
             //if context list is now empty, then terminate

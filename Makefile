@@ -16,7 +16,7 @@ test: selfie
 	diff -q selfie1.m selfie2.m
 	diff -q selfie1.s selfie2.s
 	./selfie -c selfie.c -o selfie.m -m 2 -l selfie.m -m 2
-	./selfie -c selfie.c -o selfie3.m -s selfie3.s -y 6 -l selfie3.m -y 6 -l selfie3.m -y 6 -c selfie.c -o selfie4.m -s selfie4.s
+	./selfie -c selfie.c -o selfie3.m -s selfie3.s -m 10 -l sefie3.m -y 10 -l selfie3.m -y 10 -l selfie3.m -y 10 -c selfie.c -o selfie4.m -s selfie4.s
 	diff -q selfie3.m selfie4.m
 	diff -q selfie3.s selfie4.s
 	diff -q selfie1.m selfie3.m
@@ -63,10 +63,8 @@ shmoTest: selfie
 	./selfie -c shmo.c -o shmo.m -n 4 -m 32 -l shmo.m -m 4
 
 #waaas
-cleanWin:
-	del *.m
-	del *.s
-	del selfie.exe
+cleanWin: 
+	del *.m & del *.s & del selfie.exe
 	
 # Clean up
 clean:

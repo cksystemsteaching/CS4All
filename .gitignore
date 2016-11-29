@@ -3,3 +3,4 @@
 *.s
 CMakeLists.txt
 .idea/
+*.stackdump
