@@ -33,6 +33,14 @@ assignment1:
 assignment2:
 	./selfie -c testfiles/yieldexample.c selfie.c -conc 3 -freq 1000000000 -m 4
 
+assignment3-shm:
+	./selfie -c testfiles/shmexample.c  selfie.c -o sample.m
+	./selfie -l sample.m -conc 2 -m 3
+
+assignment3-os:
+	./selfie -c selfie.c -o selfie.m
+	./selfie -c testfiles/shmexample.c selfie.c -o sample.m
+	./selfie -l selfie.m -k 3 -l sample.m -u -m 2
 	
 
 
