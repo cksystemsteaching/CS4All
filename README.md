@@ -100,3 +100,27 @@ Use these primitives to implement semaphores as a library completely outside of 
 As always, write examples that exercise all the new functionality and finally document the what, the why and any problems encountered.
 
 Again, reuse the repositories from Assignment 3.
+
+
+Assignment 6: Hardware/Software codesign
+----------------------------------------
+__Deadline__: December 6, 7pm
+
+The goal of this assignment is to disentagle the hardware and software aspects
+of your extensions to selfie.
+
+Your main task is to come up with a good interface between the processor and the operating system.
+
+The operating system should support at least the functionality of assignments 3-5.
+In particular:
+* multitasking and multithreading
+* virtual memory (with protection)
+* synchronization primitives such as locks and condition variables
+
+Try to keep the processor as simple as possible without putting too much
+restrictions on the operating system. So, for example:
+* keep the processor state small
+* give the OS full control over the memory (do not impose restrictings on where to place what)
+* it should not be too hard for other teams to port their OS to your processor
+
+Document the design of your processor and OS in a `txt`, `md` or `pdf` file.
