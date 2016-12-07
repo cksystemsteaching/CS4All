@@ -140,3 +140,20 @@ Assignment 4: Threads and locks
 * Implement a single global lock through syscalls, e.g., a lock() and unlock() call.
 * Implement a user program that demonstrates mutual exclusion, e.g, show that one process inside the critical section makes progress, processes not taking the lock make progress, and processes waiting for the lock do not make progress. Hint: you can implement the [getpid](http://linux.die.net/man/2/getpid) system call to identify processes.
 * Experiment with and demonstrate different interleavings: using locks, no locks, different time slices
+
+* __Deadline__: Dec 12, 8pm (hard, no extensions)
+-----------
+
+[Lecture 8](https://myfiles.sbg.ac.at/index.php/s/2kxDQ4EdMfLDR8F)
+-----------
+
+Assignment 5: Synchronization 
+-------------------------------------------------------
+
+* Implement in selfie a mechanism that allows multi-readers-single-writer access, where:
+ - Multiple tasks want to access a shared data element (e.g., an array) in reading or writing
+ - Tasks that only read from the data element are allowed to do so simultaneously
+ - If a task wants to write, it must first get exclusive access – no other task may access the data element in reading or writing
+* Demonstrate this with a user program
+
+* __Deadline__: Dec 19, 8pm (hard, no extensions)
