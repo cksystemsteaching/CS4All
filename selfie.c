@@ -1238,28 +1238,27 @@ void deleteShmObject(int shmId);
 // +---+----------+
 
 // getters for shared memory objects
-int* getNextShmObject(int* shmObject) { return (int*) *(shmObject + 4);       }
-int  getShmObjectID(int* shmObject)   { return        *(shmObject); }
-int* getPtrShmObject(int* shmObject) { return (int*) *(shmObject + 1); }
-int  getSizeShmObject(int* shmObject) { return        *(shmObject + 2); }
-int  getAccShmObject(int* shmObject)  { return        *(shmObject + 3); }
+int  getShmObjectID(int* shmObject)   { return        *(shmObject + 0); }
+int* getShmObjectPtr(int* shmObject)  { return (int*) *(shmObject + 1); }
+int  getShmObjectSize(int* shmObject) { return        *(shmObject + 2); }
+int  getShmObjectAcc(int* shmObject)  { return        *(shmObject + 3); }
+int* getNextShmObject(int* shmObject) { return (int*) *(shmObject + 4); }
 
 // setters for shared memory objects
-void setNextShmObject(int* shmObject, int* next) { *(shmObject + 4)      = (int) next; }
-void setShmObjectID(int* shmObject, int id)      { *(shmObject + 0) = id;         }
-void setShmPtr(int* shmObject, int* Ptr)          { *(shmObject + 1) = (int) Ptr; }
-void setShmSize(int* shmObject, int size)           { *(shmObject + 2) = size;       }
-void setAccesses(int* shmObject, int accesses)   { *(shmObject + 3) = accesses;   }
+void setShmObjectID(int* shmObject, int id)        { *(shmObject + 0) = id;         }
+void setShmObjectPtr(int* shmObject, int* ptr)     { *(shmObject + 1) = (int) ptr;  }
+void setShmObjectSize(int* shmObject, int size)    { *(shmObject + 2) = size;       }
+void setShmObjectAcc(int* shmObject, int accesses) { *(shmObject + 3) = accesses;   }
+void setNextShmObject(int* shmObject, int* next)   { *(shmObject + 4) = (int) next; }
 
 // open/create new shared memory object
 int* createShmObject(int shmId) {
   int* entry;
   entry = allocateShm(shmId);
 
-  if(shmObjects == (int*) 0) {
+  if (shmObjects == (int*) 0) {
     shmObjects = entry;  
-  }
-  else {
+  } else {
     setNextShmObject(entry, shmObjects);
     shmObjects = entry;  
   }
@@ -1269,17 +1268,16 @@ int* createShmObject(int shmId) {
 
 // allocate memory for shm object
 int* allocateShm(int shmId) {
-  return zalloc(5*SIZEOFINTSTAR);
+  return zalloc(5 * SIZEOFINTSTAR);
 }
 
 // searches for an shm object and returns a pointer to that object
 int* findShmObject(int shmId) {
-
   int* current;
 
   current = shmObjects;
-  while(current != (int*) 0) {
-    if(getShmObjectID(current) == shmId) {
+  while (current != (int*) 0) {
+    if (getShmObjectID(current) == shmId) {
       return current;    
     }
     
@@ -1289,30 +1287,27 @@ int* findShmObject(int shmId) {
   return (int*) 0;
 }
 
-
 // delete existing shm object if it's not used anymore (needed when shm_close is called)
 void deleteShmObject(int shmId) {
-
   int* prev;  
   int* toDelete;
   
-  if(shmObjects != (int*) 0) {
+  if (shmObjects != (int*) 0) {
     prev = shmObjects;
     
-    if(getShmObjectID(prev) == shmId) {
+    if (getShmObjectID(prev) == shmId) {
       shmObjects = (int*) 0;
       return;    
     }
 
-    while(getNextShmObject(prev) != (int*) 0) {
-      if(getShmObjectID(getNextShmObject(prev)) == shmId) {
+    while (getNextShmObject(prev) != (int*) 0) {
+      if (getShmObjectID(getNextShmObject(prev)) == shmId) {
         toDelete = getNextShmObject(prev);
         
         setNextShmObject(prev, getNextShmObject(toDelete));
         toDelete = (int*) 0;
         return;
-      }          
-      else {
+      } else {
         prev = getNextShmObject(prev);      
       }
     }
@@ -1321,14 +1316,13 @@ void deleteShmObject(int shmId) {
 }
 
 void traverseShmTable(int* t) {
-
-  if(t == (int*) 0) {
+  if (t == (int*) 0) {
     return;
   }
 
   print((int*) "ID: "); printInteger(getShmObjectID(t)); print((int*) "|");
-  print((int*) "Size: "); printInteger(getSizeShmObject(t)); print((int*) "|");
-  print((int*) "Accesses: "); printInteger(getAccShmObject(t)); print((int*) "|");
+  print((int*) "Size: "); printInteger(getShmObjectSize(t)); print((int*) "|");
+  print((int*) "Accesses: "); printInteger(getShmObjectAcc(t)); print((int*) "|");
   println();
   traverseShmTable(getNextShmObject(t));
 }
@@ -5220,8 +5214,7 @@ void emitSchedYield() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
-void implementSchedYield() { 
-
+void implementSchedYield() {
   print((int*) "Now yielding context: "); printInteger(getID(currentContext)); println();
   throwException(EXCEPTION_TIMER,0);
 }
@@ -5243,23 +5236,20 @@ void emitShmOpen() {
 }
 
 void implementShmOpen() {
-
   int name;
   int* shmEntry;
 
   //Creates or opens a new shared memory object and returns a descriptor (OS identifier) for it.
   //In case of error, it returns -1.
-
   name = *(registers+REG_A0);
 
   shmEntry = findShmObject(name);
 
-  if(shmEntry == (int*) 0) {
+  if (shmEntry == (int*) 0) {
     shmEntry = createShmObject(name);
   }
   
-  setAccesses(shmEntry, getAccShmObject(shmEntry) + 1);
-
+  setShmObjectAcc(shmEntry, getShmObjectAcc(shmEntry) + 1);
 }
 
 void emitShmSize() {
@@ -5282,34 +5272,32 @@ void emitShmSize() {
 }
 
 void implementShmSize() { 
-  int shSize;
-  int id;
+  int  shSize;
+  int  id;
   int* entry;
-  int entrySize;
+  int  entrySize;
 
   // Sets or returns the size (in bytes) of the shm object with identifier id.
   // If the object had size zero, it sets the size to shSize and returns shSize.
   // If the object had some previously set size actSize, then it ignores shSize and simply returns actSize.
- 
 
   shSize = *(registers+REG_A1);
   id     = *(registers+REG_A0);
 
   entry = findShmObject(id);
 
-  if(entry == (int*) 0) {
+  if (entry == (int*) 0) {
     print((int*) "Unable to open shared memory id "); printInteger(id); println();
   }
 
-  entrySize = getSizeShmObject(entry);
-  
-  if(entrySize > 0) {
+  entrySize = getShmObjectSize(entry);
+
+  if (entrySize > 0) {
     //return entrySize;
   }
-  
-  setShmSize(entry, shSize);
-//  setShmPtr(entry, zalloc(shSize));
-  
+
+  setShmObjectSize(entry, shSize);
+//  setShmObjectPtr(entry, zalloc(shSize));
 
   print((int*) "shSize ##########: ");
   printInteger(shSize);
@@ -5338,31 +5326,27 @@ void emitShmMap() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
-void implementShmMap() { 
+void implementShmMap() {
+  int id;
+  int addr;
 
-//  int id;
-//  int addr;
-//
-//  print((int*) "SHM MAP "); println();
-//  // Maps the virtual address addr to the start of the shared memory identified by id.
-//  // If addr is zero, then memory is allocated first, of the size equal to the shared memory size.
-//  // Returns virtual address actually used for mapping, 0 for error.
-//
-//
-//  id   = *(registers+REG_A1);
-//  addr = *(registers+REG_A0);
-//  print((int*) "id     ##########: ");
-//  printInteger(id);
-//  println();
-//  print((int*) "addr   ##########: ");
-//  print(addr);
-//  println();
+  print((int*) "SHM MAP "); println();
+  // Maps the virtual address addr to the start of the shared memory identified by id.
+  // If addr is zero, then memory is allocated first, of the size equal to the shared memory size.
+  // Returns virtual address actually used for mapping, 0 for error.
 
+  id   = *(registers+REG_A1);
+  addr = *(registers+REG_A0);
+  print((int*) "id     ##########: ");
+  printInteger(id);
+  println();
+  print((int*) "addr   ##########: ");
+  print(addr);
+  println();
 }
 
 void emitShmClose() {
-//  // create entry in symboltable for shm_close
-
+  // create entry in symboltable for shm_close
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_close", 0, PROCEDURE, INT_T, 0, binaryLength);
 
   emitIFormat(OP_LW, REG_SP, REG_A0, 0); // int id
@@ -5377,8 +5361,7 @@ void emitShmClose() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
-void implementShmClose() { 
-
+void implementShmClose() {
   int id;
   int* entry;
   int counter;
@@ -5392,24 +5375,20 @@ void implementShmClose() {
 
   entry = findShmObject(id);
 
-  if(entry == (int*) 0) {
+  if (entry == (int*) 0) {
     print((int*) "Unable to find shmObject id: "); printInteger(id); println();
   }
 
-  counter = getAccShmObject(entry)-1;
-  setAccesses(entry, counter);
+  counter = getShmObjectAcc(entry)-1;
+  setShmObjectAcc(entry, counter);
 
-  if(counter == 0) {
+  if (counter == 0) {
     deleteShmObject(id);
   }
   
- 
   print((int*) "id     ##########: ");
   printInteger(id);
   println();
-
-  
-
 }
 
 // -----------------------------------------------------------------
@@ -7212,7 +7191,7 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
     fromContext = findContext(fromID, usedContexts);
     fromParentID = getParent(fromContext);
 
-    if(getStatus(fromContext) == STATUS_EXITING) {
+    if (getStatus(fromContext) == STATUS_EXITING) {
       usedContexts = deleteContext(fromContext, usedContexts);
     }
 
