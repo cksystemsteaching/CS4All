@@ -124,3 +124,23 @@ restrictions on the operating system. So, for example:
 * it should not be too hard for other teams to port their OS to your processor
 
 Document the design of your processor and OS in a `txt`, `md` or `pdf` file.
+
+
+Assignment 7: Implementation
+----------------------------
+__Deadline__: December 20, 5pm
+
+Implement your design from Assignment 6.
+
+You may of course change parts of your design as your knowledge increases during implementation,
+but explain these changes and adapt your design document accordingly.
+
+Clearly separate all the OS related code, you may want to put in a separate `kernel.c` file.
+
+Adapt the `make test` so that it shows self compilation and execution.
+Write additional tests that exercise all the functionality (multithreading etc.) of your OS.
+Put these additional tests in separate files!
+
+Commit your submission to the `master` branch.
+
+As always, document what you did and explain your design choices.
