@@ -1251,24 +1251,28 @@ void setShmObjectSize(int* shmObject, int size)    { *(shmObject + 2) = size;   
 void setShmObjectAcc(int* shmObject, int accesses) { *(shmObject + 3) = accesses;   }
 void setNextShmObject(int* shmObject, int* next)   { *(shmObject + 4) = (int) next; }
 
+// allocate memory for shm object
+int* allocateShm(int shmId) {
+  return zalloc(5 * SIZEOFINTSTAR);
+}
+
 // open/create new shared memory object
 int* createShmObject(int shmId) {
   int* entry;
   entry = allocateShm(shmId);
 
   if (shmObjects == (int*) 0) {
-    shmObjects = entry;  
+    print((int*) "HERE ##################"); println();
+    shmObjects = entry;
+    setShmObjectID(entry, shmId);
   } else {
+    print((int*) "HIII ##################"); println();
     setNextShmObject(entry, shmObjects);
-    shmObjects = entry;  
+    setShmObjectID(entry, shmId);
+    //shmObjects = entry; // why should we do this?
   }
 
   return entry;
-}
-
-// allocate memory for shm object
-int* allocateShm(int shmId) {
-  return zalloc(5 * SIZEOFINTSTAR);
 }
 
 // searches for an shm object and returns a pointer to that object
@@ -1278,12 +1282,10 @@ int* findShmObject(int shmId) {
   current = shmObjects;
   while (current != (int*) 0) {
     if (getShmObjectID(current) == shmId) {
-      return current;    
+      return current;
     }
-    
     current = getNextShmObject(current);
   }
-
   return (int*) 0;
 }
 
@@ -2413,10 +2415,10 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
     local_symbol_table = newEntry;
   } else {
 
-    println(); println();
-    print((int*) "I try to write "); println();
-    print(string);println();
-    print((int*) "================================================================"); println();
+//    println(); println();
+//    print((int*) "I try to write "); println();
+//    print(string);println();
+//    print((int*) "================================================================"); println();
 
     // library procedures
     setScope(newEntry, REG_GP);
@@ -5235,12 +5237,13 @@ void emitShmOpen() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
+// Creates or opens a new shared memory object and returns
+// a descriptor (OS identifier) for it.
+// In case of error, it returns -1.
 void implementShmOpen() {
   int name;
   int* shmEntry;
 
-  //Creates or opens a new shared memory object and returns a descriptor (OS identifier) for it.
-  //In case of error, it returns -1.
   name = *(registers+REG_A0);
 
   shmEntry = findShmObject(name);
@@ -5248,8 +5251,17 @@ void implementShmOpen() {
   if (shmEntry == (int*) 0) {
     shmEntry = createShmObject(name);
   }
-  
+
+  // set return value (id of shm object; -1 in case of error)
+  if (shmEntry != (int*) 0) {
+    *(registers+REG_V0) = name;
+  } else {
+    *(registers+REG_V0) = -1;
+  }
+
   setShmObjectAcc(shmEntry, getShmObjectAcc(shmEntry) + 1);
+
+  print((int*) "opened shm id "); printInteger(name); println();
 }
 
 void emitShmSize() {
@@ -5271,40 +5283,38 @@ void emitShmSize() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
+// Sets or returns the size (in bytes) of the shm object with
+// identifier id.
+// If the object had size zero, it sets the size to shSize
+// and returns shSize.
+// If the object had some previously set size actSize, then
+// it ignores shSize and simply returns actSize.
 void implementShmSize() { 
   int  shSize;
   int  id;
   int* entry;
   int  entrySize;
 
-  // Sets or returns the size (in bytes) of the shm object with identifier id.
-  // If the object had size zero, it sets the size to shSize and returns shSize.
-  // If the object had some previously set size actSize, then it ignores shSize and simply returns actSize.
-
   shSize = *(registers+REG_A1);
   id     = *(registers+REG_A0);
+  print((int*) "shSize ##########: "); printInteger(shSize);
+  print((int*) "; id ##########: "); printInteger(id); println();
 
   entry = findShmObject(id);
-
   if (entry == (int*) 0) {
     print((int*) "Unable to open shared memory id "); printInteger(id); println();
   }
 
-  entrySize = getShmObjectSize(entry);
-
-  if (entrySize > 0) {
-    //return entrySize;
-  }
-
   setShmObjectSize(entry, shSize);
 //  setShmObjectPtr(entry, zalloc(shSize));
+  entrySize = getShmObjectSize(entry);
+  print((int*) "entrySize #######: "); printInteger(entrySize); println();
 
-  print((int*) "shSize ##########: ");
-  printInteger(shSize);
-  println();
-  print((int*) "id     ##########: ");
-  printInteger(id);
-  println();
+  if (entrySize > 0) {
+    *(registers+REG_V0) = entrySize;
+  } else {
+    *(registers+REG_V0) = 0;
+  }
 }
 
 void emitShmMap() {
@@ -5326,15 +5336,17 @@ void emitShmMap() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
+// Maps the virtual address addr to the start of the shared
+// memory identified by id.
+// If addr is zero, then memory is allocated first, of the
+// size equal to the shared memory size.
+// Returns virtual address actually used for mapping,
+// 0 for error.
 void implementShmMap() {
   int id;
   int addr;
 
   print((int*) "SHM MAP "); println();
-  // Maps the virtual address addr to the start of the shared memory identified by id.
-  // If addr is zero, then memory is allocated first, of the size equal to the shared memory size.
-  // Returns virtual address actually used for mapping, 0 for error.
-
   id   = *(registers+REG_A1);
   addr = *(registers+REG_A0);
   print((int*) "id     ##########: ");
@@ -5361,15 +5373,18 @@ void emitShmClose() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
+// Decouples the calling process from the shared memory object
+// with descriptor id.
+// Previously mapped memory is now private to the process.
+// After all processes have closed their access to a shared
+// memory object, the OS should free the resources associated
+// with the object.
 void implementShmClose() {
   int id;
   int* entry;
   int counter;
 
   print((int*) "SHM CLOSE "); println();
-  // Decouples the calling process from the shared memory object with descriptor id.
-  // Previously mapped memory is now private to the process.
-  // After all processes have closed their access to a shared memory object, the OS should free the resources associated with the object.
 
   id = *(registers+REG_A0);
 
@@ -5385,7 +5400,7 @@ void implementShmClose() {
   if (counter == 0) {
     deleteShmObject(id);
   }
-  
+
   print((int*) "id     ##########: ");
   printInteger(id);
   println();
@@ -7259,9 +7274,7 @@ int schedule() {
   }
 
   print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
-
   //traverseContexts(usedContexts);
-
   return toId;
 }
 
