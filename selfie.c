@@ -92,8 +92,8 @@ int* malloc(int size);
 // ----------------------- LIBRARY PROCEDURES ----------------------
 // -----------------------------------------------------------------
 
-void initLibrary();
 void resetLibrary();
+void initLibrary();
 
 int twoToThePowerOf(int p);
 int leftShift(int n, int b);
@@ -833,6 +833,15 @@ void implementMalloc();
 void emitSchedYield();
 void implementSchedYield();
 
+void emitGetPID();
+void implementGetPID();
+
+void emitPrintInteger();
+void implementPrintInteger();
+
+void emitThreadStart();
+void implementThreadStart();
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_read   = 0;
@@ -849,6 +858,10 @@ int SYSCALL_OPEN   = 4005;
 int SYSCALL_MALLOC = 4045;
 
 int SYSCALL_SCHED_YIELD = 4158; // linux opcode for sched yield
+int SYSCALL_GET_PID = 4039;
+
+int SYSCALL_PRINT_INTEGER = 5001;
+int SYSCALL_THREAD_START = 5002;
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
@@ -1031,7 +1044,7 @@ int debug_exception = 0;
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
-int TIMESLICE = 5000;
+int TIMESLICE = 100;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1173,6 +1186,7 @@ int STATUS_EXITING = 4;
 // | 8 | brk    | break between code, data, and heap
 // | 9 | parent | ID of context that created this context
 // | 10| status | Status of the context
+// | 11| SP			| Status of the context
 // +---+--------+
 
 int* getNextContext(int* context) { return (int*) *context; }
@@ -1186,6 +1200,7 @@ int* getPT(int* context)          { return (int*) *(context + 7); }
 int  getBreak(int* context)       { return        *(context + 8); }
 int  getParent(int* context)      { return        *(context + 9); }
 int  getStatus(int* context)      { return        *(context + 10); }
+int	 getSP(int* context)					{ return				*(context + 11); }
 
 void setNextContext(int* context, int* next) { *context       = (int) next; }
 void setPrevContext(int* context, int* prev) { *(context + 1) = (int) prev; }
@@ -1198,7 +1213,7 @@ void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
 void setBreak(int* context, int brk)         { *(context + 8) = brk; }
 void setParent(int* context, int id)         { *(context + 9) = id; }
 void setStatus(int* context, int id)         { *(context + 10) = id; }
-
+void setSP(int* context, int sp)						 { *(context + 11) = sp; }
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
 // -----------------------------------------------------------------
@@ -4040,6 +4055,9 @@ void selfie_compile() {
   emitOpen();
   emitMalloc();
   emitSchedYield();
+	emitGetPID();
+	emitPrintInteger();
+	emitThreadStart();
 
   emitID();
   emitCreate();
@@ -5082,6 +5100,75 @@ void implementSchedYield() { // TODO: should we change method type to int?
 	throwException(EXCEPTION_TIMER,0);
 }
 
+void emitGetPID() {
+  // create entry in symboltable for sched_yield
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "getPID", 0, PROCEDURE, INT_T, 0, binaryLength); // use INT_T, as sched_yield should return an integer value
+
+  // load correct syscall number
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_GET_PID);
+  // invoke the syscall
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementGetPID() {
+
+	print((int*) "Get PID ");	printInteger(getID(currentContext)); println();
+
+	*(registers+REG_V0) = getID(currentContext);
+}
+
+void emitPrintInteger() {
+  // create entry in symboltable for sched_yield
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "printInteger", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // int
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  // load correct syscall number
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_PRINT_INTEGER);
+  // invoke the syscall
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementPrintInteger() {
+	printInteger(*(registers+REG_A0));
+	println();
+}
+
+void emitThreadStart() {
+  // create entry in symboltable for sched_yield
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "threadStart", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // int
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  // load correct syscall number
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_THREAD_START);
+  // invoke the syscall
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementThreadStart() {
+
+	bumpID = createID(bumpID);
+
+	print((int*) "Start thread "); printInteger(bumpID); println();
+
+
+	usedContexts = createThread(bumpID, getID(currentContext), usedContexts);
+
+  traverseContexts(usedContexts);
+}
+
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
@@ -5605,6 +5692,12 @@ void fct_syscall() {
       implementMap();
     else if (*(registers+REG_V0) == SYSCALL_SCHED_YIELD)
       implementSchedYield();
+    else if(*(registers+REG_V0) == SYSCALL_GET_PID)
+			implementGetPID();
+    else if(*(registers+REG_V0) == SYSCALL_PRINT_INTEGER)
+    	implementPrintInteger();
+    else if(*(registers+REG_V0) == SYSCALL_THREAD_START)
+    	implementThreadStart();
     else {
       pc = pc - WORDSIZE;
 
@@ -6529,7 +6622,7 @@ int* allocateContext(int ID, int parentID) {
   int* context;
 
   if (freeContexts == (int*) 0)
-    context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
+    context = malloc(4 * SIZEOFINTSTAR + 7 * SIZEOFINT);
   else {
     context = freeContexts;
 
@@ -6596,17 +6689,24 @@ int* createThread(int ID, int parentID, int* in) {
 	int* parentTable;
 	int* parentCtx;
 
-	parentCtx = findContext(parentID, in);
-	parentTable = getPT(parentTable);
+	print((int*) "Creating thread "); printInteger(ID); println();
 
-	context = createContext(ID, parentID, in);
+	parentCtx = findContext(parentID, in);
+	parentTable = getPT(parentCtx);
+
+	context = createContext(ID, selfie_ID(), in);
 
 	table = getPT(context);
 
 	*(table+0) = *(parentTable+0);
 	*(table+1) = *(parentTable+1);
+	*(table+2) = *(parentTable+2);
+
+	setPC(context, pc + WORDSIZE);
 
 	setRegs(context, copyRegs(getRegs(parentCtx)));
+
+	setSP(context, getSP(parentCtx));
 
 	return context;
 }
@@ -6649,6 +6749,9 @@ void switchContext(int* from, int* to) {
   setRegLo(from, reg_lo);
   setBreak(from, brk);
 
+  setSP(from, *(REGISTERS+REG_SP));
+  *(REGISTERS+REG_SP) = getSP(to);
+
   // restore machine state
   pc        = getPC(to);
   registers = getRegs(to);
@@ -6656,6 +6759,8 @@ void switchContext(int* from, int* to) {
   reg_lo    = getRegLo(to);
   pt        = getPT(to);
   brk       = getBreak(to);
+
+
 }
 
 void freeContext(int* context) {
@@ -7051,7 +7156,7 @@ int schedule() {
     toId = getID(getNextContext(currentContext));
   }
 
-//  print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
+  print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
 
   //traverseContexts(usedContexts);
 
@@ -7153,6 +7258,8 @@ int boot(int argc, int* argv) {
   up_loadBinary(getPT(usedContexts));
   up_loadArguments(getPT(usedContexts), argc, argv);
 
+  setSP(usedContexts, loadVirtualMemory(getPT(usedContexts), VIRTUALMEMORYSIZE - WORDSIZE));
+
   // propagate page table of initial context to microkernel boot level
   down_mapPageTable(usedContexts);
 
@@ -7168,7 +7275,6 @@ int boot(int argc, int* argv) {
     repeats = repeats - 1;
   }
 
-  traverseContexts(usedContexts);
   printInteger(contextCount); println();
 
   // mipsters and hypsters handle page faults
