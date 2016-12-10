@@ -1247,7 +1247,7 @@ int* getNextShmObject(int* shmObject) { return (int*) *(shmObject + 4); }
 // setters for shared memory objects
 void setShmObjectID(int* shmObject, int id)        { *(shmObject + 0) = id;         }
 void setShmObjectPtr(int* shmObject, int* ptr)     { *(shmObject + 1) = (int) ptr;  }
-void setShmObjectSize(int* shmObject, int size)    { *(shmObject + 2) = size;       }
+void setShmObjectSize(int* shmObject, int size)    { if (getShmObjectSize(shmObject) == 0) *(shmObject + 2) = size; }
 void setShmObjectAcc(int* shmObject, int accesses) { *(shmObject + 3) = accesses;   }
 void setNextShmObject(int* shmObject, int* next)   { *(shmObject + 4) = (int) next; }
 
@@ -1262,11 +1262,11 @@ int* createShmObject(int shmId) {
   entry = allocateShm(shmId);
 
   if (shmObjects == (int*) 0) {
-    print((int*) "HERE ##################"); println();
+    //print((int*) "HERE ##################"); println();
     shmObjects = entry;
     setShmObjectID(entry, shmId);
   } else {
-    print((int*) "HIII ##################"); println();
+    //print((int*) "HIII ##################"); println();
     setNextShmObject(entry, shmObjects);
     setShmObjectID(entry, shmId);
     //shmObjects = entry; // why should we do this?
@@ -4098,7 +4098,7 @@ void bootstrapCode() {
   int savedBinaryLength;
 
   savedBinaryLength = binaryLength;
-
+//  printInteger(4); println();
   binaryLength = 0;
 
   // assert: allocatedTemporaries == 0
@@ -4106,12 +4106,12 @@ void bootstrapCode() {
   // assert: 0 <= savedBinaryLength < 2^28 (see load_integer)
 
   load_integer(savedBinaryLength);
-
+//  printInteger(5); println();
   // load binaryLength into GP register
   emitIFormat(OP_ADDIU, currentTemporary(), REG_GP, 0);
-
+//  printInteger(6); println();
   tfree(1);
-
+//  printInteger(7); println();
   // assert: allocatedTemporaries == 0
 
   // assert: 0 <= VIRTUALMEMORYSIZE - WORDSIZE < 2^28 (see load_integer)
@@ -4276,11 +4276,11 @@ void selfie_compile() {
   }
 
   codeLength = binaryLength;
-
+//  printInteger(1); println();
   emitGlobalsStrings();
-
+//  printInteger(2); println();
   bootstrapCode();
-
+//  printInteger(3); println();
   print(selfieName);
   print((int*) ": ");
   printInteger(binaryLength + WORDSIZE);
@@ -5204,16 +5204,11 @@ void implementMalloc() {
 }
 
 void emitSchedYield() {
-  // create entry in symboltable for sched_yield
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "sched_yield", 0, PROCEDURE, INT_T, 0, binaryLength); 
 
-  // load correct syscall number
-  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SCHED_YIELD);
-  // invoke the syscall
-  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
-
-  // jump back to caller
-  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SCHED_YIELD); // load correct syscall number
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL); // invoke the syscall
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR); // jump back to caller
 }
 
 void implementSchedYield() {
@@ -5222,30 +5217,22 @@ void implementSchedYield() {
 }
 
 void emitShmOpen() {
-  // create entry in symboltable for shm_open
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_open", 0, PROCEDURE, INT_T, 0, binaryLength);
 
   emitIFormat(OP_LW, REG_SP, REG_A0, 0); // int name
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
-  // load correct syscall number
-  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_OPEN);
-  // invoke the syscall
-  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
-
-  // jump back to caller
-  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_OPEN); // load correct syscall number
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL); // invoke the syscall
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR); // jump back to caller
 }
 
-// Creates or opens a new shared memory object and returns
-// a descriptor (OS identifier) for it.
-// In case of error, it returns -1.
+// Creates or opens a new shared memory object and returns a descriptor (OS identifier) for it. In case of error, it returns -1.
 void implementShmOpen() {
   int name;
   int* shmEntry;
 
   name = *(registers+REG_A0);
-
   shmEntry = findShmObject(name);
 
   if (shmEntry == (int*) 0) {
@@ -5260,12 +5247,10 @@ void implementShmOpen() {
   }
 
   setShmObjectAcc(shmEntry, getShmObjectAcc(shmEntry) + 1);
-
   print((int*) "opened shm id "); printInteger(name); println();
 }
 
 void emitShmSize() {
-  // create entry in symboltable for shm_size
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_size", 0, PROCEDURE, INT_T, 0, binaryLength);
 
   emitIFormat(OP_LW, REG_SP, REG_A1, 0); // int shSize
@@ -5274,21 +5259,13 @@ void emitShmSize() {
   emitIFormat(OP_LW, REG_SP, REG_A0, 0); // int id
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
-  // load correct syscall number
-  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_SIZE);
-  // invoke the syscall
-  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
-
-  // jump back to caller
-  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_SIZE); // load correct syscall number
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL); // invoke the syscall
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR); // jump back to caller
 }
 
-// Sets or returns the size (in bytes) of the shm object with
-// identifier id.
-// If the object had size zero, it sets the size to shSize
-// and returns shSize.
-// If the object had some previously set size actSize, then
-// it ignores shSize and simply returns actSize.
+// Sets or returns the size (in bytes) of the shm object with identifier id. If the object had size zero, it sets the
+// size to shSize and returns shSize. If the object had some previously set size actSize, then it ignores shSize and simply returns actSize.
 void implementShmSize() { 
   int  shSize;
   int  id;
@@ -5318,7 +5295,6 @@ void implementShmSize() {
 }
 
 void emitShmMap() {
-  // create entry in symboltable for shm_map
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_map", 0, PROCEDURE, INT_T, 0, binaryLength);
 
   emitIFormat(OP_LW, REG_SP, REG_A1, 0); // int id
@@ -5327,67 +5303,42 @@ void emitShmMap() {
   emitIFormat(OP_LW, REG_SP, REG_A0, 0); // int* addr
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
-  // load correct syscall number
-  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_MAP);
-  // invoke the syscall
-  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
-
-  // jump back to caller
-  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_MAP); // load correct syscall number
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL); // invoke the syscall
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR); // jump back to caller
 }
 
-// Maps the virtual address addr to the start of the shared
-// memory identified by id.
-// If addr is zero, then memory is allocated first, of the
-// size equal to the shared memory size.
-// Returns virtual address actually used for mapping,
-// 0 for error.
+// Maps the virtual address addr to the start of the shared memory identified by id. If addr is zero, then memory is allocated first, of the
+// size equal to the shared memory size. Returns virtual address actually used for mapping, 0 for error.
 void implementShmMap() {
   int id;
   int addr;
 
-  print((int*) "SHM MAP "); println();
   id   = *(registers+REG_A1);
   addr = *(registers+REG_A0);
-  print((int*) "id     ##########: ");
-  printInteger(id);
-  println();
-  print((int*) "addr   ##########: ");
-  print(addr);
-  println();
+//  print((int*) "id     ##########: "); printInteger(id); println();
+//  print((int*) "addr   ##########: "); print(addr); println();
 }
 
 void emitShmClose() {
-  // create entry in symboltable for shm_close
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "shm_close", 0, PROCEDURE, INT_T, 0, binaryLength);
 
   emitIFormat(OP_LW, REG_SP, REG_A0, 0); // int id
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
 
-  // load correct syscall number
-  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_CLOSE);
-  // invoke the syscall
-  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
-
-  // jump back to caller
-  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SHM_CLOSE); // load correct syscall number
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL); // invoke the syscall
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR); // jump back to caller
 }
 
-// Decouples the calling process from the shared memory object
-// with descriptor id.
-// Previously mapped memory is now private to the process.
-// After all processes have closed their access to a shared
-// memory object, the OS should free the resources associated
-// with the object.
+// Decouples the calling process from the shared memory object with descriptor id. Previously mapped memory is now private to the process.
+// After all processes have closed their access to a shared memory object, the OS should free the resources associated with the object.
 void implementShmClose() {
-  int id;
   int* entry;
-  int counter;
+  int  id;
+  int  counter;
 
-  print((int*) "SHM CLOSE "); println();
-
-  id = *(registers+REG_A0);
-
+  id    = *(registers+REG_A0);
   entry = findShmObject(id);
 
   if (entry == (int*) 0) {
@@ -5400,10 +5351,7 @@ void implementShmClose() {
   if (counter == 0) {
     deleteShmObject(id);
   }
-
-  print((int*) "id     ##########: ");
-  printInteger(id);
-  println();
+  print((int*) "id     ##########: "); printInteger(id); println();
 }
 
 // -----------------------------------------------------------------
