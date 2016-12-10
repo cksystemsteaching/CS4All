@@ -832,7 +832,6 @@ void implementMalloc();
 
 void emitSchedYield();
 void implementSchedYield();
-int  sched_yield();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -1139,6 +1138,9 @@ int createID(int seed);
 
 int* allocateContext(int ID, int parentID);
 int* createContext(int ID, int parentID, int* in);
+
+int* createThread(int ID, int parentID, int* in);
+int* copyRegs(int* regs);
 
 int* findContext(int ID, int* in);
 
@@ -3678,6 +3680,8 @@ void gr_procedure(int* procedure, int type) {
   int localVariables;
   int* entry;
 
+//  print(procedure); println();
+
   // assuming procedure is undefined
   isUndefined = 1;
 
@@ -5450,7 +5454,32 @@ void storePhysicalMemory(int* paddr, int data) {
 }
 
 int getFrameForPage(int* table, int page) {
-  return *(table + page);
+
+	int* seg;
+	int p;
+
+	if(page <= 31) {
+//		print((int*) "Seg 0 ");
+		seg = (int*) *(table+0);
+		p = page;
+	}
+	else if(page <= 8175) {
+//		print((int*) "Seg 1 ");
+		seg = (int*) *(table+1);
+		p = page - 32;
+	}
+	else if(page <= VIRTUALMEMORYSIZE / PAGESIZE - 1) {
+//		print((int*) "Seg 2 ");
+		seg = (int*) *(table+2);
+		p = page - 32 - 8176;
+	}
+	else {
+		print((int*) "SEG frame ERROR!!");
+	}
+
+//	print((int*) "Getting frame from page: "); printInteger(p); println();
+
+  return *(seg + p);
 }
 
 int isPageMapped(int* table, int page) {
@@ -5493,7 +5522,7 @@ int* tlb(int* table, int vaddr) {
   frame = getFrameForPage(table, page);
 
   // map virtual address to physical address
-  paddr = (vaddr - page * PAGESIZE) + frame;
+  paddr = (vaddr % PAGESIZE) + frame;
 
   if (debug_tlb) {
     print(binaryName);
@@ -6523,7 +6552,17 @@ int* allocateContext(int ID, int parentID) {
 
   // allocate zeroed memory for page table
   // TODO: save and reuse memory for page table
-  setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
+  //setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
+
+  setPT(context, zalloc(3*SIZEOFINTSTAR));
+  *(getPT(context)) = (int) zalloc(maxBinaryLength / PAGESIZE * WORDSIZE);
+  *(getPT(context) + 1) = (int) zalloc((VIRTUALMEMORYSIZE - maxBinaryLength) / PAGESIZE / 2 * WORDSIZE);
+  *(getPT(context) + 2) = (int) zalloc((VIRTUALMEMORYSIZE - maxBinaryLength) / PAGESIZE / 2 * WORDSIZE);
+
+  print((int*)"Pages total: "); printInteger(VIRTUALMEMORYSIZE / PAGESIZE); println();
+  print((int*)"Pages code: "); printInteger(maxBinaryLength / PAGESIZE); println();
+  print((int*)"Pages heap: "); printInteger((VIRTUALMEMORYSIZE - maxBinaryLength) / PAGESIZE / 2); println();
+  print((int*)"Pages stack: "); printInteger((VIRTUALMEMORYSIZE - maxBinaryLength) / PAGESIZE / 2); println();
 
   // heap starts where it is safe to start
   setBreak(context, maxBinaryLength);
@@ -6548,6 +6587,44 @@ int* createContext(int ID, int parentID, int* in) {
   setStatus(context, STATUS_READY);
 
   return context;
+}
+
+int* createThread(int ID, int parentID, int* in) {
+
+	int* context;
+	int* table;
+	int* parentTable;
+	int* parentCtx;
+
+	parentCtx = findContext(parentID, in);
+	parentTable = getPT(parentTable);
+
+	context = createContext(ID, parentID, in);
+
+	table = getPT(context);
+
+	*(table+0) = *(parentTable+0);
+	*(table+1) = *(parentTable+1);
+
+	setRegs(context, copyRegs(getRegs(parentCtx)));
+
+	return context;
+}
+
+int* copyRegs(int* regs) {
+
+	int i;
+	int* ret;
+
+	ret = zalloc(NUMBEROFREGISTERS * WORDSIZE);
+
+	while(i < NUMBEROFREGISTERS) {
+
+		*(ret+i) = *(regs+i);
+		i = i + 1;
+	}
+
+	return ret;
 }
 
 int* findContext(int ID, int* in) {
@@ -6622,7 +6699,32 @@ int* deleteContext(int* context, int* from) {
 
 void mapPage(int* table, int page, int frame) {
   // assert: 0 <= page < VIRTUALMEMORYSIZE / PAGESIZE
-  *(table + page) = frame;
+
+	int* seg;
+	int p;
+
+	if(page <= 31) {
+//		print((int*) "Seg 0 ");
+		seg = (int*) *(table+0);
+		p = page;
+	}
+	else if(page <= 8175) {
+//		print((int*) "Seg 1 ");
+		seg = (int*) *(table+1);
+		p = page - 32;
+	}
+	else if(page <= VIRTUALMEMORYSIZE / PAGESIZE - 1) {
+//		print((int*) "Seg 2 ");
+		seg = (int*) *(table+2);
+		p = page - 32 - 8176;
+	}
+	else {
+		print((int*) "SEG map ERROR!!");
+	}
+
+//	print((int*) "Mapping page: "); printInteger(p); println();
+
+  *(seg + p) = frame;
 }
 
 // -----------------------------------------------------------------
@@ -6691,6 +6793,7 @@ void pfree(int* frame) {
 void up_loadBinary(int* table) {
   int vaddr;
 
+  print((int*) "Start binary upload"); println();
   // binaries start at lowest virtual address
   vaddr = 0;
 
@@ -6699,6 +6802,8 @@ void up_loadBinary(int* table) {
 
     vaddr = vaddr + WORDSIZE;
   }
+
+  print((int*) "End binary upload: "); printInteger(vaddr/PAGESIZE); println();
 }
 
 int up_loadString(int* table, int* s, int SP) {
@@ -6728,6 +6833,8 @@ void up_loadArguments(int* table, int argc, int* argv) {
   int vargv;
   int i_argc;
   int i_vargv;
+
+  print((int*) "Start argument upload"); println();
 
   // arguments are pushed onto stack which starts at highest virtual address
   SP = VIRTUALMEMORYSIZE - WORDSIZE;
@@ -6771,6 +6878,8 @@ void up_loadArguments(int* table, int argc, int* argv) {
 
   // store stack pointer at highest virtual address for binary to retrieve
   mapAndStoreVirtualMemory(table, VIRTUALMEMORYSIZE - WORDSIZE, SP);
+
+  print((int*) "End argument upload "); printInteger((VIRTUALMEMORYSIZE - WORDSIZE) / PAGESIZE); println();
 }
 
 void mapUnmappedPages(int* table) {
@@ -6792,6 +6901,8 @@ void mapUnmappedPages(int* table) {
 void down_mapPageTable(int* context) {
   int page;
 
+  print((int*) "Start Down mapPage"); println();
+
   // assert: context page table is only mapped from beginning up and end down
 
   page = 0;
@@ -6809,6 +6920,8 @@ void down_mapPageTable(int* context) {
 
     page = page - 1;
   }
+
+  print((int*) "End Down mapPage"); println();
 }
 
 int runUntilExitWithoutExceptionHandling(int toID) {
@@ -6932,13 +7045,13 @@ int schedule() {
 
   fromId = getID(currentContext);
 
-  if (getNextContext(currentContext) == 0) {
+  if (getNextContext(currentContext) == (int*) 0) {
     toId = getID(usedContexts);
   } else {
     toId = getID(getNextContext(currentContext));
   }
 
-  print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
+//  print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
 
   //traverseContexts(usedContexts);
 
