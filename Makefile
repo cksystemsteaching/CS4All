@@ -3,6 +3,7 @@ CFLAGS := -w -m32 -D'main(a,b)=main(a,char**argv)' -g
 
 # Compile selfie.c into selfie executable
 selfie: selfie.c
+	git clean -dfx
 	$(CC) $(CFLAGS) $< -o $@
 
 # Consider these targets as targets, not files

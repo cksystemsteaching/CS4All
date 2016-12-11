@@ -1044,7 +1044,7 @@ int debug_exception = 0;
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
-int TIMESLICE = 100;
+int TIMESLICE = 1000;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1152,6 +1152,7 @@ int createID(int seed);
 int* allocateContext(int ID, int parentID);
 int* createContext(int ID, int parentID, int* in);
 
+int* copyPage(int* from, int* to);
 int* createThread(int ID, int parentID, int* in);
 int* copyRegs(int* regs);
 
@@ -5145,9 +5146,6 @@ void emitThreadStart() {
   // create entry in symboltable for sched_yield
   createSymbolTableEntry(LIBRARY_TABLE, (int*) "threadStart", 0, PROCEDURE, VOID_T, 0, binaryLength);
 
-  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // int
-  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
-
   // load correct syscall number
   emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_THREAD_START);
   // invoke the syscall
@@ -5162,7 +5160,6 @@ void implementThreadStart() {
 	bumpID = createID(bumpID);
 
 	print((int*) "Start thread "); printInteger(bumpID); println();
-
 
 	usedContexts = createThread(bumpID, getID(currentContext), usedContexts);
 
@@ -6682,12 +6679,26 @@ int* createContext(int ID, int parentID, int* in) {
   return context;
 }
 
+int* copyPage(int* from, int* to) {
+	int i;
+	i = 0;
+
+	while(i*WORDSIZE < PAGESIZE) {
+		*(to+i) = *(from+i);
+
+		i = i + 1;
+	}
+
+	return to;
+}
+
 int* createThread(int ID, int parentID, int* in) {
 
 	int* context;
 	int* table;
 	int* parentTable;
 	int* parentCtx;
+	int i;
 
 	print((int*) "Creating thread "); printInteger(ID); println();
 
@@ -6700,7 +6711,17 @@ int* createThread(int ID, int parentID, int* in) {
 
 	*(table+0) = *(parentTable+0);
 	*(table+1) = *(parentTable+1);
-	*(table+2) = *(parentTable+2);
+
+	//Copy stack
+	i = 0;
+	while(i <= 8175) {
+		if(isPageMapped(parentTable, 8207 + i)) {
+			print((int*) "copy page: "); printInteger(i); println();
+			mapPage(table, 8207 + i, copyPage(*(parentTable+i), palloc()));
+		}
+
+		i = i + 1;
+	}
 
 	setPC(context, pc + WORDSIZE);
 
@@ -6749,8 +6770,8 @@ void switchContext(int* from, int* to) {
   setRegLo(from, reg_lo);
   setBreak(from, brk);
 
-  setSP(from, *(REGISTERS+REG_SP));
-  *(REGISTERS+REG_SP) = getSP(to);
+//  setSP(from, *(REGISTERS+REG_SP));
+//  *(REGISTERS+REG_SP) = getSP(to);
 
   // restore machine state
   pc        = getPC(to);
@@ -7156,7 +7177,7 @@ int schedule() {
     toId = getID(getNextContext(currentContext));
   }
 
-  print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
+//  print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
 
   //traverseContexts(usedContexts);
 
@@ -7258,7 +7279,7 @@ int boot(int argc, int* argv) {
   up_loadBinary(getPT(usedContexts));
   up_loadArguments(getPT(usedContexts), argc, argv);
 
-  setSP(usedContexts, loadVirtualMemory(getPT(usedContexts), VIRTUALMEMORYSIZE - WORDSIZE));
+//  setSP(usedContexts, loadVirtualMemory(getPT(usedContexts), VIRTUALMEMORYSIZE - WORDSIZE));
 
   // propagate page table of initial context to microkernel boot level
   down_mapPageTable(usedContexts);
