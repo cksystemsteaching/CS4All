@@ -92,8 +92,8 @@ int* malloc(int size);
 // ----------------------- LIBRARY PROCEDURES ----------------------
 // -----------------------------------------------------------------
 
-void initLibrary();
 void resetLibrary();
+void initLibrary();
 
 int twoToThePowerOf(int p);
 int leftShift(int n, int b);
@@ -830,6 +830,18 @@ void implementOpen();
 void emitMalloc();
 void implementMalloc();
 
+void emitSchedYield();
+void implementSchedYield();
+
+void emitGetPID();
+void implementGetPID();
+
+void emitPrintInteger();
+void implementPrintInteger();
+
+void emitThreadStart();
+void implementThreadStart();
+
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
 int debug_read   = 0;
@@ -844,6 +856,12 @@ int SYSCALL_WRITE  = 4004;
 int SYSCALL_OPEN   = 4005;
 
 int SYSCALL_MALLOC = 4045;
+
+int SYSCALL_SCHED_YIELD = 4158; // linux opcode for sched yield
+int SYSCALL_GET_PID = 4039;
+
+int SYSCALL_PRINT_INTEGER = 5001;
+int SYSCALL_THREAD_START = 5002;
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
@@ -1026,7 +1044,7 @@ int debug_exception = 0;
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
-int TIMESLICE = 10000000;
+int TIMESLICE = 5000;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -1050,11 +1068,15 @@ int cycles = 0; // cycle counter where one cycle is equal to one instruction
 
 int timer = 0; // counter for timer interrupt
 
+int repeats = 0; // number of repeats (gets set when option "-r" is used)
+
 int mipster = 0; // flag for forcing to use mipster rather than hypster
 
 int interpret = 0; // flag for executing or disassembling code
 
 int debug = 0; // flag for logging code execution
+
+int debugLocally = 0; // flag for debugging locally
 
 int  calls           = 0;        // total number of executed procedure calls
 int* callsPerAddress = (int*) 0; // number of executed calls of each procedure
@@ -1067,6 +1089,8 @@ int* loadsPerAddress = (int*) 0; // number of executed loads per load operation
 
 int  stores           = 0;        // total number of executed memory stores
 int* storesPerAddress = (int*) 0; // number of executed stores per store operation
+
+int contextCount = 0;
 
 // ------------------------- INITIALIZATION ------------------------
 
@@ -1128,6 +1152,10 @@ int createID(int seed);
 int* allocateContext(int ID, int parentID);
 int* createContext(int ID, int parentID, int* in);
 
+int* copyPage(int* from, int* to);
+int* createThread(int ID, int parentID, int* in);
+int* copyRegs(int* regs);
+
 int* findContext(int ID, int* in);
 
 void switchContext(int* from, int* to);
@@ -1135,7 +1163,16 @@ void switchContext(int* from, int* to);
 void freeContext(int* context);
 int* deleteContext(int* context, int* from);
 
+void traverseContexts(int* ctxHead);
+
 void mapPage(int* table, int page, int frame);
+
+//Context status constants
+int STATUS_SUSPENDED = 0;
+int STATUS_RUNNING = 1;
+int STATUS_READY = 2;
+int STATUS_WAITING = 3;
+int STATUS_EXITING = 4;
 
 // context struct:
 // +---+--------+
@@ -1149,6 +1186,8 @@ void mapPage(int* table, int page, int frame);
 // | 7 | pt     | pointer to page table
 // | 8 | brk    | break between code, data, and heap
 // | 9 | parent | ID of context that created this context
+// | 10| status | Status of the context
+// | 11| SP			| Status of the context
 // +---+--------+
 
 int* getNextContext(int* context) { return (int*) *context; }
@@ -1161,6 +1200,8 @@ int  getRegLo(int* context)       { return        *(context + 6); }
 int* getPT(int* context)          { return (int*) *(context + 7); }
 int  getBreak(int* context)       { return        *(context + 8); }
 int  getParent(int* context)      { return        *(context + 9); }
+int  getStatus(int* context)      { return        *(context + 10); }
+int	 getSP(int* context)					{ return				*(context + 11); }
 
 void setNextContext(int* context, int* next) { *context       = (int) next; }
 void setPrevContext(int* context, int* prev) { *(context + 1) = (int) prev; }
@@ -1172,7 +1213,8 @@ void setRegLo(int* context, int reg_lo)      { *(context + 6) = reg_lo; }
 void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
 void setBreak(int* context, int brk)         { *(context + 8) = brk; }
 void setParent(int* context, int id)         { *(context + 9) = id; }
-
+void setStatus(int* context, int id)         { *(context + 10) = id; }
+void setSP(int* context, int sp)						 { *(context + 11) = sp; }
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
 // -----------------------------------------------------------------
@@ -1224,6 +1266,7 @@ void down_mapPageTable(int* context);
 
 int runUntilExitWithoutExceptionHandling(int toID);
 int runOrHostUntilExitWithPageFaultHandling(int toID);
+int schedule();
 
 int bootminmob(int argc, int* argv, int machine);
 int boot(int argc, int* argv);
@@ -3653,6 +3696,8 @@ void gr_procedure(int* procedure, int type) {
   int localVariables;
   int* entry;
 
+//  print(procedure); println();
+
   // assuming procedure is undefined
   isUndefined = 1;
 
@@ -4010,6 +4055,10 @@ void selfie_compile() {
   emitWrite();
   emitOpen();
   emitMalloc();
+  emitSchedYield();
+	emitGetPID();
+	emitPrintInteger();
+	emitThreadStart();
 
   emitID();
   emitCreate();
@@ -4234,8 +4283,8 @@ void printOpcode(int opcode) {
 void printFunction(int function) {
   print((int*) *(FUNCTIONS + function));
 }
-
 void decode() {
+
   opcode = getOpcode(ir);
 
   if (opcode == 0)
@@ -5032,6 +5081,93 @@ void implementMalloc() {
   }
 }
 
+void emitSchedYield() {
+  // create entry in symboltable for sched_yield
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "sched_yield", 0, PROCEDURE, INT_T, 0, binaryLength); // use INT_T, as sched_yield should return an integer value
+
+  // load correct syscall number
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_SCHED_YIELD);
+  // invoke the syscall
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementSchedYield() { // TODO: should we change method type to int?
+
+	print((int*) "Now yielding context: "); printInteger(getID(currentContext)); println();
+
+	throwException(EXCEPTION_TIMER,0);
+}
+
+void emitGetPID() {
+  // create entry in symboltable for sched_yield
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "getPID", 0, PROCEDURE, INT_T, 0, binaryLength); // use INT_T, as sched_yield should return an integer value
+
+  // load correct syscall number
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_GET_PID);
+  // invoke the syscall
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementGetPID() {
+
+	print((int*) "Get PID ");	printInteger(getID(currentContext)); println();
+
+	*(registers+REG_V0) = getID(currentContext);
+}
+
+void emitPrintInteger() {
+  // create entry in symboltable for sched_yield
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "printInteger", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // int
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  // load correct syscall number
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_PRINT_INTEGER);
+  // invoke the syscall
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementPrintInteger() {
+	printInteger(*(registers+REG_A0));
+	println();
+}
+
+void emitThreadStart() {
+  // create entry in symboltable for sched_yield
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "threadStart", 0, PROCEDURE, VOID_T, 0, binaryLength);
+
+  // load correct syscall number
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_THREAD_START);
+  // invoke the syscall
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  // jump back to caller
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementThreadStart() {
+
+	bumpID = createID(bumpID);
+
+	print((int*) "Start thread "); printInteger(bumpID); println();
+
+	usedContexts = createThread(bumpID, getID(currentContext), usedContexts);
+
+	print((int*) "Started thread "); printInteger(bumpID); println();
+  traverseContexts(usedContexts);
+}
+
+
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
 // -----------------------------------------------------------------
@@ -5154,6 +5290,7 @@ int doSwitch(int toID) {
     printInteger(toID);
     print((int*) " not found");
     println();
+    traverseContexts(usedContexts);
   }
 
   return fromID;
@@ -5186,7 +5323,7 @@ int mipster_switch(int toID) {
 
   runUntilException();
 
-  return getID(currentContext);
+  return fromID;
 }
 
 int hypster_switch(int toID) {
@@ -5195,6 +5332,15 @@ int hypster_switch(int toID) {
 }
 
 int selfie_switch(int toID) {
+  if (debugLocally) {
+    print((int*) "Coming from Context ");
+    printInteger(getID(currentContext));
+    println();
+    print((int*) "Now Running context ");
+    printInteger(toID);
+    println();
+  }
+
   if (mipster)
     return mipster_switch(toID);
   else
@@ -5393,7 +5539,32 @@ void storePhysicalMemory(int* paddr, int data) {
 }
 
 int getFrameForPage(int* table, int page) {
-  return *(table + page);
+
+	int* seg;
+	int p;
+
+	if(page <= 31) {
+//		print((int*) "Seg 0 ");
+		seg = (int*) *(table+0);
+		p = page;
+	}
+	else if(page <= 8175) {
+//		print((int*) "Seg 1 ");
+		seg = (int*) *(table+1);
+		p = page - 32;
+	}
+	else if(page <= VIRTUALMEMORYSIZE / PAGESIZE - 1) {
+//		print((int*) "Seg 2 ");
+		seg = (int*) *(table+2);
+		p = page - 32 - 8176;
+	}
+	else {
+		print((int*) "SEG frame ERROR!!");
+	}
+
+//	print((int*) "Getting frame from page: "); printInteger(p); println();
+
+  return *(seg + p);
 }
 
 int isPageMapped(int* table, int page) {
@@ -5436,7 +5607,7 @@ int* tlb(int* table, int vaddr) {
   frame = getFrameForPage(table, page);
 
   // map virtual address to physical address
-  paddr = (vaddr - page * PAGESIZE) + frame;
+  paddr = (vaddr % PAGESIZE) + frame;
 
   if (debug_tlb) {
     print(binaryName);
@@ -5517,6 +5688,14 @@ void fct_syscall() {
       implementDelete();
     else if (*(registers+REG_V0) == SYSCALL_MAP)
       implementMap();
+    else if (*(registers+REG_V0) == SYSCALL_SCHED_YIELD)
+      implementSchedYield();
+    else if(*(registers+REG_V0) == SYSCALL_GET_PID)
+			implementGetPID();
+    else if(*(registers+REG_V0) == SYSCALL_PRINT_INTEGER)
+    	implementPrintInteger();
+    else if(*(registers+REG_V0) == SYSCALL_THREAD_START)
+    	implementThreadStart();
     else {
       pc = pc - WORDSIZE;
 
@@ -6205,7 +6384,6 @@ void throwException(int exception, int parameter) {
 void fetch() {
   // assert: isValidVirtualAddress(pc) == 1
   // assert: isVirtualAddressMapped(pt, pc) == 1
-
   ir = loadVirtualMemory(pt, pc);
 }
 
@@ -6277,11 +6455,18 @@ void interrupt() {
       if (status == 0)
         // only throw exception if no other is pending
         // TODO: handle multiple pending exceptions
+
+        if (debugLocally) {
+          print((int*) "TIMER!!");
+          println();
+        }
+
         throwException(EXCEPTION_TIMER, 0);
     }
 }
 
 void runUntilException() {
+
   trap = 0;
 
   while (trap == 0) {
@@ -6397,7 +6582,7 @@ void selfie_disassemble() {
 
   debug = 1;
 
-  while(pc < codeLength) {
+  while (pc < codeLength) {
     ir = loadBinary(pc);
 
     decode();
@@ -6434,7 +6619,7 @@ int* allocateContext(int ID, int parentID) {
   int* context;
 
   if (freeContexts == (int*) 0)
-    context = malloc(4 * SIZEOFINTSTAR + 6 * SIZEOFINT);
+    context = malloc(4 * SIZEOFINTSTAR + 7 * SIZEOFINT);
   else {
     context = freeContexts;
 
@@ -6457,12 +6642,24 @@ int* allocateContext(int ID, int parentID) {
 
   // allocate zeroed memory for page table
   // TODO: save and reuse memory for page table
-  setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
+  //setPT(context, zalloc(VIRTUALMEMORYSIZE / PAGESIZE * WORDSIZE));
+
+  setPT(context, zalloc(3*SIZEOFINTSTAR));
+  *(getPT(context)) = (int) zalloc(maxBinaryLength / PAGESIZE * WORDSIZE);
+  *(getPT(context) + 1) = (int) zalloc((VIRTUALMEMORYSIZE - maxBinaryLength) / PAGESIZE / 2 * WORDSIZE);
+  *(getPT(context) + 2) = (int) zalloc((VIRTUALMEMORYSIZE - maxBinaryLength) / PAGESIZE / 2 * WORDSIZE);
+
+  print((int*)"Pages total: "); printInteger(VIRTUALMEMORYSIZE / PAGESIZE); println();
+  print((int*)"Pages code: "); printInteger(maxBinaryLength / PAGESIZE); println();
+  print((int*)"Pages heap: "); printInteger((VIRTUALMEMORYSIZE - maxBinaryLength) / PAGESIZE / 2); println();
+  print((int*)"Pages stack: "); printInteger((VIRTUALMEMORYSIZE - maxBinaryLength) / PAGESIZE / 2); println();
 
   // heap starts where it is safe to start
   setBreak(context, maxBinaryLength);
 
   setParent(context, parentID);
+
+  contextCount = contextCount + 1;
 
   return context;
 }
@@ -6477,7 +6674,80 @@ int* createContext(int ID, int parentID, int* in) {
   if (in != (int*) 0)
     setPrevContext(in, context);
 
+  setStatus(context, STATUS_READY);
+
   return context;
+}
+
+int* copyPage(int* from, int* to) {
+	int i;
+	i = 0;
+
+	while(i < PAGESIZE / WORDSIZE) {
+
+		*(to+i) = *(from+i);
+
+		i = i + 1;
+	}
+
+	return to;
+}
+
+int* createThread(int ID, int parentID, int* in) {
+
+	int* context;
+	int* table;
+	int* parentTable;
+	int* parentCtx;
+	int i;
+
+	print((int*) "Creating thread "); printInteger(ID); println();
+
+	parentCtx = findContext(parentID, in);
+	parentTable = getPT(parentCtx);
+
+	context = createContext(ID, selfie_ID(), in);
+
+	table = getPT(context);
+
+	*(table+0) = *(parentTable+0);
+	*(table+1) = *(parentTable+1);
+
+	//Copy stack
+	i = 32 + 8176;
+	while(i < VIRTUALMEMORYSIZE / PAGESIZE) {
+		if(isPageMapped(parentTable, i)) {
+			print((int*) "copy page: "); printInteger(i); println();
+			mapPage(table, i, palloc());
+			copyPage(getFrameForPage(parentTable, i), getFrameForPage(table, i));
+		}
+
+		i = i + 1;
+	}
+
+	setPC(context, pc + WORDSIZE);
+
+	setRegs(context, copyRegs(getRegs(parentCtx)));
+
+	setSP(context, getSP(parentCtx));
+
+	return context;
+}
+
+int* copyRegs(int* regs) {
+
+	int i;
+	int* ret;
+
+	ret = zalloc(NUMBEROFREGISTERS * WORDSIZE);
+
+	while(i < NUMBEROFREGISTERS) {
+
+		*(ret+i) = *(regs+i);
+		i = i + 1;
+	}
+
+	return ret;
 }
 
 int* findContext(int ID, int* in) {
@@ -6502,6 +6772,11 @@ void switchContext(int* from, int* to) {
   setRegLo(from, reg_lo);
   setBreak(from, brk);
 
+  setSP(from, *(REGISTERS+REG_SP));
+
+//  setSP(from, *(REGISTERS+REG_SP));
+//  *(REGISTERS+REG_SP) = getSP(to);
+
   // restore machine state
   pc        = getPC(to);
   registers = getRegs(to);
@@ -6509,12 +6784,28 @@ void switchContext(int* from, int* to) {
   reg_lo    = getRegLo(to);
   pt        = getPT(to);
   brk       = getBreak(to);
+
+
 }
 
 void freeContext(int* context) {
   setNextContext(context, freeContexts);
+  setPrevContext(context, 0);
 
   freeContexts = context;
+
+  contextCount = contextCount - 1;
+}
+
+void traverseContexts(int* head) {
+  if (head != (int*) 0) {
+    printInteger(getID(head));
+    print((int*) " -> ");
+    return traverseContexts(getNextContext(head));
+  } else {
+    println();
+    return;
+  }
 }
 
 int* deleteContext(int* context, int* from) {
@@ -6529,12 +6820,41 @@ int* deleteContext(int* context, int* from) {
 
   freeContext(context);
 
+  //print((int*) "Deleted Context "); printInteger(getID(context)); println();
+
+  //traverseContexts(from);
+
   return from;
 }
 
 void mapPage(int* table, int page, int frame) {
   // assert: 0 <= page < VIRTUALMEMORYSIZE / PAGESIZE
-  *(table + page) = frame;
+
+	int* seg;
+	int p;
+
+	if(page <= 31) {
+//		print((int*) "Seg 0 ");
+		seg = (int*) *(table+0);
+		p = page;
+	}
+	else if(page <= 8175) {
+//		print((int*) "Seg 1 ");
+		seg = (int*) *(table+1);
+		p = page - 32;
+	}
+	else if(page <= VIRTUALMEMORYSIZE / PAGESIZE - 1) {
+//		print((int*) "Seg 2 ");
+		seg = (int*) *(table+2);
+		p = page - 32 - 8176;
+	}
+	else {
+		print((int*) "SEG map ERROR!!");
+	}
+
+	print((int*) "Mapping page: "); printInteger(p); println();
+
+  *(seg + p) = frame;
 }
 
 // -----------------------------------------------------------------
@@ -6603,6 +6923,7 @@ void pfree(int* frame) {
 void up_loadBinary(int* table) {
   int vaddr;
 
+  print((int*) "Start binary upload"); println();
   // binaries start at lowest virtual address
   vaddr = 0;
 
@@ -6611,6 +6932,8 @@ void up_loadBinary(int* table) {
 
     vaddr = vaddr + WORDSIZE;
   }
+
+  print((int*) "End binary upload: "); printInteger(vaddr/PAGESIZE); println();
 }
 
 int up_loadString(int* table, int* s, int SP) {
@@ -6640,6 +6963,8 @@ void up_loadArguments(int* table, int argc, int* argv) {
   int vargv;
   int i_argc;
   int i_vargv;
+
+  print((int*) "Start argument upload"); println();
 
   // arguments are pushed onto stack which starts at highest virtual address
   SP = VIRTUALMEMORYSIZE - WORDSIZE;
@@ -6683,6 +7008,8 @@ void up_loadArguments(int* table, int argc, int* argv) {
 
   // store stack pointer at highest virtual address for binary to retrieve
   mapAndStoreVirtualMemory(table, VIRTUALMEMORYSIZE - WORDSIZE, SP);
+
+  print((int*) "End argument upload "); printInteger((VIRTUALMEMORYSIZE - WORDSIZE) / PAGESIZE); println();
 }
 
 void mapUnmappedPages(int* table) {
@@ -6704,6 +7031,8 @@ void mapUnmappedPages(int* table) {
 void down_mapPageTable(int* context) {
   int page;
 
+  print((int*) "Start Down mapPage"); println();
+
   // assert: context page table is only mapped from beginning up and end down
 
   page = 0;
@@ -6721,6 +7050,8 @@ void down_mapPageTable(int* context) {
 
     page = page - 1;
   }
+
+  print((int*) "End Down mapPage"); println();
 }
 
 int runUntilExitWithoutExceptionHandling(int toID) {
@@ -6772,18 +7103,27 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
   int exceptionNumber;
   int exceptionParameter;
   int frame;
+  int fromParentID;
 
   while (1) {
     fromID = selfie_switch(toID);
 
+    //traverseContexts(usedContexts);
+    //print((int*)"current context trap: "); printInteger(getID(currentContext));println();
+
     fromContext = findContext(fromID, usedContexts);
+    fromParentID = getParent(fromContext);
+
+    if(getStatus(fromContext) == STATUS_EXITING) {
+    	usedContexts = deleteContext(fromContext, usedContexts);
+    }
 
     // assert: fromContext must be in usedContexts (created here)
+    if (fromParentID != selfie_ID()) {
 
-    if (getParent(fromContext) != selfie_ID())
       // switch to parent which is in charge of handling exceptions
-      toID = getParent(fromContext);
-    else {
+      toID = fromParentID;
+    } else {
       // we are the parent in charge of handling exceptions
       savedStatus = selfie_status();
 
@@ -6798,10 +7138,21 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
 
         // page table on microkernel boot level
         selfie_map(fromID, exceptionParameter, frame);
-      } else if (exceptionNumber == EXCEPTION_EXIT)
-        // TODO: only return if all contexts have exited
-        return exceptionParameter;
-      else if (exceptionNumber != EXCEPTION_TIMER) {
+      } else if (exceptionNumber == EXCEPTION_EXIT) {
+
+        print((int*) "Context "); printInteger(getID(currentContext)); print((int*) " is exiting");
+        println();
+
+        if (contextCount == 1) {
+          print((int*) "Bye bye!");
+          return exceptionParameter;
+        }
+
+        toID = schedule();
+
+        setStatus(currentContext, STATUS_EXITING);
+
+      } else if (exceptionNumber != EXCEPTION_TIMER) {
         print(binaryName);
         print((int*) ": context ");
         printInteger(getID(fromContext));
@@ -6810,12 +7161,31 @@ int runOrHostUntilExitWithPageFaultHandling(int toID) {
         println();
 
         return -1;
+      } else if (exceptionNumber == EXCEPTION_TIMER) {
+        //print((int*) "asdfasdf"); printInteger(getID(fromContext));
+        toID = schedule();
       }
-
-      // TODO: scheduler should go here
-      toID = fromID;
     }
   }
+}
+
+int schedule() {
+  int fromId;
+  int toId;
+
+  fromId = getID(currentContext);
+
+  if (getNextContext(currentContext) == (int*) 0) {
+    toId = getID(usedContexts);
+  } else {
+    toId = getID(getNextContext(currentContext));
+  }
+
+//  print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
+
+//  traverseContexts(usedContexts);
+
+  return toId;
 }
 
 int bootminmob(int argc, int* argv, int machine) {
@@ -6876,6 +7246,13 @@ int boot(int argc, int* argv) {
   // works with mipsters and hypsters
   int initID;
   int exitCode;
+  int* tempCtx;
+
+  if (debugLocally) {
+    print((int*) "DEBUG ");
+    printInteger(argc);
+    println();
+  }
 
   print(selfieName);
   print((int*) ": this is selfie's ");
@@ -6898,16 +7275,32 @@ int boot(int argc, int* argv) {
   // create initial context on microkernel boot level
   initID = selfie_create();
 
-  if (usedContexts == (int*) 0)
+  if (usedContexts == (int*) 0) {
     // create duplicate of the initial context on our boot level
     usedContexts = createContext(initID, selfie_ID(), (int*) 0);
+  }
 
   up_loadBinary(getPT(usedContexts));
-
   up_loadArguments(getPT(usedContexts), argc, argv);
+
+//  setSP(usedContexts, loadVirtualMemory(getPT(usedContexts), VIRTUALMEMORYSIZE - WORDSIZE));
 
   // propagate page table of initial context to microkernel boot level
   down_mapPageTable(usedContexts);
+
+  while ((repeats - 1) > 0) {
+    bumpID = createID(bumpID);
+    tempCtx = createContext(bumpID, selfie_ID(), usedContexts);
+
+    usedContexts = tempCtx;
+
+    up_loadBinary(getPT(tempCtx));
+    up_loadArguments(getPT(tempCtx), argc, argv);
+
+    repeats = repeats - 1;
+  }
+
+  printInteger(contextCount); println();
 
   // mipsters and hypsters handle page faults
   exitCode = runOrHostUntilExitWithPageFaultHandling(initID);
@@ -7043,7 +7436,10 @@ int selfie() {
         selfie_disassemble();
       else if (stringCompare(option, (int*) "-l"))
         selfie_load();
-      else if (stringCompare(option, (int*) "-m"))
+      else if (stringCompare(option, (int*) "-r")) {
+        repeats = atoi(*(selfie_argv)); // number of repeats
+        return selfie_run(MIPSTER, MIPSTER, 0);
+      } else if (stringCompare(option, (int*) "-m"))
         return selfie_run(MIPSTER, MIPSTER, 0);
       else if (stringCompare(option, (int*) "-d"))
         return selfie_run(MIPSTER, MIPSTER, 1);
@@ -7053,8 +7449,9 @@ int selfie() {
         return selfie_run(MIPSTER, MINSTER, 0);
       else if (stringCompare(option, (int*) "-mob"))
         return selfie_run(MIPSTER, MOBSTER, 0);
-      else
+      else {
         return USAGE;
+      }
     }
   }
 
@@ -7064,6 +7461,8 @@ int selfie() {
 int main(int argc, int* argv) {
   int exitCode;
 
+  write(1, (int*) "This is Selfiestick Selfie\n", 27);
+
   initSelfie(argc, (int*) argv);
 
   initLibrary();
@@ -7072,10 +7471,11 @@ int main(int argc, int* argv) {
 
   if (exitCode == USAGE) {
     print(selfieName);
-    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary } [ (-m | -d | -y | -min | -mob ) size ... ] ");
+    print((int*) ": usage: selfie { -c { source } | -o binary | -s assembly | -l binary | -r repeats} [ (-m | -d | -y | -min | -mob ) size ... ] ");
     println();
 
     return 0;
-  } else
+  } else {
     return exitCode;
+  }
 }
