@@ -9,6 +9,9 @@ selfie: selfie.c
 # Consider these targets as targets, not files
 .PHONY : test clean
 
+check: selfie
+	./selfie -c thread.c -o binary -l binary -m 2
+
 # Test self-compilation, self-execution, and self-hosting
 test: selfie
 	./selfie -c selfie.c -o selfie1.m -s selfie1.s -m 2 -c selfie.c -o selfie2.m -s selfie2.s

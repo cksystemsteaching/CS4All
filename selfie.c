@@ -1044,7 +1044,7 @@ int debug_exception = 0;
 // number of instructions from context switch to timer interrupt
 // CAUTION: avoid interrupting any kernel activities, keep TIMESLICE large
 // TODO: implement proper interrupt controller to turn interrupts on and off
-int TIMESLICE = 1000;
+int TIMESLICE = 5000;
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -4283,8 +4283,8 @@ void printOpcode(int opcode) {
 void printFunction(int function) {
   print((int*) *(FUNCTIONS + function));
 }
-
 void decode() {
+
   opcode = getOpcode(ir);
 
   if (opcode == 0)
@@ -5163,6 +5163,7 @@ void implementThreadStart() {
 
 	usedContexts = createThread(bumpID, getID(currentContext), usedContexts);
 
+	print((int*) "Started thread "); printInteger(bumpID); println();
   traverseContexts(usedContexts);
 }
 
@@ -6383,7 +6384,6 @@ void throwException(int exception, int parameter) {
 void fetch() {
   // assert: isValidVirtualAddress(pc) == 1
   // assert: isVirtualAddressMapped(pt, pc) == 1
-
   ir = loadVirtualMemory(pt, pc);
 }
 
@@ -6683,7 +6683,8 @@ int* copyPage(int* from, int* to) {
 	int i;
 	i = 0;
 
-	while(i*WORDSIZE < PAGESIZE) {
+	while(i < PAGESIZE / WORDSIZE) {
+
 		*(to+i) = *(from+i);
 
 		i = i + 1;
@@ -6713,11 +6714,12 @@ int* createThread(int ID, int parentID, int* in) {
 	*(table+1) = *(parentTable+1);
 
 	//Copy stack
-	i = 0;
-	while(i <= 8175) {
-		if(isPageMapped(parentTable, 8207 + i)) {
+	i = 32 + 8176;
+	while(i < VIRTUALMEMORYSIZE / PAGESIZE) {
+		if(isPageMapped(parentTable, i)) {
 			print((int*) "copy page: "); printInteger(i); println();
-			mapPage(table, 8207 + i, copyPage(*(parentTable+i), palloc()));
+			mapPage(table, i, palloc());
+			copyPage(getFrameForPage(parentTable, i), getFrameForPage(table, i));
 		}
 
 		i = i + 1;
@@ -6769,6 +6771,8 @@ void switchContext(int* from, int* to) {
   setRegHi(from, reg_hi);
   setRegLo(from, reg_lo);
   setBreak(from, brk);
+
+  setSP(from, *(REGISTERS+REG_SP));
 
 //  setSP(from, *(REGISTERS+REG_SP));
 //  *(REGISTERS+REG_SP) = getSP(to);
@@ -6848,7 +6852,7 @@ void mapPage(int* table, int page, int frame) {
 		print((int*) "SEG map ERROR!!");
 	}
 
-//	print((int*) "Mapping page: "); printInteger(p); println();
+	print((int*) "Mapping page: "); printInteger(p); println();
 
   *(seg + p) = frame;
 }
@@ -7179,7 +7183,7 @@ int schedule() {
 
 //  print((int*) "Scheduling from "); printInteger(fromId); print((int*) " to context "); printInteger(toId); println();
 
-  //traverseContexts(usedContexts);
+//  traverseContexts(usedContexts);
 
   return toId;
 }
