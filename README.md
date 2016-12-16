@@ -18,6 +18,13 @@ a manual context switch is triggered.
 
 ./selfie -c selfie.c -o selfie.m && ./selfie -l selfie.m -conc 3 -freq 1 -m  2
 
+# Assignment 3 (Instructions)
+
+The example illustrate 3 processes writting on the same position of a shared memory object (array) concurrently.
+After the shared memory object is closed each process proceeds to write on its own private copy of the shared memory object.
+
+./selfie -c testfiles/shmexample.c selfie.c -o shmexample.m -l shmexample.m -conc 3 -freq 1000 -m 4
+
 
 # Selfie [![Build Status](https://travis-ci.org/cksystemsteaching/selfie.svg?branch=master)](https://travis-ci.org/cksystemsteaching/selfie)
 
