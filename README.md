@@ -156,3 +156,13 @@ Assignment 5: Synchronization
  - If a task wants to write, it must first get exclusive access – no other task may access the data element in reading or writing
 * Demonstrate this with a user program
 * __Deadline__: Dec 19, 8pm (hard, no extensions)
+
+-----------
+
+Assignment 6: Free-space memory management 
+-------------------------------------------------------
+
+* Read and understand [Chapter 17 from the OSTEP book](http://pages.cs.wisc.edu/~remzi/OSTEP/vm-freespace.pdf). Feel free to follow any references therein, especially the survey \[W+95\]. Be prepared to answer questions from that chapter in class!
+* Implement in selfie a basic strategy for free space memory management (Section 17.3 in the book). 
+* Demonstrate the implemented policy with a user program.
+* __Deadline__: Jan 16, 2017, 8pm (hard, no extensions)
