@@ -135,12 +135,33 @@ Implement your design from Assignment 6.
 You may of course change parts of your design as your knowledge increases during implementation,
 but explain these changes and adapt your design document accordingly.
 
-Clearly separate all the OS related code, you may want to put in a separate `kernel.c` file.
+Clearly separate all the OS related code, you may want to put it in a separate `kernel.c` file.
 
 Adapt the `make test` so that it shows self compilation and execution.
 Write additional tests that exercise all the functionality (multithreading etc.) of your OS.
 Put these additional tests in separate files!
 
 Commit your submission to the `master` branch.
+
+As always, document what you did and explain your design choices.
+
+Assignment 8: Paging
+--------------------
+__Deadline__: January 24, 5pm
+
+Implement paging as your virtual memory mechanism.
+Decide on a suitable frame-size, TLB-size and whether to use a software or a hardware managed TLB.
+
+You may prefetch the code and data segment, but not the heap and stack.
+
+Write meaningful tests that demonstrate the functionality, e.g. by using more virtual memory than physical memory.
+Again, put these tests in separate files!
+
+Bonus tasks:
+ * let your kernel run in paged virtual memory
+ * implement the (L4)[http://read.seas.harvard.edu/cs261/papers/liedtke95on.pdf] system calls `map` and `flush`
+ * implement page replacement and/or swapping
+
+Tag the your submission to the previous assignment with `a7` before committing your current submissions to the `master` branch.
 
 As always, document what you did and explain your design choices.
