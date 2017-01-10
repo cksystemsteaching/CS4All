@@ -166,3 +166,17 @@ Assignment 6: Free-space memory management
 * Implement in selfie a basic strategy for free space memory management (Section 17.3 in the book). 
 * Demonstrate the implemented policy with a user program.
 * __Deadline__: Jan 16, 2017, 8pm (hard, no extensions)
+
+-----------
+
+[Lecture 9](https://myfiles.sbg.ac.at/index.php/s/NK1ibsUYJGzALkF)
+-----------
+
+Assignment 7: Deadlock 
+-------------------------------------------------------
+
+* Extend selfie to provide multiple locks as resources
+* Demonstrate deadlock with the user program shown in class (see slides)
+* Implement the Banker's algorithm in selfie for locks
+* Show how deadlock is avoided in the example program
+* __Deadline__: Jan 23, 8pm (hard, no extensions)
