@@ -180,3 +180,15 @@ Assignment 7: Deadlock
 * Implement the Banker's algorithm in selfie for locks
 * Show how deadlock is avoided in the example program
 * __Deadline__: Jan 23, 8pm (hard, no extensions)
+
+-----------
+
+[Lecture 10](https://myfiles.sbg.ac.at/index.php/s/yuYVqQ96hA2khPe)
+-----------
+
+Assignment 8: Concurrent data structures 
+-------------------------------------------------------
+
+* Implement the [Michael-Scott queue](https://www.research.ibm.com/people/m/michael/podc-1996.pdf). For that, you need to implement a Compare and Swap instruction (CAS), as discussed in previous lectures (see also the [Wikipedia article] (https://en.wikipedia.org/wiki/Compare-and-swap)).
+* Demonstrate your data structure with a meaningful test program, e.g., a Producer-Consumer instance, or the test program from Assignment 7.
+* __Deadline__: Jan 30, 8pm (hard, no extensions)
