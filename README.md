@@ -59,7 +59,8 @@ Implement basic concurrent execution of _n_ processes in mipster. _n >= 2_
 * __Deadline__: October 24, 8pm (hard, no extensions)
 
 -----------
-[Lecture 2](https://myfiles.sbg.ac.at/index.php/s/DOuC6keTPyEAHcw)
+
+[Lecture 2](https://myfiles.sbg.ac.at/index.php/s/07vEgGSgK0t6cn9)
 -----------
 
 Assignment 2: Memory segmentation, yield system call
