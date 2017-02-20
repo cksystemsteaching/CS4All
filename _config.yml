@@ -1,0 +1,8 @@
+title: CS4All
+description: This is the homepage of the computer science for all course by Professor Christoph Kirsch.
+google_analytics: 
+show_downloads: true
+theme: jekyll-theme-cayman
+
+gems:
+  - jekyll-mentions
