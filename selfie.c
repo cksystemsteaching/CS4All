@@ -7069,6 +7069,9 @@ int main(int argc, int* argv) {
   initLibrary();
 
   exitCode = selfie();
+  
+  print((int*) "This is jkvh Selfie");
+  println();
 
   if (exitCode == USAGE) {
     print(selfieName);
