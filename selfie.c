@@ -316,6 +316,7 @@ int SYM_NOTEQ        = 24; // !=
 int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
+int SYM_PLUSPLUS     = 28; // ++
 
 int* SYMBOLS; // strings representing symbols
 
@@ -352,7 +353,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(28 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(29 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -382,6 +383,7 @@ void initScanner () {
   *(SYMBOLS + SYM_MOD)          = (int) "%";
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
+  *(SYMBOLS + SYM_PLUSPLUS)     = (int) "++";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -535,6 +537,7 @@ void gr_procedure(int* procedure, int type);
 void gr_cstar();
 
 // ------------------------ GLOBAL VARIABLES -----------------------
+int plusPlusFound = 0;
 
 int allocatedTemporaries = 0; // number of allocated temporaries
 
@@ -2126,7 +2129,15 @@ void getSymbol() {
       } else if (character == CHAR_PLUS) {
         getCharacter();
 
-        symbol = SYM_PLUS;
+        if (character == CHAR_PLUS) {
+          symbol = SYM_PLUSPLUS;
+          getCharacter();
+
+        } else {
+
+          symbol = SYM_PLUS;
+
+        }
 
       } else if (character == CHAR_DASH) {
         getCharacter();
@@ -2424,6 +2435,8 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_ASTERISK)
     return 0;
+  else if (symbol == SYM_PLUSPLUS)
+    return 0;
   else if (symbol == SYM_IDENTIFIER)
     return 0;
   else if (symbol == SYM_INTEGER)
@@ -2443,7 +2456,10 @@ int lookForStatement() {
     return 0;
   else if (symbol == SYM_IDENTIFIER)
     return 0;
-  else if (symbol == SYM_WHILE)
+  else if (symbol == SYM_PLUSPLUS) {
+    getSymbol();
+    return 0;
+  } else if (symbol == SYM_WHILE)
     return 0;
   else if (symbol == SYM_IF)
     return 0;
@@ -2611,6 +2627,13 @@ int load_variable(int* variable) {
   talloc();
 
   emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
+
+  if(plusPlusFound == 1){
+    emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+    emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+    plusPlusFound = 0;
+  }
+
 
   return getType(entry);
 }
@@ -2867,14 +2890,48 @@ int gr_factor() {
     }
   }
 
+  if (symbol == SYM_PLUSPLUS) {
+    plusPlusFound = 1;
+    getSymbol();
+    if (symbol == SYM_IDENTIFIER) {
+      load_variable(identifier);
+      //emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+    } else if (symbol == SYM_ASTERISK) {
+      plusPlusFound = 0;
+      getSymbol();
+      if (symbol == SYM_IDENTIFIER) {
+        load_variable(identifier);
+        talloc();
+        emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+        emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), previousTemporary(), FCT_ADDU);
+        tfree(1);
+        getSymbol();
+      } else if (symbol == SYM_LPARENTHESIS) {
+        getSymbol();
+        gr_expression();
+        talloc();
+        emitIFormat(OP_LW, previousTemporary(), currentTemporary(), 0);
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+        emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), previousTemporary(), FCT_ADDU);
+        tfree(1);
+        if (symbol == SYM_RPARENTHESIS)
+          getSymbol();
+        else
+          syntaxErrorSymbol(SYM_RPARENTHESIS);
+      }
+    }
+  }
+
   // dereference?
-  if (symbol == SYM_ASTERISK) {
+  else if (symbol == SYM_ASTERISK) {
     getSymbol();
 
     // ["*"] identifier
     if (symbol == SYM_IDENTIFIER) {
       type = load_variable(identifier);
-
       getSymbol();
 
     // * "(" expression ")"
@@ -7067,6 +7124,10 @@ int main(int argc, int* argv) {
   initSelfie(argc, (int*) argv);
 
   initLibrary();
+
+  print((int *)"This is the Starc Mipsdustries Selfie");
+  println();
+
 
   exitCode = selfie();
 
