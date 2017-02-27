@@ -44,6 +44,8 @@ cast             = "(" type ")" .
 
 literal          = integer | character .
 
+lvalue           = [ "*" ] ( identifier | "(" expression ")" ) .
+
 procedure        = "(" [ variable { "," variable } ] ")"
                     ( ";" | "{" { variable ";" } { statement } "}" ) .
 
@@ -62,7 +64,7 @@ simpleExpression = [ "-" ] term { ( "+" | "-" ) term } .
 term             = factor { ( "*" | "/" | "%" ) factor } .
 
 factor           = [ cast ]
-                    ( [ "*" ] ( identifier | "(" expression ")" ) |
+                    ( [ "++" | "--" ] lvalue [ "++" | "--" ] ) |
                       call |
                       literal |
                       string ) .
