@@ -10,7 +10,7 @@ C\* is a small Turing-complete subset of C that includes dereferencing (the `*` 
 
 C\* Keywords: `int`, `while`, `if`, `else`, `return`, `void`
 
-C\* Symbols: `;`, `+`, `-`, `*`, `/`, `%`, `==`, `=`, `(`, `)`, `{`, `}`, `,`, `<`, `<=`, `>`, `>=`, `!=`, integer, identifier, character, string
+C\* Symbols: `;`, `+`, `-`, `++`, `--`, `*`, `/`, `%`, `==`, `=`, `(`, `)`, `{`, `}`, `,`, `<`, `<=`, `>`, `>=`, `!=`, integer, identifier, character, string
 
 with:
 
@@ -50,6 +50,7 @@ procedure        = "(" [ variable { "," variable } ] ")"
 variable         = type identifier .
 
 statement        = call ";" | while | if | return ";" |
+                   increment_decrement ";" |
                    ( [ "*" ] identifier | "*" "(" expression ")" )
                      "=" expression ";" .
 
@@ -62,10 +63,15 @@ simpleExpression = [ "-" ] term { ( "+" | "-" ) term } .
 term             = factor { ( "*" | "/" | "%" ) factor } .
 
 factor           = [ cast ]
-                    ( [ "*" ] ( identifier | "(" expression ")" ) |
+                    ( [ "*" ] "(" expression ")" |
+                      identifier) |
                       call |
                       literal |
-                      string ) .
+                      string  |
+                      increment_decrement  .
+
+increment_decrement = identifier ( "++" | "--" ) |
+                      ( "++" | "--" ) identifier  .
 
 while            = "while" "(" expression ")"
                              ( statement |
