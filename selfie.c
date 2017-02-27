@@ -316,6 +316,8 @@ int SYM_NOTEQ        = 24; // !=
 int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
+int SYM_PLUSPLUS     = 28; // ++
+int SYM_MINUSMINUS   = 29;  // --
 
 int* SYMBOLS; // strings representing symbols
 
@@ -351,8 +353,8 @@ int  sourceFD   = 0;        // file descriptor of open source file
 
 // ------------------------- INITIALIZATION ------------------------
 
-void initScanner () {
-  SYMBOLS = malloc(28 * SIZEOFINTSTAR);
+void initScanner() {
+  SYMBOLS = malloc(30 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -382,6 +384,8 @@ void initScanner () {
   *(SYMBOLS + SYM_MOD)          = (int) "%";
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
+  *(SYMBOLS + SYM_PLUSPLUS)     = (int) "++";
+  *(SYMBOLS + SYM_MINUSMINUS)   = (int) "--";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -427,23 +431,55 @@ int reportUndefinedProcedures();
 // |  7 | scope   | REG_GP, REG_FP
 // +----+---------+
 
-int* getNextEntry(int* entry)  { return (int*) *entry; }
-int* getString(int* entry)     { return (int*) *(entry + 1); }
-int  getLineNumber(int* entry) { return        *(entry + 2); }
-int  getClass(int* entry)      { return        *(entry + 3); }
-int  getType(int* entry)       { return        *(entry + 4); }
-int  getValue(int* entry)      { return        *(entry + 5); }
-int  getAddress(int* entry)    { return        *(entry + 6); }
-int  getScope(int* entry)      { return        *(entry + 7); }
+int* getNextEntry(int* entry)  {
+  return (int*) *entry;
+}
+int* getString(int* entry)     {
+  return (int*) * (entry + 1);
+}
+int  getLineNumber(int* entry) {
+  return        *(entry + 2);
+}
+int  getClass(int* entry)      {
+  return        *(entry + 3);
+}
+int  getType(int* entry)       {
+  return        *(entry + 4);
+}
+int  getValue(int* entry)      {
+  return        *(entry + 5);
+}
+int  getAddress(int* entry)    {
+  return        *(entry + 6);
+}
+int  getScope(int* entry)      {
+  return        *(entry + 7);
+}
 
-void setNextEntry(int* entry, int* next)    { *entry       = (int) next; }
-void setString(int* entry, int* identifier) { *(entry + 1) = (int) identifier; }
-void setLineNumber(int* entry, int line)    { *(entry + 2) = line; }
-void setClass(int* entry, int class)        { *(entry + 3) = class; }
-void setType(int* entry, int type)          { *(entry + 4) = type; }
-void setValue(int* entry, int value)        { *(entry + 5) = value; }
-void setAddress(int* entry, int address)    { *(entry + 6) = address; }
-void setScope(int* entry, int scope)        { *(entry + 7) = scope; }
+void setNextEntry(int* entry, int* next)    {
+  *entry       = (int) next;
+}
+void setString(int* entry, int* identifier) {
+  *(entry + 1) = (int) identifier;
+}
+void setLineNumber(int* entry, int line)    {
+  *(entry + 2) = line;
+}
+void setClass(int* entry, int class)        {
+  *(entry + 3) = class;
+}
+void setType(int* entry, int type)          {
+  *(entry + 4) = type;
+}
+void setValue(int* entry, int value)        {
+  *(entry + 5) = value;
+}
+void setAddress(int* entry, int address)    {
+  *(entry + 6) = address;
+}
+void setScope(int* entry, int scope)        {
+  *(entry + 7) = scope;
+}
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -1151,27 +1187,67 @@ void mapPage(int* table, int page, int frame);
 // | 9 | parent | ID of context that created this context
 // +---+--------+
 
-int* getNextContext(int* context) { return (int*) *context; }
-int* getPrevContext(int* context) { return (int*) *(context + 1); }
-int  getID(int* context)          { return        *(context + 2); }
-int  getPC(int* context)          { return        *(context + 3); }
-int* getRegs(int* context)        { return (int*) *(context + 4); }
-int  getRegHi(int* context)       { return        *(context + 5); }
-int  getRegLo(int* context)       { return        *(context + 6); }
-int* getPT(int* context)          { return (int*) *(context + 7); }
-int  getBreak(int* context)       { return        *(context + 8); }
-int  getParent(int* context)      { return        *(context + 9); }
+int* getNextContext(int* context) {
+  return (int*) *context;
+}
+int* getPrevContext(int* context) {
+  return (int*) * (context + 1);
+}
+int  getID(int* context)          {
+  return        *(context + 2);
+}
+int  getPC(int* context)          {
+  return        *(context + 3);
+}
+int* getRegs(int* context)        {
+  return (int*) * (context + 4);
+}
+int  getRegHi(int* context)       {
+  return        *(context + 5);
+}
+int  getRegLo(int* context)       {
+  return        *(context + 6);
+}
+int* getPT(int* context)          {
+  return (int*) * (context + 7);
+}
+int  getBreak(int* context)       {
+  return        *(context + 8);
+}
+int  getParent(int* context)      {
+  return        *(context + 9);
+}
 
-void setNextContext(int* context, int* next) { *context       = (int) next; }
-void setPrevContext(int* context, int* prev) { *(context + 1) = (int) prev; }
-void setID(int* context, int id)             { *(context + 2) = id; }
-void setPC(int* context, int pc)             { *(context + 3) = pc; }
-void setRegs(int* context, int* regs)        { *(context + 4) = (int) regs; }
-void setRegHi(int* context, int reg_hi)      { *(context + 5) = reg_hi; }
-void setRegLo(int* context, int reg_lo)      { *(context + 6) = reg_lo; }
-void setPT(int* context, int* pt)            { *(context + 7) = (int) pt; }
-void setBreak(int* context, int brk)         { *(context + 8) = brk; }
-void setParent(int* context, int id)         { *(context + 9) = id; }
+void setNextContext(int* context, int* next) {
+  *context       = (int) next;
+}
+void setPrevContext(int* context, int* prev) {
+  *(context + 1) = (int) prev;
+}
+void setID(int* context, int id)             {
+  *(context + 2) = id;
+}
+void setPC(int* context, int pc)             {
+  *(context + 3) = pc;
+}
+void setRegs(int* context, int* regs)        {
+  *(context + 4) = (int) regs;
+}
+void setRegHi(int* context, int reg_hi)      {
+  *(context + 5) = reg_hi;
+}
+void setRegLo(int* context, int reg_lo)      {
+  *(context + 6) = reg_lo;
+}
+void setPT(int* context, int* pt)            {
+  *(context + 7) = (int) pt;
+}
+void setBreak(int* context, int brk)         {
+  *(context + 8) = brk;
+}
+void setParent(int* context, int id)         {
+  *(context + 9) = id;
+}
 
 // -----------------------------------------------------------------
 // -------------------------- MICROKERNEL --------------------------
@@ -1322,7 +1398,7 @@ int rightShift(int n, int b) {
     // then dividing with powers of two, and finally restoring the sign bit
     // but b bits to the right; this works even if n == INT_MIN
     return ((n + 1) + INT_MAX) / twoToThePowerOf(b) +
-      (INT_MAX / twoToThePowerOf(b) + 1);
+           (INT_MAX / twoToThePowerOf(b) + 1);
   else if (b == 31)
     // right shift of a negative 32-bit integer by 31 bits is 1 (the sign bit)
     return 1;
@@ -1773,7 +1849,7 @@ void printSymbol(int symbol) {
   if (symbol == SYM_EOF)
     print((int*) "end of file");
   else
-    print((int*) *(SYMBOLS + symbol));
+    print((int*) * (SYMBOLS + symbol));
 
   putCharacter(CHAR_DOUBLEQUOTE);
 }
@@ -1961,7 +2037,7 @@ int isCharacterNotDoubleQuoteOrNewLineOrEOF() {
 }
 
 int identifierStringMatch(int keyword) {
-  return stringCompare(identifier, (int*) *(SYMBOLS + keyword));
+  return stringCompare(identifier, (int*) * (SYMBOLS + keyword));
 }
 
 int identifierOrKeyword() {
@@ -2125,13 +2201,21 @@ void getSymbol() {
 
       } else if (character == CHAR_PLUS) {
         getCharacter();
+        if (character == CHAR_PLUS) {
+          symbol = SYM_PLUSPLUS;
+          getCharacter();
+        } else
+          symbol = SYM_PLUS;
 
-        symbol = SYM_PLUS;
 
       } else if (character == CHAR_DASH) {
         getCharacter();
 
-        symbol = SYM_MINUS;
+        if (character == CHAR_DASH) {
+          getCharacter();
+          symbol = SYM_MINUSMINUS;
+        } else
+          symbol = SYM_MINUS;
 
       } else if (character == CHAR_ASTERISK) {
         getCharacter();
@@ -2369,6 +2453,10 @@ int isExpression() {
     return 1;
   else if (symbol == SYM_CHARACTER)
     return 1;
+  else if (symbol == SYM_PLUSPLUS)
+    return 1;
+  else if (symbol == SYM_MINUSMINUS)
+    return 1;
   else
     return 0;
 }
@@ -2434,6 +2522,10 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_EOF)
     return 0;
+  else if (symbol == SYM_PLUSPLUS)
+    return 0;
+  else if (symbol == SYM_MINUSMINUS)
+    return 0;
   else
     return 1;
 }
@@ -2450,6 +2542,10 @@ int lookForStatement() {
   else if (symbol == SYM_RETURN)
     return 0;
   else if (symbol == SYM_EOF)
+    return 0;
+  else if (symbol == SYM_PLUSPLUS)
+    return 0;
+  else if (symbol == SYM_MINUSMINUS)
     return 0;
   else
     return 1;
@@ -2852,7 +2948,7 @@ int gr_factor() {
       else
         syntaxErrorSymbol(SYM_RPARENTHESIS);
 
-    // not a cast: "(" expression ")"
+      // not a cast: "(" expression ")"
     } else {
       type = gr_expression();
 
@@ -2877,7 +2973,7 @@ int gr_factor() {
 
       getSymbol();
 
-    // * "(" expression ")"
+      // * "(" expression ")"
     } else if (symbol == SYM_LPARENTHESIS) {
       getSymbol();
 
@@ -2898,7 +2994,7 @@ int gr_factor() {
 
     type = INT_T;
 
-  // identifier?
+    // identifier?
   } else if (symbol == SYM_IDENTIFIER) {
     variableOrProcedureName = identifier;
 
@@ -2918,11 +3014,30 @@ int gr_factor() {
       // reset return register to initial return value
       // for missing return expressions
       emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
+    }   //++
+    else if (symbol == SYM_PLUSPLUS) {
+      getSymbol();
+
+      type = load_variable(variableOrProcedureName);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      emitIFormat(OP_SW, getScope(getVariable(variableOrProcedureName)), currentTemporary(), getAddress(getVariable(variableOrProcedureName)));
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+
+      //--
+    } else if (symbol == SYM_MINUSMINUS) {
+      getSymbol();
+
+      type = load_variable(variableOrProcedureName);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+      emitIFormat(OP_SW, getScope(getVariable(variableOrProcedureName)), currentTemporary(), getAddress(getVariable(variableOrProcedureName)));
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+
+      // variable access: identifier
     } else
       // variable access: identifier
       type = load_variable(variableOrProcedureName);
 
-  // integer?
+    // integer?
   } else if (symbol == SYM_INTEGER) {
     load_integer(literal);
 
@@ -2930,7 +3045,7 @@ int gr_factor() {
 
     type = INT_T;
 
-  // character?
+    // character?
   } else if (symbol == SYM_CHARACTER) {
     talloc();
 
@@ -2940,7 +3055,7 @@ int gr_factor() {
 
     type = INT_T;
 
-  // string?
+    // string?
   } else if (symbol == SYM_STRING) {
     load_string(string);
 
@@ -2948,7 +3063,7 @@ int gr_factor() {
 
     type = INTSTAR_T;
 
-  //  "(" expression ")"
+    //  "(" expression ")"
   } else if (symbol == SYM_LPARENTHESIS) {
     getSymbol();
 
@@ -2958,6 +3073,49 @@ int gr_factor() {
       getSymbol();
     else
       syntaxErrorSymbol(SYM_RPARENTHESIS);
+    //PLUSPLUS
+  } else if (symbol == SYM_PLUSPLUS) {
+    getSymbol();
+
+    //prefix ++
+    if (symbol == SYM_IDENTIFIER) {
+      getSymbol();
+      type = load_variable(identifier);
+      if (type != INT_T)
+        typeWarning(INT_T, type);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      emitIFormat(OP_SW, getScope(getVariable(identifier)), currentTemporary(), getAddress(getVariable(identifier)));
+      //postfix ++
+    } else {
+      type = load_variable(identifier);
+      //getSymbol();
+      if (type != INT_T)
+        typeWarning(INT_T, type);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+      emitIFormat(OP_SW, getScope(getVariable(identifier)), currentTemporary(), getAddress(getVariable(identifier)));
+    }
+    //syntaxErrorSymbol(SYM_IDENTIFIER);
+  } else if (SYM_MINUSMINUS) {
+    getSymbol();
+    //prefix --
+    if (symbol == SYM_IDENTIFIER) {
+      getSymbol();
+      type = load_variable(identifier);
+      if (type != INT_T)
+        typeWarning(INT_T, type);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+      emitIFormat(OP_SW, getScope(getVariable(identifier)), currentTemporary(), getAddress(getVariable(identifier)));
+    }//postfix --
+    else {
+      type = load_variable(identifier);
+      //getSymbol();
+      if (type != INT_T)
+        typeWarning(INT_T, type);
+      emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+      emitIFormat(OP_SW, getScope(getVariable(identifier)), currentTemporary(), getAddress(getVariable(identifier)));
+
+    }
+    //syntaxErrorSymbol(SYM_IDENTIFIER);
   } else
     syntaxErrorUnexpected();
 
@@ -3316,7 +3474,7 @@ void gr_if() {
               exit(-1);
             }
 
-          // only one statement without {}
+            // only one statement without {}
           } else
             gr_statement();
 
@@ -3418,6 +3576,13 @@ void gr_statement() {
         tfree(2);
 
         numberOfAssignments = numberOfAssignments + 1;
+        //  ++
+      } else if (symbol == SYM_PLUSPLUS) {
+        gr_expression();
+        //  --
+      } else if (symbol == SYM_MINUSMINUS) {
+        gr_expression();
+
       } else {
         syntaxErrorSymbol(SYM_ASSIGN);
 
@@ -3429,7 +3594,7 @@ void gr_statement() {
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
 
-    // "*" "(" expression ")"
+      // "*" "(" expression ")"
     } else if (symbol == SYM_LPARENTHESIS) {
       getSymbol();
 
@@ -3491,7 +3656,7 @@ void gr_statement() {
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
 
-    // identifier = expression
+      // identifier = expression
     } else if (symbol == SYM_ASSIGN) {
       entry = getVariable(variableOrProcedureName);
 
@@ -3514,7 +3679,17 @@ void gr_statement() {
         getSymbol();
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
-    } else
+        //++
+    } else if (symbol == SYM_PLUSPLUS){
+      gr_expression();
+      getSymbol();
+      //--
+    }else if(symbol == SYM_MINUSMINUS){
+      gr_expression();
+      getSymbol();
+
+    }
+    else
       syntaxErrorUnexpected();
   }
   // while statement?
@@ -3529,6 +3704,20 @@ void gr_statement() {
   else if (symbol == SYM_RETURN) {
     gr_return();
 
+    if (symbol == SYM_SEMICOLON)
+      getSymbol();
+    else
+      syntaxErrorSymbol(SYM_SEMICOLON);
+  } else if (symbol == SYM_PLUSPLUS) {
+    //gr_term();
+    gr_expression();
+    if (symbol == SYM_SEMICOLON)
+      getSymbol();
+    else
+      syntaxErrorSymbol(SYM_SEMICOLON);
+  } else if (symbol == SYM_MINUSMINUS) {
+    //gr_term();
+    gr_expression();
     if (symbol == SYM_SEMICOLON)
       getSymbol();
     else
@@ -4132,7 +4321,7 @@ void selfie_compile() {
 // -----------------------------------------------------------------
 
 void printRegister(int reg) {
-  print((int*) *(REGISTERS + reg));
+  print((int*) * (REGISTERS + reg));
 }
 
 // -----------------------------------------------------------------
@@ -4228,11 +4417,11 @@ int signExtend(int immediate) {
 // -----------------------------------------------------------------
 
 void printOpcode(int opcode) {
-  print((int*) *(OPCODES + opcode));
+  print((int*) * (OPCODES + opcode));
 }
 
 void printFunction(int function) {
-  print((int*) *(FUNCTIONS + function));
+  print((int*) * (FUNCTIONS + function));
 }
 
 void decode() {
@@ -4362,15 +4551,15 @@ void fixup_relative(int fromAddress) {
   instruction = loadBinary(fromAddress);
 
   storeBinary(fromAddress,
-    encodeIFormat(getOpcode(instruction),
-      getRS(instruction),
-      getRT(instruction),
-      (binaryLength - fromAddress - WORDSIZE) / WORDSIZE));
+              encodeIFormat(getOpcode(instruction),
+                            getRS(instruction),
+                            getRT(instruction),
+                            (binaryLength - fromAddress - WORDSIZE) / WORDSIZE));
 }
 
 void fixup_absolute(int fromAddress, int toAddress) {
   storeBinary(fromAddress,
-    encodeJFormat(getOpcode(loadBinary(fromAddress)), toAddress / WORDSIZE));
+              encodeJFormat(getOpcode(loadBinary(fromAddress)), toAddress / WORDSIZE));
 }
 
 void fixlink_absolute(int fromAddress, int toAddress) {
@@ -4524,7 +4713,8 @@ int* touch(int* memory, int length) {
   }
 
   // avoids unused warning for n
-  n = 0; n = n + 1;
+  n = 0;
+  n = n + 1;
 
   return memory;
 }
@@ -4624,7 +4814,7 @@ void emitExit() {
 void implementExit() {
   int exitCode;
 
-  exitCode = *(registers+REG_A0);
+  exitCode = *(registers + REG_A0);
 
   // exit code must be signed 16-bit integer
   if (exitCode > INT16_MAX)
@@ -4636,7 +4826,7 @@ void implementExit() {
 
   print(binaryName);
   print((int*) ": exiting with exit code ");
-  printInteger(*(registers+REG_A0));
+  printInteger(*(registers + REG_A0));
   print((int*) " and ");
   printFixedPointRatio(brk - maxBinaryLength, MEGABYTE);
   print((int*) "MB of mallocated memory");
@@ -4674,9 +4864,9 @@ void implementRead() {
 
   // assert: read buffer is mapped
 
-  size  = *(registers+REG_A2);
-  vaddr = *(registers+REG_A1);
-  fd    = *(registers+REG_A0);
+  size  = *(registers + REG_A2);
+  vaddr = *(registers + REG_A1);
+  fd    = *(registers + REG_A0);
 
   if (debug_read) {
     print(binaryName);
@@ -4746,9 +4936,9 @@ void implementRead() {
   }
 
   if (failed == 0)
-    *(registers+REG_V0) = readTotal;
+    *(registers + REG_V0) = readTotal;
   else
-    *(registers+REG_V0) = -1;
+    *(registers + REG_V0) = -1;
 
   if (debug_read) {
     print(binaryName);
@@ -4790,9 +4980,9 @@ void implementWrite() {
 
   // assert: write buffer is mapped
 
-  size  = *(registers+REG_A2);
-  vaddr = *(registers+REG_A1);
-  fd    = *(registers+REG_A0);
+  size  = *(registers + REG_A2);
+  vaddr = *(registers + REG_A1);
+  fd    = *(registers + REG_A0);
 
   if (debug_write) {
     print(binaryName);
@@ -4862,9 +5052,9 @@ void implementWrite() {
   }
 
   if (failed == 0)
-    *(registers+REG_V0) = writtenTotal;
+    *(registers + REG_V0) = writtenTotal;
   else
-    *(registers+REG_V0) = -1;
+    *(registers + REG_V0) = -1;
 
   if (debug_write) {
     print(binaryName);
@@ -4948,14 +5138,14 @@ void implementOpen() {
   int vaddr;
   int fd;
 
-  mode  = *(registers+REG_A2);
-  flags = *(registers+REG_A1);
-  vaddr = *(registers+REG_A0);
+  mode  = *(registers + REG_A2);
+  flags = *(registers + REG_A1);
+  vaddr = *(registers + REG_A0);
 
   if (down_loadString(pt, vaddr, filename_buffer)) {
     fd = open(filename_buffer, flags, mode);
 
-    *(registers+REG_V0) = fd;
+    *(registers + REG_V0) = fd;
 
     if (debug_open) {
       print(binaryName);
@@ -4970,7 +5160,7 @@ void implementOpen() {
       println();
     }
   } else {
-    *(registers+REG_V0) = -1;
+    *(registers + REG_V0) = -1;
 
     if (debug_open) {
       print(binaryName);
@@ -5005,19 +5195,19 @@ void implementMalloc() {
   if (debug_malloc) {
     print(binaryName);
     print((int*) ": trying to malloc ");
-    printInteger(*(registers+REG_A0));
+    printInteger(*(registers + REG_A0));
     print((int*) " bytes");
     println();
   }
 
-  size = roundUp(*(registers+REG_A0), WORDSIZE);
+  size = roundUp(*(registers + REG_A0), WORDSIZE);
 
   bump = brk;
 
-  if (bump + size >= *(registers+REG_SP))
+  if (bump + size >= *(registers + REG_SP))
     throwException(EXCEPTION_HEAPOVERFLOW, 0);
   else {
-    *(registers+REG_V0) = bump;
+    *(registers + REG_V0) = bump;
 
     brk = bump + size;
 
@@ -5046,7 +5236,7 @@ void emitID() {
 }
 
 void implementID() {
-  *(registers+REG_V0) = getID(currentContext);
+  *(registers + REG_V0) = getID(currentContext);
 }
 
 int hypster_ID() {
@@ -5097,7 +5287,7 @@ int doCreate(int parentID) {
 }
 
 void implementCreate() {
-  *(registers+REG_V0) = doCreate(getID(currentContext));
+  *(registers + REG_V0) = doCreate(getID(currentContext));
 }
 
 int hypster_create() {
@@ -5166,10 +5356,10 @@ void implementSwitch() {
   // but some compilers dereference the lvalue *(registers+REG_V1)
   // before evaluating the rvalue doSwitch()
 
-  fromID = doSwitch(*(registers+REG_A0));
+  fromID = doSwitch(*(registers + REG_A0));
 
   // use REG_V1 instead of REG_V0 to avoid race condition with interrupt
-  *(registers+REG_V1) = fromID;
+  *(registers + REG_V1) = fromID;
 }
 
 int mipster_switch(int toID) {
@@ -5182,7 +5372,7 @@ int mipster_switch(int toID) {
   fromID = doSwitch(toID);
 
   // use REG_V1 instead of REG_V0 to avoid race condition with interrupt
-  *(registers+REG_V1) = fromID;
+  *(registers + REG_V1) = fromID;
 
   runUntilException();
 
@@ -5228,7 +5418,7 @@ int doStatus() {
 }
 
 void implementStatus() {
-  *(registers+REG_V0) = doStatus();
+  *(registers + REG_V0) = doStatus();
 }
 
 int hypster_status() {
@@ -5279,7 +5469,7 @@ void doDelete(int ID) {
 }
 
 void implementDelete() {
-  doDelete(*(registers+REG_A0));
+  doDelete(*(registers + REG_A0));
 }
 
 void hypster_delete(int ID) {
@@ -5359,7 +5549,7 @@ void doMap(int ID, int page, int frame) {
 }
 
 void implementMap() {
-  doMap(*(registers+REG_A0), *(registers+REG_A1), *(registers+REG_A2));
+  doMap(*(registers + REG_A0), *(registers + REG_A1), *(registers + REG_A2));
 }
 
 void hypster_map(int ID, int page, int frame) {
@@ -5495,27 +5685,27 @@ void fct_syscall() {
   if (interpret) {
     pc = pc + WORDSIZE;
 
-    if (*(registers+REG_V0) == SYSCALL_EXIT)
+    if (*(registers + REG_V0) == SYSCALL_EXIT)
       implementExit();
-    else if (*(registers+REG_V0) == SYSCALL_READ)
+    else if (*(registers + REG_V0) == SYSCALL_READ)
       implementRead();
-    else if (*(registers+REG_V0) == SYSCALL_WRITE)
+    else if (*(registers + REG_V0) == SYSCALL_WRITE)
       implementWrite();
-    else if (*(registers+REG_V0) == SYSCALL_OPEN)
+    else if (*(registers + REG_V0) == SYSCALL_OPEN)
       implementOpen();
-    else if (*(registers+REG_V0) == SYSCALL_MALLOC)
+    else if (*(registers + REG_V0) == SYSCALL_MALLOC)
       implementMalloc();
-    else if (*(registers+REG_V0) == SYSCALL_ID)
+    else if (*(registers + REG_V0) == SYSCALL_ID)
       implementID();
-    else if (*(registers+REG_V0) == SYSCALL_CREATE)
+    else if (*(registers + REG_V0) == SYSCALL_CREATE)
       implementCreate();
-    else if (*(registers+REG_V0) == SYSCALL_SWITCH)
+    else if (*(registers + REG_V0) == SYSCALL_SWITCH)
       implementSwitch();
-    else if (*(registers+REG_V0) == SYSCALL_STATUS)
+    else if (*(registers + REG_V0) == SYSCALL_STATUS)
       implementStatus();
-    else if (*(registers+REG_V0) == SYSCALL_DELETE)
+    else if (*(registers + REG_V0) == SYSCALL_DELETE)
       implementDelete();
-    else if (*(registers+REG_V0) == SYSCALL_MAP)
+    else if (*(registers + REG_V0) == SYSCALL_MAP)
       implementMap();
     else {
       pc = pc - WORDSIZE;
@@ -5547,13 +5737,13 @@ void op_jal() {
       print((int*) ": ");
       printRegister(REG_RA);
       print((int*) "=");
-      printHexadecimal(*(registers+REG_RA), 0);
+      printHexadecimal(*(registers + REG_RA), 0);
     }
   }
 
   if (interpret) {
     // skip over delay slot
-    *(registers+REG_RA) = pc + 8;
+    *(registers + REG_RA) = pc + 8;
 
     pc = instr_index * WORDSIZE;
 
@@ -5570,7 +5760,7 @@ void op_jal() {
       print((int*) " -> ");
       printRegister(REG_RA);
       print((int*) "=");
-      printHexadecimal(*(registers+REG_RA), 0);
+      printHexadecimal(*(registers + REG_RA), 0);
       print((int*) ",$pc=");
       printHexadecimal(pc, 0);
     }
@@ -5619,18 +5809,18 @@ void op_beq() {
       print((int*) ": ");
       printRegister(rs);
       print((int*) "=");
-      printInteger(*(registers+rs));
+      printInteger(*(registers + rs));
       print((int*) ",");
       printRegister(rt);
       print((int*) "=");
-      printInteger(*(registers+rt));
+      printInteger(*(registers + rt));
     }
   }
 
   if (interpret) {
     pc = pc + WORDSIZE;
 
-    if (*(registers+rs) == *(registers+rt)) {
+    if (*(registers + rs) == *(registers + rt)) {
       pc = pc + signExtend(immediate) * WORDSIZE;
 
       if (signExtend(immediate) < 0) {
@@ -5669,18 +5859,18 @@ void op_bne() {
       print((int*) ": ");
       printRegister(rs);
       print((int*) "=");
-      printInteger(*(registers+rs));
+      printInteger(*(registers + rs));
       print((int*) ",");
       printRegister(rt);
       print((int*) "=");
-      printInteger(*(registers+rt));
+      printInteger(*(registers + rt));
     }
   }
 
   if (interpret) {
     pc = pc + WORDSIZE;
 
-    if (*(registers+rs) != *(registers+rt)) {
+    if (*(registers + rs) != *(registers + rt)) {
       pc = pc + signExtend(immediate) * WORDSIZE;
 
       // TODO: execute delay slot
@@ -5709,16 +5899,16 @@ void op_addiu() {
       print((int*) ": ");
       printRegister(rt);
       print((int*) "=");
-      printInteger(*(registers+rt));
+      printInteger(*(registers + rt));
       print((int*) ",");
       printRegister(rs);
       print((int*) "=");
-      printInteger(*(registers+rs));
+      printInteger(*(registers + rs));
     }
   }
 
   if (interpret) {
-    *(registers+rt) = *(registers+rs) + signExtend(immediate);
+    *(registers + rt) = *(registers + rs) + signExtend(immediate);
 
     // TODO: check for overflow
 
@@ -5730,7 +5920,7 @@ void op_addiu() {
       print((int*) " -> ");
       printRegister(rt);
       print((int*) "=");
-      printInteger(*(registers+rt));
+      printInteger(*(registers + rt));
     }
     println();
   }
@@ -5745,12 +5935,12 @@ void fct_jr() {
       print((int*) ": ");
       printRegister(rs);
       print((int*) "=");
-      printHexadecimal(*(registers+rs), 0);
+      printHexadecimal(*(registers + rs), 0);
     }
   }
 
   if (interpret)
-    pc = *(registers+rs);
+    pc = *(registers + rs);
 
   if (debug) {
     if (interpret) {
@@ -5770,14 +5960,14 @@ void fct_mfhi() {
       print((int*) ":");
       printRegister(rd);
       print((int*) "=");
-      printInteger(*(registers+rd));
+      printInteger(*(registers + rd));
       print((int*) ",$hi=");
       printInteger(reg_hi);
     }
   }
 
   if (interpret) {
-    *(registers+rd) = reg_hi;
+    *(registers + rd) = reg_hi;
 
     pc = pc + WORDSIZE;
   }
@@ -5787,7 +5977,7 @@ void fct_mfhi() {
       print((int*) " -> ");
       printRegister(rd);
       print((int*) "=");
-      printInteger(*(registers+rd));
+      printInteger(*(registers + rd));
     }
     println();
   }
@@ -5802,14 +5992,14 @@ void fct_mflo() {
       print((int*) ": ");
       printRegister(rd);
       print((int*) "=");
-      printInteger(*(registers+rd));
+      printInteger(*(registers + rd));
       print((int*) ",$lo=");
       printInteger(reg_lo);
     }
   }
 
   if (interpret) {
-    *(registers+rd) = reg_lo;
+    *(registers + rd) = reg_lo;
 
     pc = pc + WORDSIZE;
   }
@@ -5819,7 +6009,7 @@ void fct_mflo() {
       print((int*) " -> ");
       printRegister(rd);
       print((int*) "=");
-      printInteger(*(registers+rd));
+      printInteger(*(registers + rd));
     }
     println();
   }
@@ -5836,11 +6026,11 @@ void fct_multu() {
       print((int*) ": ");
       printRegister(rs);
       print((int*) "=");
-      printInteger(*(registers+rs));
+      printInteger(*(registers + rs));
       print((int*) ",");
       printRegister(rt);
       print((int*) "=");
-      printInteger(*(registers+rt));
+      printInteger(*(registers + rt));
       print((int*) ",$lo=");
       printInteger(reg_lo);
     }
@@ -5848,7 +6038,7 @@ void fct_multu() {
 
   if (interpret) {
     // TODO: 64-bit resolution currently not supported
-    reg_lo = *(registers+rs) * *(registers+rt);
+    reg_lo = *(registers + rs) * *(registers + rt);
 
     pc = pc + WORDSIZE;
   }
@@ -5873,11 +6063,11 @@ void fct_divu() {
       print((int*) ": ");
       printRegister(rs);
       print((int*) "=");
-      printInteger(*(registers+rs));
+      printInteger(*(registers + rs));
       print((int*) ",");
       printRegister(rt);
       print((int*) "=");
-      printInteger(*(registers+rt));
+      printInteger(*(registers + rt));
       print((int*) ",$lo=");
       printInteger(reg_lo);
       print((int*) ",$hi=");
@@ -5886,8 +6076,8 @@ void fct_divu() {
   }
 
   if (interpret) {
-    reg_lo = *(registers+rs) / *(registers+rt);
-    reg_hi = *(registers+rs) % *(registers+rt);
+    reg_lo = *(registers + rs) / *(registers + rt);
+    reg_hi = *(registers + rs) % *(registers + rt);
 
     pc = pc + WORDSIZE;
   }
@@ -5916,20 +6106,20 @@ void fct_addu() {
       print((int*) ": ");
       printRegister(rd);
       print((int*) "=");
-      printInteger(*(registers+rd));
+      printInteger(*(registers + rd));
       print((int*) ",");
       printRegister(rs);
       print((int*) "=");
-      printInteger(*(registers+rs));
+      printInteger(*(registers + rs));
       print((int*) ",");
       printRegister(rt);
       print((int*) "=");
-      printInteger(*(registers+rt));
+      printInteger(*(registers + rt));
     }
   }
 
   if (interpret) {
-    *(registers+rd) = *(registers+rs) + *(registers+rt);
+    *(registers + rd) = *(registers + rs) + *(registers + rt);
 
     pc = pc + WORDSIZE;
   }
@@ -5939,7 +6129,7 @@ void fct_addu() {
       print((int*) " -> ");
       printRegister(rd);
       print((int*) "=");
-      printInteger(*(registers+rd));
+      printInteger(*(registers + rd));
     }
     println();
   }
@@ -5958,20 +6148,20 @@ void fct_subu() {
       print((int*) ": ");
       printRegister(rd);
       print((int*) "=");
-      printInteger(*(registers+rd));
+      printInteger(*(registers + rd));
       print((int*) ",");
       printRegister(rs);
       print((int*) "=");
-      printInteger(*(registers+rs));
+      printInteger(*(registers + rs));
       print((int*) ",");
       printRegister(rt);
       print((int*) "=");
-      printInteger(*(registers+rt));
+      printInteger(*(registers + rt));
     }
   }
 
   if (interpret) {
-    *(registers+rd) = *(registers+rs) - *(registers+rt);
+    *(registers + rd) = *(registers + rs) - *(registers + rt);
 
     pc = pc + WORDSIZE;
   }
@@ -5981,7 +6171,7 @@ void fct_subu() {
       print((int*) " -> ");
       printRegister(rd);
       print((int*) "=");
-      printInteger(*(registers+rd));
+      printInteger(*(registers + rd));
     }
     println();
   }
@@ -6003,20 +6193,20 @@ void op_lw() {
       print((int*) ": ");
       printRegister(rt);
       print((int*) "=");
-      printInteger(*(registers+rt));
+      printInteger(*(registers + rt));
       print((int*) ",");
       printRegister(rs);
       print((int*) "=");
-      printHexadecimal(*(registers+rs), 0);
+      printHexadecimal(*(registers + rs), 0);
     }
   }
 
   if (interpret) {
-    vaddr = *(registers+rs) + signExtend(immediate);
+    vaddr = *(registers + rs) + signExtend(immediate);
 
     if (isValidVirtualAddress(vaddr)) {
       if (isVirtualAddressMapped(pt, vaddr)) {
-        *(registers+rt) = loadVirtualMemory(pt, vaddr);
+        *(registers + rt) = loadVirtualMemory(pt, vaddr);
 
         // keep track of number of loads
         loads = loads + 1;
@@ -6035,7 +6225,7 @@ void op_lw() {
       print((int*) " -> ");
       printRegister(rt);
       print((int*) "=");
-      printInteger(*(registers+rt));
+      printInteger(*(registers + rt));
       print((int*) "=memory[");
       printHexadecimal(vaddr, 0);
       print((int*) "]");
@@ -6057,19 +6247,19 @@ void fct_slt() {
       print((int*) ": ");
       printRegister(rs);
       print((int*) "=");
-      printInteger(*(registers+rs));
+      printInteger(*(registers + rs));
       print((int*) ",");
       printRegister(rt);
       print((int*) "=");
-      printInteger(*(registers+rt));
+      printInteger(*(registers + rt));
     }
   }
 
   if (interpret) {
-    if (*(registers+rs) < *(registers+rt))
-      *(registers+rd) = 1;
+    if (*(registers + rs) < * (registers + rt))
+      *(registers + rd) = 1;
     else
-      *(registers+rd) = 0;
+      *(registers + rd) = 0;
 
     pc = pc + WORDSIZE;
   }
@@ -6079,7 +6269,7 @@ void fct_slt() {
       print((int*) " -> ");
       printRegister(rd);
       print((int*) "=");
-      printInteger(*(registers+rd));
+      printInteger(*(registers + rd));
     }
     println();
   }
@@ -6101,20 +6291,20 @@ void op_sw() {
       print((int*) ": ");
       printRegister(rt);
       print((int*) "=");
-      printInteger(*(registers+rt));
+      printInteger(*(registers + rt));
       print((int*) ",");
       printRegister(rs);
       print((int*) "=");
-      printHexadecimal(*(registers+rs), 0);
+      printHexadecimal(*(registers + rs), 0);
     }
   }
 
   if (interpret) {
-    vaddr = *(registers+rs) + signExtend(immediate);
+    vaddr = *(registers + rs) + signExtend(immediate);
 
     if (isValidVirtualAddress(vaddr)) {
       if (isVirtualAddressMapped(pt, vaddr)) {
-        storeVirtualMemory(pt, vaddr, *(registers+rt));
+        storeVirtualMemory(pt, vaddr, *(registers + rt));
 
         // keep track of number of stores
         stores = stores + 1;
@@ -6133,7 +6323,7 @@ void op_sw() {
       print((int*) " -> memory[");
       printHexadecimal(vaddr, 0);
       print((int*) "]=");
-      printInteger(*(registers+rt));
+      printInteger(*(registers + rt));
       print((int*) "=");
       printRegister(rt);
     }
@@ -6146,7 +6336,7 @@ void op_sw() {
 // -----------------------------------------------------------------
 
 void printException(int exception) {
-  print((int*) *(EXCEPTIONS + exception));
+  print((int*) * (EXCEPTIONS + exception));
 }
 
 int encodeException(int exception, int parameter) {
@@ -6397,7 +6587,7 @@ void selfie_disassemble() {
 
   debug = 1;
 
-  while(pc < codeLength) {
+  while (pc < codeLength) {
     ir = loadBinary(pc);
 
     decode();
@@ -7063,12 +7253,68 @@ int selfie() {
 
 int main(int argc, int* argv) {
   int exitCode;
-
+  int testPLUSPLUS;
+  testPLUSPLUS = 0;
   initSelfie(argc, (int*) argv);
 
   initLibrary();
 
   exitCode = selfie();
+
+  print((int*)"This is knights Selfie");
+  println();
+
+
+  //test Ass_1: PLUSPLUS
+  print((int*)"Startwert (0): ");
+  printInteger(testPLUSPLUS);
+  println();
+
+  //----------------------
+
+  // ++testPLUSPLUS;
+  // print((int*)"nach prefix ++ (1): ");
+  // printInteger(testPLUSPLUS);
+  // println();
+  //
+  // --testPLUSPLUS;
+  // print((int*)"nach prefix -- (0): ");
+  // printInteger(testPLUSPLUS);
+  // println();
+  //
+  // testPLUSPLUS++;
+  // print((int*)"testPLUSPLUS++ (1): ");
+  // printInteger(testPLUSPLUS);
+  // println();
+  //----------------------
+
+  print((int*)"nach prefix ++ (1): ");
+  printInteger(++testPLUSPLUS);
+  println();
+
+
+  print((int*)"nach prefix -- (0): ");
+  printInteger(--testPLUSPLUS);
+  println();
+
+  print((int*)"postfix ++ (0): ");
+  printInteger(testPLUSPLUS++);
+  println();
+
+  print((int*)"nach dem postix ++ (1): ");
+  printInteger(testPLUSPLUS);
+  println();
+
+  print((int*)"postfix -- (1): ");
+  printInteger(testPLUSPLUS--);
+  println();
+
+  print((int*)"nach dem postix -- (0): ");
+  printInteger(testPLUSPLUS);
+  println();
+
+
+
 
   if (exitCode == USAGE) {
     print(selfieName);
