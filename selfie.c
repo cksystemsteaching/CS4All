@@ -316,6 +316,8 @@ int SYM_NOTEQ        = 24; // !=
 int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
+int SYM_INCREMENT    = 28; //++
+int SYM_DECREMENT    = 29; //--
 
 int* SYMBOLS; // strings representing symbols
 
@@ -352,7 +354,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(28 * SIZEOFINTSTAR);
+  SYMBOLS = malloc(30 * SIZEOFINTSTAR);
 
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
@@ -382,6 +384,8 @@ void initScanner () {
   *(SYMBOLS + SYM_MOD)          = (int) "%";
   *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
   *(SYMBOLS + SYM_STRING)       = (int) "string";
+  *(SYMBOLS + SYM_INCREMENT)    = (int) "++";
+  *(SYMBOLS + SYM_DECREMENT)    = (int) "--";
 
   character = CHAR_EOF;
   symbol    = SYM_EOF;
@@ -2122,17 +2126,25 @@ void getSymbol() {
         getCharacter();
 
         symbol = SYM_SEMICOLON;
-
+      //increment
       } else if (character == CHAR_PLUS) {
         getCharacter();
-
-        symbol = SYM_PLUS;
-
+        if (character == CHAR_PLUS) {
+        	getCharacter();
+        	symbol = SYM_INCREMENT;
+        } else {
+            symbol = SYM_PLUS;
+        }
+      //decrement
       } else if (character == CHAR_DASH) {
         getCharacter();
-
-        symbol = SYM_MINUS;
-
+        if (character == CHAR_DASH) {
+            getCharacter();
+            symbol = SYM_DECREMENT;
+        } else {
+            symbol = SYM_MINUS;
+        }
+          
       } else if (character == CHAR_ASTERISK) {
         getCharacter();
 
@@ -2369,6 +2381,10 @@ int isExpression() {
     return 1;
   else if (symbol == SYM_CHARACTER)
     return 1;
+  else if (symbol == SYM_INCREMENT)
+    return 1;
+  else if (symbol == SYM_DECREMENT)
+    return 1;
   else
     return 0;
 }
@@ -2434,6 +2450,10 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_EOF)
     return 0;
+  else if (symbol == SYM_INCREMENT)
+	return 0;
+  else if (symbol == SYM_DECREMENT)
+    return 0;
   else
     return 1;
 }
@@ -2450,6 +2470,10 @@ int lookForStatement() {
   else if (symbol == SYM_RETURN)
     return 0;
   else if (symbol == SYM_EOF)
+    return 0;
+  else if (symbol == SYM_INCREMENT)
+    return 0;
+  else if (symbol == SYM_DECREMENT)
     return 0;
   else
     return 1;
@@ -2819,7 +2843,7 @@ int gr_factor() {
   int hasCast;
   int cast;
   int type;
-
+  int* entry;
   int* variableOrProcedureName;
 
   // assert: n = allocatedTemporaries
@@ -2918,12 +2942,77 @@ int gr_factor() {
       // reset return register to initial return value
       // for missing return expressions
       emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
+    //postfix
+    } else if (symbol == SYM_INCREMENT) {
+        getSymbol();
+        type = load_variable(variableOrProcedureName);
+        //add and store
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+        entry = getVariable(variableOrProcedureName);
+        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+        
+        //decrement in register
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+    } else if (symbol == SYM_DECREMENT) {
+        getSymbol();
+        type = load_variable(variableOrProcedureName);
+        //subtract and store
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+        entry = getVariable(variableOrProcedureName);
+        emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+        
+        //increment in register
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
     } else
-      // variable access: identifier
-      type = load_variable(variableOrProcedureName);
+        // variable access: identifier
+        type = load_variable(variableOrProcedureName);
+     
+  //increment?
+  } else if (symbol == SYM_INCREMENT){
+	  getSymbol();
+	  if (symbol == SYM_IDENTIFIER){
+		  getSymbol();
+
+		  type = load_variable(identifier);
+          if (type != INT_T)
+              typeWarning(INT_T, type);
+          
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+          entry = getVariable(identifier);
+          emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+
+
+      } else {
+          type = load_variable(identifier);
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), 1);
+          entry = getVariable(identifier);
+          emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+      }
+  //decrement?
+  } else if (symbol == SYM_DECREMENT){
+      getSymbol();
+      if (symbol == SYM_IDENTIFIER){
+          getSymbol();
+          
+          type = load_variable(identifier);
+          if (type != INT_T)
+              typeWarning(INT_T, type);
+          
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+          entry = getVariable(identifier);
+          emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+          
+          
+      } else {
+          type = load_variable(identifier);
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), -1);
+          entry = getVariable(identifier);
+          emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+      }
+  }
 
   // integer?
-  } else if (symbol == SYM_INTEGER) {
+  else if (symbol == SYM_INTEGER) {
     load_integer(literal);
 
     getSymbol();
@@ -3486,10 +3575,10 @@ void gr_statement() {
       // for missing return expressions
       emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
 
-      if (symbol == SYM_SEMICOLON)
-        getSymbol();
-      else
-        syntaxErrorSymbol(SYM_SEMICOLON);
+      //if (symbol == SYM_SEMICOLON)
+        //getSymbol();
+      //else
+        //syntaxErrorSymbol(SYM_SEMICOLON);
 
     // identifier = expression
     } else if (symbol == SYM_ASSIGN) {
@@ -3509,13 +3598,21 @@ void gr_statement() {
       tfree(1);
 
       numberOfAssignments = numberOfAssignments + 1;
+        
 
-      if (symbol == SYM_SEMICOLON)
+    } else if (symbol == SYM_INCREMENT) {
+        gr_expression();
+    } else if (symbol == SYM_DECREMENT) {
+        gr_expression();
+    } else {
+        syntaxErrorUnexpected();
+    }
+    if (symbol == SYM_SEMICOLON)
         getSymbol();
-      else
+    else
         syntaxErrorSymbol(SYM_SEMICOLON);
-    } else
-      syntaxErrorUnexpected();
+
+
   }
   // while statement?
   else if (symbol == SYM_WHILE) {
@@ -3525,6 +3622,24 @@ void gr_statement() {
   else if (symbol == SYM_IF) {
     gr_if();
   }
+  else if(symbol == SYM_INCREMENT) {
+      	  gr_expression();
+      
+      	  if (symbol == SYM_SEMICOLON)
+                  getSymbol();
+            else
+                  syntaxErrorSymbol(SYM_SEMICOLON);
+  }
+  else if(symbol == SYM_DECREMENT) {
+      gr_expression();
+      
+      if (symbol == SYM_SEMICOLON)
+          getSymbol();
+      else
+          syntaxErrorSymbol(SYM_SEMICOLON);
+  }
+
+  
   // return statement?
   else if (symbol == SYM_RETURN) {
     gr_return();
@@ -3534,6 +3649,7 @@ void gr_statement() {
     else
       syntaxErrorSymbol(SYM_SEMICOLON);
   }
+    
 }
 
 int gr_type() {
@@ -7061,12 +7177,37 @@ int selfie() {
   return 0;
 }
 
+void test(){
+    int i;
+    i = 0;
+    printInteger(i);
+    println();
+    
+    i++;
+    
+    printInteger(i);
+    println();
+    
+    --i;
+    
+    printInteger(i);
+    println();
+    
+    
+}
+
 int main(int argc, int* argv) {
   int exitCode;
 
   initSelfie(argc, (int*) argv);
 
   initLibrary();
+    
+
+  
+  print((int*) "This is WeirdOS Selfie");
+  println();
+  test();
 
   exitCode = selfie();
 
