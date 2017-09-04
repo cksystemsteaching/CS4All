@@ -27,13 +27,13 @@ We teach basic principles of computer science on bachelor and masters level with
 
 Bachelor:
 
-* Introduction to Operating Systems
-* Computer Science for Everyone
-* Systems Engineering
+* Introduction to Operating Systems (IOS)
+* Computer Science for Everyone (CS4All)
+* Systems Engineering (SE)
 
 Masters:
 
-* Software Systems
+* Software Systems (SWS)
 
 ## Summer Semester
 
