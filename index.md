@@ -1,8 +1,6 @@
-## About
+## Computer Science for All
 
 We are the [Computational Systems Group](http://www.cs.uni-salzburg.at/~ck) at the University of Salzburg, Austria. We work on the problem of how to *engineer* systems software rigorously and how to apply that knowledge to *teach* computer science in ways that may eventually make computer science more accessible to more people.
-
-## Teaching
 
 We teach *basic principles of computer science* on bachelor and masters level covering all relevant layers of computer systems and their connection, from the lowest levels of machine architecture via programming languages, compilers, and virtual machines which includes algorithms, data structures, complexity, and computability, to the highest levels of cloud computing.
 
