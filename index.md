@@ -12,7 +12,7 @@ Our goal is to enable you understand and answer fundamental and intrinsically se
 
 1. Compilation: How can software create the *semantics* or *meaning* of any high-level programming language including the language in which that software is written?
 2. Emulation: How can software imitate the *semantics* of low-level machine code, that is, the *behavior* of any computer including the one it runs on?
-3. Virtualization: How can software create a *virtual*, that is, *indistinguishable* version of any computer including the one it runs on?
+3. Virtualization: How can software create a *virtual* version of any computer, *indistinguishable* from the original, including the one it runs on?
 
 ## Why?
 
