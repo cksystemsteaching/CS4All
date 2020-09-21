@@ -34,7 +34,7 @@ All classes are held online and open to anyone:
 
 1. [Selfie System](https://github.com/cksystemsteaching/selfie)
 2. [Slack Workspace](https://join.slack.com/t/cksystemsteaching/shared_invite/zt-cp3kb9uq-ACUnAuI8DBdmULQXIjW15A)
-3. [Online Classroom](https://us02web.zoom.us/j/88156651016)
+3. [Online Classroom](https://us02web.zoom.us/j/88156651016) (passcode: 42 in binary)
 4. [Class Schedule](http://www.google.com/calendar/embed?src=8sic4boj129rm0k4k85g428s7k%40group.calendar.google.com)
 
 ## Classes
