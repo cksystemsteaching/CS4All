@@ -18,6 +18,8 @@ This is an introductory class on [Elementary Computer Science](https://github.co
 
 [Assignments](https://github.com/cksystemsteaching/selfie/tree/main/assignments)
 
+[Exercises](https://github.com/cksystemsteaching/selfie/blob/main/assignments/introductory-assignments.md)
+
 ## References
 
 [Elementary Computer Science](https://github.com/ckirsch/book)
