@@ -1,5 +1,9 @@
 ## Compiler Construction
 
+This is an introductory class on compiler construction for bachelor students in computer science. The goal of the class is to introduce basic principles of compilers for students to understand the design and implementation of programming languages. Seeing and actually understanding self-compilation is the overarching theme of the class.
+
+After taking the class, students are able to understand the difference between syntax and semantics of a programming language, how syntax is specified and efficiently checked, how semantics is efficiently implemented through code generation, and finally how a compiler is bootstrapped that compiles itself.
+
 ## Syllabus
 
 1. [Selfie](https://github.com/cksystemsteaching/selfie)

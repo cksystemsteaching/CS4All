@@ -1,5 +1,9 @@
 ## Systems Engineering
 
+This is an introductory class on systems engineering for bachelor students in computer science. The goal of the class is to introduce basic principles of operating systems for students to understand processor and memory virtualization. Seeing and actually understanding virtualization is the overarching theme of the class.
+
+After taking the class, students are able to understand the difference between processes and threads as well as emulation and virtualization, what virtual memory is and how it works, what concurrency is, as opposed to parallelism, and how processes and threads synchronize efficiently to overcome concurrency for communication.
+
 ## Syllabus
 
 1. [Selfie](https://github.com/cksystemsteaching/selfie)
