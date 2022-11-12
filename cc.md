@@ -2,6 +2,31 @@
 
 ## Syllabus
 
+1. [Selfie](https://github.com/cksystemsteaching/selfie)
+2. Language
+    1. Programming Language
+    2. Machine Code
+    3. Formal Grammar
+3. Machine
+    1. Model
+    2. Processor
+    3. Memory
+    4. Input/Output
+    5. Instructions
+    6. Emulation
+4. Compiler
+    1. Scanning
+    2. Parsing
+    3. Code Generation
+    4. Operators
+    5. Arrays
+    6. Structs
+    7. Loops
+    8. Conditionals
+    9. Procedures
+    10. Linking
+    11. Bootstrapping
+
 ## Software
 
 The class essentially works by explaining the basic principles behind [selfie](https://github.com/cksystemsteaching/selfie) which is a software system written in a tiny subset of C called C\* that implements a self-compiling compiler targeting a tiny subset of RISC-V machine code called RISC-U, a self-executing RISC-U emulator, and a self-hosting RISC-U hypervisor.
