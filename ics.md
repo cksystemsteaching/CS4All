@@ -16,19 +16,20 @@ After taking the class, students are able to answer not just basic computer scie
 3. Information
     1. Bits
     2. Numbers
-    3. Negative Numbers
-    4. Integers
-    5. Overflows
-    6. Characters
-    7. Bytes
-    8. Memory
-    9. Text
-    10. Files
-    11. Images
-    12. Video
-    13. Audio
-    14. Code
-    15. Apps
+    3. Boolean Algebra
+    4. Negative Numbers
+    5. Integers
+    6. Overflows
+    7. Characters
+    8. Bytes
+    9. Memory
+    10. Text
+    11. Files
+    12. Images
+    13. Video
+    14. Audio
+    15. Code
+    16. Apps
 4. Machine
     1. Model
     2. Processor
@@ -38,25 +39,22 @@ After taking the class, students are able to answer not just basic computer scie
     6. Emulation
     7. Performance
 5. Programming
-    1. Literal
-    2. Variable
-    3. Type
-    4. Expression
-    5. Assignment
-    6. Conditional
-    7. Loop
-    8. Procedure
+    1. Literals
+    2. Variables
+    3. Expressions
+    4. Statements
+    5. Assignments
+    6. Loops
+    7. Conditionals
+    8. Procedures
     9. Libraries
     10. Apps
-6. Tools
-    1. Compiler
-    2. Interpreter
-    3. Virtual Machine
-    4. Virtual Memory
-    5. Virtual Time
-    6. Virtual Machine Monitor
-    7. Computing as Utility
-    8. Cloud Computing
+6. Computing
+    1. Virtual Machine
+    2. Virtual Memory
+    3. Runtime Systems
+    4. Computing as Utility
+    5. Cloud Computing
 
 ## Software
 
