@@ -1,8 +1,8 @@
 ## Introduction to Computer Science
 
-This is an introductory class on [Elementary Computer Science](https://github.com/ckirsch/book) for broad audiences: bachelor students in computer science, students majoring in other fields but interested in computer science, high-school students, anybody with a background in basic math and the desire to understand the absolute basics of computer science.
+This is an introductory class on [Elementary Computer Science](https://github.com/ckirsch/book) for broad audiences such as bachelor students in computer science, students majoring in other fields but interested in computer science, high-school students, and anybody with a background in basic math and the desire to understand the absolute basics of computer science.
 
-The goal of the class is to introduce and relate basic principles of computer science for students to understand, early on, what computer science is, why things such as high-level programming languages and tools are done the way they are, and even how, on a basic yet representative and practically relevant level.
+The goal of the class is to introduce and relate basic principles of computer science for students to understand, early on, what computer science is, why things such as high-level programming languages and tools are done the way they are, and even how they are implemented, on a basic yet representative and practically relevant level.
 
 After taking the class, students are able to answer not just basic computer science questions but also questions about themselves such as which courses to take next and which books to follow up with, ideally realizing if they are interested in computer science more than expected, or even less than before.
 
@@ -52,9 +52,10 @@ After taking the class, students are able to answer not just basic computer scie
 6. Computing
     1. Virtual Machine
     2. Virtual Memory
-    3. Runtime Systems
-    4. Computing as Utility
-    5. Cloud Computing
+    3. Concurrency
+    4. Self-Reference
+    5. Runtime Systems
+    6. Universality of Computing
 
 ## Software
 
