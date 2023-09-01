@@ -61,9 +61,9 @@ After taking the class, students are able to answer not just basic computer scie
 
 The class essentially works by explaining the basic principles behind [selfie](https://github.com/cksystemsteaching/selfie) which is a software system written in a tiny subset of C called C\* that implements a self-compiling compiler targeting a tiny subset of RISC-V machine code called RISC-U, a self-executing RISC-U emulator, and a self-hosting RISC-U hypervisor.
 
-## Assignments
+## Assessment
 
-Selfie features an [autograder](https://github.com/cksystemsteaching/selfie/tree/main/grader) for a variety of technical [assignments](https://github.com/cksystemsteaching/selfie/tree/main/assignments). Because of the introductory nature of the class, we nevertheless focus on basic [exercises](https://github.com/cksystemsteaching/selfie/blob/main/assignments/introductory-assignments.md).
+Finals are done online. Students submit their own, original, previously prepared questions and answers, covering all major topics of the syllabus. Selfie features an [autograder](https://github.com/cksystemsteaching/selfie/tree/main/grader) for a variety of technical [assignments](https://github.com/cksystemsteaching/selfie/tree/main/assignments) that provide guidance during preparation, in addition to the material presented in class. More details on the finals are provided in class.
 
 ## References
 
