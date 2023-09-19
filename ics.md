@@ -53,7 +53,7 @@ After taking the class, students are able to answer not just basic computer scie
     1. Virtual Machine
     2. Virtual Memory
     3. Concurrency
-    4. Self-Reference
+    4. Bootstrapping
     5. Runtime Systems
     6. Universality of Computing
 
