@@ -38,3 +38,7 @@ Relevant here are the [systems assignments](https://github.com/cksystemsteaching
 ## References
 
 There is a draft of a textbook on [Elementary Computer Science](https://github.com/ckirsch/book) that is currently being developed for the class. The draft includes references to the literature relevant here.
+
+## Organization
+
+The class is organized as part of a series of [Computer Science for All](index.md) classes.

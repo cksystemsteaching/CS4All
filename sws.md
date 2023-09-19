@@ -19,3 +19,7 @@ The class is based on the [unicorn](https://github.com/cksystemsgroup/unicorn) t
 ## Projects
 
 Instead of assignments, students are asked to work in teams of 2-3 students on a coding project defined in class. Projects may involve unicorn but do not have to.
+
+## Organization
+
+The class is organized as part of a series of [Computer Science for All](index.md) classes.
