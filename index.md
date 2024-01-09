@@ -42,4 +42,4 @@ All classes are held online and open to anyone:
 * Bachelor: 1st Semester (October - January): [Introduction to Computer Science (ICS)](ics.md)
 * Bachelor: 4th Semester (March - June): [Compiler Construction (CC)](cc.md)
 * Bachelor: 5th Semester (October - January): [Systems Engineering (SE)](se.md)
-* Master: 7th Semester (October - January): [Software Systems (SWS)](sws.md)
+* Master: 8th Semester (March - June): [Advanced Systems Engineering (ASE)](ase.md)
