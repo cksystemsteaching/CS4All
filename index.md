@@ -26,16 +26,15 @@ Your core interest may not be in computer science but other exciting fields such
 
 2. Software engineers: you would like to develop software professionally and are interested in more than just learning how to code. In particular, you are looking for a background in computer science that is going to serve as foundation for understanding not just the state of the art in software engineering now but also any future development technology whatever it may be.
 
-3. Computer scientists: you plan to become a computer scientist, or are already one, and would like to either gain a solid understanding or revisit your understanding of the absolute basics of computer science. Even if your focus area is not covered by this book, the material presented here may still have a profound effect on how you see and approach your own field.
+3. Computer scientists: you plan to become a computer scientist, or are already one, and would like to either gain a solid understanding or revisit your understanding of the absolute basics of computer science. Even if your focus area is not covered, the material presented here may still have a profound effect on how you see and approach your own field.
 
 ## Content
 
 All classes are held online and open to anyone:
 
 1. [Selfie System](https://github.com/cksystemsteaching/selfie)
-2. [Slack Workspace](https://join.slack.com/t/cksystemsteaching/signup) (includes recordings)
-3. [Online Classroom](https://us02web.zoom.us/j/88156651016) (passcode: 42 in binary)
-4. [Class Schedule](http://www.google.com/calendar/embed?src=8sic4boj129rm0k4k85g428s7k%40group.calendar.google.com)
+2. [Slack Workspace](https://join.slack.com/t/cksystemsteaching/signup) (including online classroom and recordings)
+3. [Class Schedule](http://www.google.com/calendar/embed?src=8sic4boj129rm0k4k85g428s7k%40group.calendar.google.com)
 
 ## Classes
 
