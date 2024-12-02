@@ -1,24 +1,22 @@
 ## Advanced Systems Engineering
 
-This is an advanced class on systems engineering for masters students in computer science. The goal of the class is to introduce students to ongoing scientific work in systems and prepare them for working on their masters thesis, in systems but not necessarily. The class focuses on advanced topics that are often unfamiliar to students such as SMT and SAT solving as well as adiabatic quantum computing and gate-model quantum machines.
+This is an advanced class on systems engineering for masters students in computer science. The goal of the class is to introduce students to ongoing scientific work in systems and prepare them for working on their masters thesis, in systems but not necessarily. The class focuses on advanced topics in the intersection of systems and formal methods, in particular symbolic execution of machine code through SMT and SAT solving.
 
-After taking the class, students are able to understand the difference between motivation and problem definition, and know what is involved in defining an interesting problem to work on, regardless of any particular motivation, how to work on a problem for which they a-priori do not know a solution, and finally how to give a presentation with proper problem definition, solution, and conclusions.
+After taking the class, using systems and formal methods as foundation, students are able to understand the difference between motivation and problem definition, and know what is involved in defining an interesting problem to work on, regardless of any particular motivation, how to work on a problem for which they a-priori do not know a solution, and finally how to give a presentation with proper problem definition, solution, and conclusions.
 
 ## Syllabus
 
-1. [Unicorn](https://github.com/cksystemsgroup/unicorn)
+1. [Symbolic Execution](https://github.com/cksystemsteaching/selfie/tree/rotor)
 2. SMT Solving
 3. SAT Solving
-4. Adiabatic Quantum Computing
-5. Gate-Model Quantum Machines
 
 ## Software
 
-The class is based on the [unicorn](https://github.com/cksystemsgroup/unicorn) toolchain which encodes symbolic execution of RISC-V machine code in logically equivalent SMT and SAT formulae as well as quadratic unconstrained binary optimization (QUBO) models and quantum circuits (QCs).
+The class is based on the rotor and bitme toolchain in the [selfie](https://github.com/cksystemsteaching/selfie/tree/rotor) system which encodes symbolic execution of RISC-V machine code in logically equivalent SMT and SAT formulae.
 
 ## Projects
 
-Instead of assignments, students are asked to work in teams of 2-3 students on a coding project defined in class. Projects may involve unicorn but do not have to.
+Instead of assignments, students are asked to work in teams of 2-3 students on a coding project defined in class. Projects may involve rotor and bitme but do not have to.
 
 ## Organization
 
