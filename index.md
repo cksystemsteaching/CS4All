@@ -4,7 +4,7 @@ We are the [Computational Systems Group](http://www.cs.uni-salzburg.at/~ck) at t
 
 We teach *basic principles of computer science* on bachelor and masters level covering all relevant levels of computer systems and their connection, from the lowest levels of machine architecture via programming languages, compilers, and virtual machines which includes algorithms, data structures, complexity, and computability, to the highest levels of cloud computing.
 
-In our classes, we use [Selfie](http://selfie.cs.uni-salzburg.at), an educational system of a self-compiling C compiler, a self-executing RISC-V emulator, and a self-hosting RISC-V hypervisor that comes with source code, slides, and an autograder.
+In our classes, we use [Selfie](https://selfie.cs.uni-salzburg.at), an educational system of a self-compiling C compiler, a self-executing RISC-V emulator, a self-hosting RISC-V hypervisor, and a model checker, that comes with source code, a book, three talks, fourteen lecture decks per class, and an autograder.
 
 ## Goal
 
@@ -13,6 +13,10 @@ Our goal is to enable you understand and answer fundamental and intrinsically se
 1. Compilation: How can software create the *semantics* or *meaning* of any high-level programming language including the language in which that software is written?
 2. Emulation: How can software imitate the *semantics* of low-level machine code, that is, the *behavior* of any computer including the one it runs on?
 3. Virtualization: How can software create a *virtual* version of any computer, *indistinguishable* from the original, including the one it runs on?
+
+## Purpose
+
+The three bachelor classes and the book [What is Intelligence? Discovering Unproven Truth](https://github.com/cksystemsteaching/selfie/blob/main/book/README.md) tell one story: proof against truth, along one axis from the small to the vast to the countable to the uncountable, with Cantor, Gödel, Turing and Rice met in each class. The purpose is a deep understanding of basic computer science principles, deep enough to position generative AI, and whatever comes next, properly.
 
 ## Why?
 
@@ -33,8 +37,10 @@ Your core interest may not be in computer science but other exciting fields such
 All classes are held online and open to anyone:
 
 1. [Selfie System](https://github.com/cksystemsteaching/selfie)
-2. [Slack Workspace](https://join.slack.com/t/cksystemsteaching/signup) (including online classroom and recordings)
-3. [Class Schedule](http://www.google.com/calendar/embed?src=8sic4boj129rm0k4k85g428s7k%40group.calendar.google.com)
+2. [Lecture Decks](https://selfie.cs.uni-salzburg.at/classes/) for all three bachelor classes, and the talks [What is Intelligence?](https://selfie.cs.uni-salzburg.at/intelligence/), [What is Selfie?](https://selfie.cs.uni-salzburg.at/talk/) and [What is Computer Science?](https://selfie.cs.uni-salzburg.at/cs/)
+3. [Book](https://github.com/cksystemsteaching/selfie/blob/main/book/README.md): What is Intelligence? Discovering Unproven Truth
+4. [Slack Workspace](https://join.slack.com/t/cksystemsteaching/signup) (including online classroom and recordings)
+5. [Class Schedule](http://www.google.com/calendar/embed?src=8sic4boj129rm0k4k85g428s7k%40group.calendar.google.com)
 
 ## Classes
 

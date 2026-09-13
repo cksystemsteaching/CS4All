@@ -6,13 +6,17 @@ After taking the class, using systems and formal methods as foundation, students
 
 ## Syllabus
 
-1. [Symbolic Execution](https://github.com/cksystemsteaching/selfie/tree/rotor)
+1. [Symbolic Execution](https://github.com/cksystemsteaching/selfie/tree/main/tools)
 2. SMT Solving
 3. SAT Solving
 
 ## Software
 
-The class is based on the rotor and bitme toolchain in the [selfie](https://github.com/cksystemsteaching/selfie/tree/rotor) system which encodes symbolic execution of RISC-V machine code in logically equivalent SMT and SAT formulae.
+The class is based on the rotor and bitme toolchain in the [selfie](https://github.com/cksystemsteaching/selfie/tree/main/tools) system which encodes symbolic execution of RISC-V machine code in logically equivalent SMT and SAT formulae.
+
+## Background
+
+The bachelor classes end where this class begins: the [bounded model checking](https://selfie.cs.uni-salzburg.at/classes/cc/12-bounded-model-checking/) week of the compiler class, the [verification](https://selfie.cs.uni-salzburg.at/classes/se/10-verifying-systems-code/) week of the systems class, and the Cost chapter of [What is Intelligence? Discovering Unproven Truth](https://github.com/cksystemsteaching/selfie/blob/main/book/README.md).
 
 ## Projects
 

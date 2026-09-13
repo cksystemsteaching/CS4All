@@ -1,74 +1,43 @@
 ## Introduction to Computer Science
 
-This is an introductory class on [Elementary Computer Science](https://github.com/ckirsch/book) for broad audiences such as bachelor students in computer science, students majoring in other fields but interested in computer science, high-school students, and anybody with a background in basic math and the desire to understand the absolute basics of computer science.
+This is an introductory class on computer science for broad audiences such as bachelor students in computer science, students majoring in other fields but interested in computer science, high-school students, and anybody with a background in basic math and the desire to understand the absolute basics of computer science.
 
-The goal of the class is to introduce and relate basic principles of computer science for students to understand, early on, what computer science is, why things such as high-level programming languages and tools are done the way they are, and even how they are implemented, on a basic yet representative and practically relevant level.
+The class follows the book [What is Intelligence? Discovering Unproven Truth](https://github.com/cksystemsteaching/selfie/blob/main/book/README.md) at talk resolution: proof against truth, along one axis from the small to the vast to the countable to the uncountable, with Cantor, Gödel, Turing and Rice met along the way and selfie run live in every session. The purpose is a deep understanding of basic computer science principles, deep enough to position generative AI, and whatever comes next, properly.
 
 After taking the class, students are able to answer not just basic computer science questions but also questions about themselves such as which courses to take next and which books to follow up with, ideally realizing if they are interested in computer science more than expected, or even less than before.
 
 ## Syllabus
 
-1. [Selfie](https://github.com/cksystemsteaching/selfie)
-2. Language
-    1. Programming Language
-    2. Machine Code
-    3. Formal Grammar
-3. Information
-    1. Bits
-    2. Numbers
-    3. Boolean Algebra
-    4. Negative Numbers
-    5. Integers
-    6. Overflows
-    7. Characters
-    8. Bytes
-    9. Memory
-    10. Text
-    11. Files
-    12. Images
-    13. Video
-    14. Audio
-    15. Code
-    16. Apps
-4. Machine
-    1. Model
-    2. Processor
-    3. Memory
-    4. Input/Output
-    5. Instructions
-    6. Emulation
-    7. Performance
-5. Programming
-    1. Literals
-    2. Variables
-    3. Expressions
-    4. Statements
-    5. Assignments
-    6. Loops
-    7. Conditionals
-    8. Procedures
-    9. Libraries
-    10. Apps
-6. Computing
-    1. Virtual Machine
-    2. Virtual Memory
-    3. Time-Sharing
-    4. Self-Reference
-    5. Concurrency
-    6. Runtime Systems
-    7. Universality of Computing
+Week 1 is the talk [What is Intelligence?](https://selfie.cs.uni-salzburg.at/intelligence/). The lectures follow one axis, from the small to the vast to the countable to the uncountable, in six stations: I Size, II Notation, III Meaning, IV Cost, V Machines, VI Intelligence. Each lecture is an HTML deck with a PDF rendering next to it, and ends with a piece of music and, in the introductory class, two things to read. The decks are at [selfie.cs.uni-salzburg.at/classes/ics](https://selfie.cs.uni-salzburg.at/classes/ics/).
+
+| week | station | lecture |
+|---|---|---|
+| 1 | — | [What is Intelligence? The talk, then the class](https://selfie.cs.uni-salzburg.at/classes/ics/01-what-is-intelligence/) ([pdf](https://selfie.cs.uni-salzburg.at/classes/ics/01-what-is-intelligence/01-what-is-intelligence.pdf)) |
+| 2 | I | [Size](https://selfie.cs.uni-salzburg.at/classes/ics/02-size/) ([pdf](https://selfie.cs.uni-salzburg.at/classes/ics/02-size/02-size.pdf)) |
+| 3 | I | [Everything is Bits](https://selfie.cs.uni-salzburg.at/classes/ics/03-everything-is-bits/) ([pdf](https://selfie.cs.uni-salzburg.at/classes/ics/03-everything-is-bits/03-everything-is-bits.pdf)) |
+| 4 | II | [Notation](https://selfie.cs.uni-salzburg.at/classes/ics/04-notation/) ([pdf](https://selfie.cs.uni-salzburg.at/classes/ics/04-notation/04-notation.pdf)) |
+| 5 | II | [Countability](https://selfie.cs.uni-salzburg.at/classes/ics/05-countability/) ([pdf](https://selfie.cs.uni-salzburg.at/classes/ics/05-countability/05-countability.pdf)) |
+| 6 | II | [The Machine](https://selfie.cs.uni-salzburg.at/classes/ics/06-the-machine/) ([pdf](https://selfie.cs.uni-salzburg.at/classes/ics/06-the-machine/06-the-machine.pdf)) |
+| 7 | III | [Uncountability](https://selfie.cs.uni-salzburg.at/classes/ics/07-uncountability/) ([pdf](https://selfie.cs.uni-salzburg.at/classes/ics/07-uncountability/07-uncountability.pdf)) |
+| 8 | III | [Self-Reference I](https://selfie.cs.uni-salzburg.at/classes/ics/08-self-reference-i/) ([pdf](https://selfie.cs.uni-salzburg.at/classes/ics/08-self-reference-i/08-self-reference-i.pdf)) |
+| 9 | III | [Self-Reference II](https://selfie.cs.uni-salzburg.at/classes/ics/09-self-reference-ii/) ([pdf](https://selfie.cs.uni-salzburg.at/classes/ics/09-self-reference-ii/09-self-reference-ii.pdf)) |
+| 10 | III | [Systems](https://selfie.cs.uni-salzburg.at/classes/ics/10-systems/) ([pdf](https://selfie.cs.uni-salzburg.at/classes/ics/10-systems/10-systems.pdf)) |
+| 11 | IV | [Cost](https://selfie.cs.uni-salzburg.at/classes/ics/11-cost/) ([pdf](https://selfie.cs.uni-salzburg.at/classes/ics/11-cost/11-cost.pdf)) |
+| 12 | IV | [Formal Methods](https://selfie.cs.uni-salzburg.at/classes/ics/12-formal-methods/) ([pdf](https://selfie.cs.uni-salzburg.at/classes/ics/12-formal-methods/12-formal-methods.pdf)) |
+| 13 | V | [Machines](https://selfie.cs.uni-salzburg.at/classes/ics/13-machines/) ([pdf](https://selfie.cs.uni-salzburg.at/classes/ics/13-machines/13-machines.pdf)) |
+| 14 | VI | [So, What is Intelligence?](https://selfie.cs.uni-salzburg.at/classes/ics/14-what-is-intelligence/) ([pdf](https://selfie.cs.uni-salzburg.at/classes/ics/14-what-is-intelligence/14-what-is-intelligence.pdf)) |
 
 ## Software
 
-The class essentially works by explaining the basic principles behind [selfie](https://github.com/cksystemsteaching/selfie) which is a software system written in a tiny subset of C called C\* that implements a self-compiling compiler targeting a tiny subset of RISC-V machine code called RISC-U, a self-executing RISC-U emulator, and a self-hosting RISC-U hypervisor.
+The class works by explaining the basic principles behind [selfie](https://github.com/cksystemsteaching/selfie), a software system written in a tiny subset of C called C\* that implements a self-compiling compiler targeting a tiny subset of RISC-V machine code called RISC-U, a self-executing RISC-U emulator, and a self-hosting RISC-U hypervisor. Selfie also comes with rotor and bitme, a model generator and a bounded model checker that turn a RISC-U binary into a formula and ask a SAT or SMT solver whether any input reaches a bad state within a bound.
 
-## Assessment
+## Exercises and Assessment
 
-Finals are done online. Students submit their own, original, previously prepared questions and answers, covering all major topics of the syllabus. Selfie features an [autograder](https://github.com/cksystemsteaching/selfie/tree/main/grader) for a variety of technical [assignments](https://github.com/cksystemsteaching/selfie/tree/main/assignments) that provide guidance during preparation, in addition to the material presented in class. More details on the finals are provided in class.
+The class has no graded assignments. Each lecture ends with a list of recommended exercises, mirrored in [introductory-assignments.md](https://github.com/cksystemsteaching/selfie/blob/main/assignments/introductory-assignments.md), and the exam draws on these exercises and on nothing else: place a number on the axis, build a diagonal, say what a self-check proves, sort text from behaviour, name the outside check. Students who want more can do the first assignments of the compiler and systems classes with selfie's [autograder](https://github.com/cksystemsteaching/selfie/tree/main/grader).
 
 ## References
 
-There is a draft of a textbook on [Elementary Computer Science](https://github.com/ckirsch/book) that is currently being developed for the class. The draft includes references to the literature relevant here.
+The textbook is [What is Intelligence? Discovering Unproven Truth](https://github.com/cksystemsteaching/selfie/blob/main/book/README.md), whose chapters are the weeks of the class; it includes recommended readings for every part. The previous edition, [Elementary Computer Science: From Bits and Bytes to the Universality of Computing](https://github.com/ckirsch/book), remains available.
 
 ## Organization
 
