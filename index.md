@@ -34,7 +34,7 @@ Your core interest may not be in computer science but other exciting fields such
 
 ## Content
 
-All classes are held online and open to anyone:
+All classes are made available online and open to anyone:
 
 1. [Selfie System](https://github.com/cksystemsteaching/selfie)
 2. [Lecture Decks](https://selfie.cs.uni-salzburg.at/classes/) for all three bachelor classes, and the talks [What is Intelligence?](https://selfie.cs.uni-salzburg.at/intelligence/), [What is Selfie?](https://selfie.cs.uni-salzburg.at/talk/) and [What is Computer Science?](https://selfie.cs.uni-salzburg.at/cs/)
